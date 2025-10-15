@@ -195,7 +195,7 @@ export function computeMinimumEnclosingCircle(locations: Location[]): Circle | n
   if (locations.length === 1) {
     return {
       center: { lat: locations[0].lat, lng: locations[0].lng },
-      radius: 100, // Minimum radius of 100m for single point
+      radius: 10, // Very small default radius of 10m for single point
     };
   }
 
@@ -205,10 +205,10 @@ export function computeMinimumEnclosingCircle(locations: Location[]): Circle | n
 
   if (!circle) return null;
 
-  // Ensure minimum radius of 100m
+  // Ensure minimum radius of 10m (very tight circles)
   return {
     center: circle.center,
-    radius: Math.max(circle.radius, 100),
+    radius: Math.max(circle.radius, 10),
   };
 }
 

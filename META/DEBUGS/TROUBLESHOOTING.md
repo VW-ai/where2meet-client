@@ -37,8 +37,7 @@
 
 **Application Restrictions:**
 - For development: Use "HTTP referrers"
-- Add: `http://localhost:3001/*` (note: port might be 3000 or 3001)
-- Add: `http://localhost:3000/*`
+- Add: `http://localhost:4000/*`
 - For production: Add your domain
 
 #### Check Browser Console

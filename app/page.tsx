@@ -1,326 +1,280 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
-import InputPanel from '@/components/InputPanel';
-import CandidatesPanel from '@/components/CandidatesPanel';
-import { Location, Candidate, Circle, SortMode } from '@/types';
-import { computeCentroid, computeMinimumEnclosingCircle, expandCircle, haversineDistance } from '@/lib/algorithms';
-
-// Dynamically import MapView to avoid SSR issues with Google Maps
-const MapView = dynamic(() => import('@/components/MapView'), {
-  ssr: false,
-  loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
-});
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { api, CreateEventRequest } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
-  const [apiKey, setApiKey] = useState<string>('');
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [centroid, setCentroid] = useState<{ lat: number; lng: number } | null>(null);
-  const [circle, setCircle] = useState<Circle | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>('rating');
-  const [keyword, setKeyword] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  const router = useRouter();
+  const { user, token, logout } = useAuth();
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load API key and locations from environment/storage
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-    setApiKey(key);
+  // Event creation form state
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('restaurant');
+  const [visibility, setVisibility] = useState<'blur' | 'show'>('blur');
+  const [allowVote, setAllowVote] = useState(true);
 
-    // Load from localStorage
-    const saved = localStorage.getItem('where2meet-locations');
-    if (saved) {
-      try {
-        setLocations(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load saved locations', e);
-      }
-    }
-  }, []);
-
-  // Save locations to localStorage
-  useEffect(() => {
-    localStorage.setItem('where2meet-locations', JSON.stringify(locations));
-  }, [locations]);
-
-  // Recompute centroid and circle whenever locations change
-  useEffect(() => {
-    if (locations.length === 0) {
-      setCentroid(null);
-      setCircle(null);
+  const handleCreateEvent = async () => {
+    if (!title.trim()) {
+      setError('Please enter an event title');
       return;
     }
 
-    const newCentroid = computeCentroid(locations);
-    setCentroid(newCentroid);
-
-    if (locations.length >= 1) {
-      const mec = computeMinimumEnclosingCircle(locations);
-      if (mec) {
-        // Expand by 10% for search radius
-        const expanded = expandCircle(mec, 0.1);
-        setCircle(expanded);
-      }
-    }
-  }, [locations]);
-
-  const handleAddLocation = useCallback((location: Location) => {
-    setLocations((prev) => [...prev, location]);
-  }, []);
-
-  const handleRemoveLocation = useCallback((id: string) => {
-    setLocations((prev) => prev.filter((loc) => loc.id !== id));
-  }, []);
-
-  const handleUpdateLocation = useCallback((id: string, updates: Partial<Location>) => {
-    setLocations((prev) =>
-      prev.map((loc) => (loc.id === id ? { ...loc, ...updates } : loc))
-    );
-  }, []);
-
-  const handleMapClick = useCallback((lat: number, lng: number) => {
-    const newLocation: Location = {
-      id: Date.now().toString(),
-      lat,
-      lng,
-      address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-    };
-    handleAddLocation(newLocation);
-  }, [handleAddLocation]);
-
-  const searchPlaces = useCallback(async () => {
-    if (!circle || !centroid || !keyword.trim()) {
-      alert('Please add at least 2 locations and enter a search keyword');
-      return;
-    }
-
-    // Check if Google Maps is loaded
-    if (!window.google?.maps?.places?.PlacesService) {
-      alert('Google Maps is still loading. Please wait a moment and try again.');
-      return;
-    }
-
-    setIsSearching(true);
-    setCandidates([]);
-    setSelectedCandidate(null);
+    setIsCreating(true);
+    setError(null);
 
     try {
-      // Use Places Library (nearbySearch)
-      const service = new google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-
-      const request: google.maps.places.PlaceSearchRequest = {
-        location: new google.maps.LatLng(circle.center.lat, circle.center.lng),
-        radius: circle.radius,
-        keyword: keyword,
-        // You can also use 'type' for specific categories
+      const request: CreateEventRequest = {
+        title: title.trim(),
+        category,
+        visibility,
+        allow_vote: allowVote,
       };
 
-      service.nearbySearch(request, (results, status) => {
-        try {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            // De-duplicate by place_id
-            const uniqueResults = new Map<string, google.maps.places.PlaceResult>();
-            results.forEach((place) => {
-              if (place.place_id) {
-                uniqueResults.set(place.place_id, place);
-              }
-            });
+      // Pass auth token if user is logged in
+      const response = await api.createEvent(request, token || undefined);
 
-            // Convert to our Candidate type
-            const newCandidates: Candidate[] = Array.from(uniqueResults.values())
-              .filter((place) => place.geometry?.location && place.place_id)
-              .map((place, index) => {
-                const lat = place.geometry!.location!.lat();
-                const lng = place.geometry!.location!.lng();
-                const distanceFromCenter = haversineDistance(
-                  circle.center.lat,
-                  circle.center.lng,
-                  lat,
-                  lng
-                );
-                const inCircle = distanceFromCenter <= circle.radius;
+      // Store event ID and role in sessionStorage
+      sessionStorage.setItem('eventId', response.event.id);
+      sessionStorage.setItem('role', 'host');
+      sessionStorage.setItem('joinToken', response.join_token);
 
-                return {
-                  id: `${place.place_id}-${index}`,
-                  placeId: place.place_id!,
-                  name: place.name || 'Unnamed Place',
-                  lat,
-                  lng,
-                  rating: place.rating,
-                  userRatingsTotal: place.user_ratings_total,
-                  distanceFromCenter,
-                  inCircle,
-                  openNow: place.opening_hours?.open_now,
-                  vicinity: place.vicinity,
-                  types: place.types,
-                };
-              });
+      // For anonymous users, store event ID in localStorage
+      if (!token) {
+        const storedEventIds = localStorage.getItem('my_events');
+        const eventIds = storedEventIds ? JSON.parse(storedEventIds) : [];
+        eventIds.unshift(response.event.id); // Add to beginning
+        localStorage.setItem('my_events', JSON.stringify(eventIds));
+      }
 
-            // Basic filtering: prefer open places, minimum rating
-            const filtered = newCandidates.filter((c) => {
-              // Optional: filter by rating threshold
-              if (c.rating && c.rating < 3.0) return false;
-              return true;
-            });
-
-            setCandidates(filtered);
-
-            if (filtered.length === 0) {
-              alert(`No results found for "${keyword}". Try a different search term or add more locations.`);
-            }
-          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            setCandidates([]);
-            alert(`No results found for "${keyword}". Try a different search term or expand your search area.`);
-          } else {
-            console.error('Places search failed:', status);
-            let errorMessage = 'Search failed. ';
-            switch (status) {
-              case google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT:
-                errorMessage += 'Query limit reached. Please try again later.';
-                break;
-              case google.maps.places.PlacesServiceStatus.REQUEST_DENIED:
-                errorMessage += 'Request denied. Check your API key permissions.';
-                break;
-              case google.maps.places.PlacesServiceStatus.INVALID_REQUEST:
-                errorMessage += 'Invalid request. Please check your input.';
-                break;
-              default:
-                errorMessage += 'Please try again.';
-            }
-            alert(errorMessage);
-          }
-        } catch (callbackError) {
-          console.error('Error processing search results:', callbackError);
-          alert('An error occurred while processing results. Please try again.');
-        } finally {
-          setIsSearching(false);
-        }
-      });
-    } catch (error) {
-      console.error('Search error:', error);
-      alert('An error occurred during search. Please try again.');
-      setIsSearching(false);
+      // Navigate to event page
+      router.push(`/event?id=${response.event.id}`);
+    } catch (err) {
+      console.error('Failed to create event:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create event');
+    } finally {
+      setIsCreating(false);
     }
-  }, [circle, centroid, keyword]);
+  };
 
-  // Sort candidates
-  const sortedCandidates = useCallback(() => {
-    const sorted = [...candidates];
-    if (sortMode === 'rating') {
-      sorted.sort((a, b) => {
-        const ratingA = a.rating || 0;
-        const ratingB = b.rating || 0;
-        return ratingB - ratingA; // Higher rating first
-      });
-    } else {
-      sorted.sort((a, b) => {
-        const distA = a.distanceFromCenter || Infinity;
-        const distB = b.distanceFromCenter || Infinity;
-        return distA - distB; // Closer first
-      });
+  const handleJoinWithLink = () => {
+    const link = prompt('Paste the event join link:');
+    if (!link) return;
+
+    try {
+      // Extract event ID from link (format: http://...?id=EVENT_ID&token=TOKEN)
+      const url = new URL(link);
+      const eventId = url.searchParams.get('id');
+      const token = url.searchParams.get('token');
+
+      if (!eventId) {
+        setError('Invalid join link: missing event ID');
+        return;
+      }
+
+      // Store event ID and role in sessionStorage
+      sessionStorage.setItem('eventId', eventId);
+      sessionStorage.setItem('role', 'participant');
+      if (token) {
+        sessionStorage.setItem('joinToken', token);
+      }
+
+      // Navigate to event page
+      router.push(`/event?id=${eventId}`);
+    } catch (err) {
+      console.error('Invalid join link:', err);
+      setError('Invalid join link format');
     }
-    return sorted;
-  }, [candidates, sortMode]);
-
-  if (!apiKey) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">API Key Missing</h1>
-          <p className="text-gray-700 mb-4">
-            Please set your Google Maps API key in the <code className="bg-gray-100 px-2 py-1 rounded">.env.local</code> file:
-          </p>
-          <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
-            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
-          </pre>
-          <p className="text-gray-600 text-sm mt-4">
-            See <code className="bg-gray-100 px-2 py-1 rounded">.env.local.example</code> for reference.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-800">Where2Meet</h1>
-          <p className="text-gray-600 mt-1">
-            Find the perfect meeting place for your group
-          </p>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Inputs */}
-          <div className="lg:col-span-1 space-y-6">
-            <InputPanel
-              locations={locations}
-              onAddLocation={handleAddLocation}
-              onRemoveLocation={handleRemoveLocation}
-              onUpdateLocation={handleUpdateLocation}
-            />
-
-            <CandidatesPanel
-              candidates={sortedCandidates()}
-              selectedCandidate={selectedCandidate}
-              sortMode={sortMode}
-              onSortChange={setSortMode}
-              onCandidateClick={setSelectedCandidate}
-              keyword={keyword}
-              onKeywordChange={setKeyword}
-              onSearch={searchPlaces}
-              isSearching={isSearching}
-            />
-          </div>
-
-          {/* Right Panel - Map */}
-          <div className="lg:col-span-2 h-[600px] lg:h-[calc(100vh-200px)] bg-white rounded-lg shadow-lg overflow-hidden">
-            <MapView
-              apiKey={apiKey}
-              locations={locations}
-              centroid={centroid}
-              circle={circle}
-              candidates={sortedCandidates()}
-              selectedCandidate={selectedCandidate}
-              onMapClick={handleMapClick}
-              onCandidateClick={setSelectedCandidate}
-            />
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="text-xl font-bold text-gray-800">Where2Meet</div>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                <span className="text-gray-600">
+                  Hello, {user.name || user.email}
+                </span>
+                <Link
+                  href="/my-events"
+                  className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  My Events
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-700 font-medium"
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-700 font-medium"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
+      </nav>
 
-        {/* Info Section */}
-        {circle && (
-          <div className="mt-6 bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Analysis Info</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-gray-600">Center Point (Centroid)</p>
-                <p className="font-mono text-gray-800">
-                  {centroid?.lat.toFixed(6)}, {centroid?.lng.toFixed(6)}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-600">Search Radius</p>
-                <p className="font-mono text-gray-800">
-                  {(circle.radius / 1000).toFixed(2)} km
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-600">Total Locations</p>
-                <p className="font-mono text-gray-800">{locations.length}</p>
+      <div className="flex items-center justify-center p-4 pt-12">
+        <div className="max-w-2xl w-full">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold text-gray-800 mb-4">Where2Meet</h1>
+            <p className="text-xl text-gray-600">
+              Find the perfect meeting place for your group
+            </p>
+          </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Create New Event</h2>
+
+          {/* Event Creation Form */}
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Event Title *
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Team Lunch, Weekend Hangout"
+                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Looking for
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="restaurant">Restaurant</option>
+                <option value="cafe">Café</option>
+                <option value="bar">Bar</option>
+                <option value="park">Park</option>
+                <option value="basketball_court">Basketball Court</option>
+                <option value="gym">Gym</option>
+                <option value="library">Library</option>
+                <option value="movie_theater">Movie Theater</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allowVote}
+                  onChange={(e) => setAllowVote(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded"
+                />
+                <span className="text-sm text-gray-700">Allow voting</span>
+              </label>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Privacy:</span>
+                <button
+                  onClick={() => setVisibility('blur')}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    visibility === 'blur'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Blur locations
+                </button>
+                <button
+                  onClick={() => setVisibility('show')}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    visibility === 'show'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Show exact
+                </button>
               </div>
             </div>
           </div>
-        )}
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleCreateEvent}
+            disabled={isCreating || !title.trim()}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          >
+            {isCreating ? 'Creating Event...' : 'Create Event & Get Link'}
+          </button>
+        </div>
+
+        {/* Join Event */}
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            Already have a link?
+          </h3>
+          <button
+            onClick={handleJoinWithLink}
+            className="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors border-2 border-gray-300"
+          >
+            Join Existing Event
+          </button>
+        </div>
+
+        {/* Features List */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="p-4">
+            <div className="text-3xl mb-2">📍</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Add Locations</h4>
+            <p className="text-sm text-gray-600">
+              Everyone adds their location anonymously
+            </p>
+          </div>
+          <div className="p-4">
+            <div className="text-3xl mb-2">🎯</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Find Venues</h4>
+            <p className="text-sm text-gray-600">
+              Smart algorithm finds the perfect middle ground
+            </p>
+          </div>
+          <div className="p-4">
+            <div className="text-3xl mb-2">🗳️</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Vote Together</h4>
+            <p className="text-sm text-gray-600">
+              Let everyone vote on their favorite spot
+            </p>
+          </div>
+        </div>
+        </div>
       </div>
     </main>
   );

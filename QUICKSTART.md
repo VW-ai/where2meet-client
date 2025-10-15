@@ -35,7 +35,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY_HERE
 2. Create a new project or select existing
 3. Enable **Maps JavaScript API** and **Places API**
 4. Create credentials (API key)
-5. Restrict key by HTTP referrers: `http://localhost:3000/*`
+5. Restrict key by HTTP referrers: `http://localhost:4000/*`
 
 ### 3. Run Development Server
 
@@ -43,7 +43,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY_HERE
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:4000](http://localhost:4000)
 
 ## Usage Flow
 

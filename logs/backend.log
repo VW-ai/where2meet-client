@@ -1,0 +1,30 @@
+INFO:     Will watch for changes in these directories: ['/Users/victor/work/where2meet-clientside/where2meet-client/server/server']
+INFO:     Uvicorn running on http://127.0.0.1:5001 (Press CTRL+C to quit)
+INFO:     Started reloader process [65722] using WatchFiles
+INFO:     Started server process [65728]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52831 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52926 - "OPTIONS /api/v1/auth/login HTTP/1.1" 200 OK
+2025-10-15 12:09:52,698 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-10-15 12:09:52,700 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-15 12:09:52,703 INFO sqlalchemy.engine.Engine select current_schema()
+2025-10-15 12:09:52,703 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-15 12:09:52,704 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-10-15 12:09:52,704 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-15 12:09:52,705 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-15 12:09:52,707 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-10-15 12:09:52,708 INFO sqlalchemy.engine.Engine [generated in 0.00011s] {'email_1': '1@1.com', 'param_1': 1}
+2025-10-15 12:09:52,900 INFO sqlalchemy.engine.Engine UPDATE users SET last_login=%(last_login)s WHERE users.id = %(users_id)s
+2025-10-15 12:09:52,901 INFO sqlalchemy.engine.Engine [generated in 0.00015s] {'last_login': datetime.datetime(2025, 10, 15, 16, 9, 52, 899985), 'users_id': 'user_4895e0117c48457f'}
+2025-10-15 12:09:52,904 INFO sqlalchemy.engine.Engine COMMIT
+2025-10-15 12:09:52,906 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-15 12:09:52,906 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(pk_1)s
+2025-10-15 12:09:52,906 INFO sqlalchemy.engine.Engine [generated in 0.00005s] {'pk_1': 'user_4895e0117c48457f'}
+2025-10-15 12:09:52,913 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:52926 - "POST /api/v1/auth/login HTTP/1.1" 200 OK

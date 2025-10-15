@@ -13,6 +13,10 @@ interface CandidatesPanelProps {
   onKeywordChange: (keyword: string) => void;
   onSearch: () => void;
   isSearching: boolean;
+  onVote?: (candidateId: string) => void;
+  participantId?: string;
+  onRemoveCandidate?: (candidateId: string) => void;
+  isHost?: boolean;
 }
 
 export default function CandidatesPanel({
@@ -25,6 +29,10 @@ export default function CandidatesPanel({
   onKeywordChange,
   onSearch,
   isSearching,
+  onVote,
+  participantId,
+  onRemoveCandidate,
+  isHost,
 }: CandidatesPanelProps) {
   const getGoogleMapsUrl = (candidate: Candidate, origin?: { lat: number; lng: number }) => {
     const dest = `${candidate.lat},${candidate.lng}`;
@@ -35,12 +43,12 @@ export default function CandidatesPanel({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800">Search Venues</h2>
+    <div className="h-full flex flex-col space-y-3">
+      <h2 className="text-base font-bold text-gray-900">Search Venues</h2>
 
       {/* Search Input */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="flex-shrink-0">
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
           Venue Type
         </label>
         <div className="flex gap-2">
@@ -49,13 +57,13 @@ export default function CandidatesPanel({
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
             placeholder="e.g., restaurant, cafe, basketball court"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
           />
           <button
             onClick={onSearch}
             disabled={isSearching || !keyword.trim()}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isSearching ? 'Searching...' : 'Search'}
           </button>
@@ -64,27 +72,27 @@ export default function CandidatesPanel({
 
       {/* Sort Controls */}
       {candidates.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="flex-shrink-0">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
             Sort By
           </label>
           <div className="flex gap-2">
             <button
               onClick={() => onSortChange('rating')}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
                 sortMode === 'rating'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
               Rating
             </button>
             <button
               onClick={() => onSortChange('distance')}
-              className={`flex-1 px-4 py-2 rounded-md transition-colors ${
+              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
                 sortMode === 'distance'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
               Distance
@@ -94,13 +102,13 @@ export default function CandidatesPanel({
       )}
 
       {/* Candidates List */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+      <div className="flex-1 flex flex-col min-h-0">
+        <h3 className="text-sm font-semibold text-gray-900 mb-2">
           Candidate Venues ({candidates.length})
         </h3>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 flex-1 overflow-y-auto">
           {candidates.length === 0 ? (
-            <p className="text-gray-500 text-sm italic">
+            <p className="text-gray-700 text-sm italic">
               No venues found. Add at least 2 locations and search for a venue type.
             </p>
           ) : (
@@ -108,19 +116,19 @@ export default function CandidatesPanel({
               <div
                 key={candidate.id}
                 onClick={() => onCandidateClick(candidate)}
-                className={`p-4 rounded-md cursor-pointer transition-all ${
+                className={`p-3 rounded-md cursor-pointer transition-all ${
                   selectedCandidate?.id === candidate.id
-                    ? 'bg-red-100 border-2 border-red-500'
-                    : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                    ? 'bg-red-100 border-2 border-red-600'
+                    : 'bg-white hover:bg-gray-100 border-2 border-gray-200'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-800">{candidate.name}</h4>
+                    <h4 className="font-semibold text-gray-900">{candidate.name}</h4>
                     {candidate.vicinity && (
-                      <p className="text-sm text-gray-600 mt-1">{candidate.vicinity}</p>
+                      <p className="text-sm text-gray-700 mt-1">{candidate.vicinity}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-sm">
+                    <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
                       {candidate.rating && (
                         <span className="flex items-center gap-1">
                           <span className="text-yellow-500">★</span>
@@ -146,10 +154,15 @@ export default function CandidatesPanel({
                           {candidate.openNow ? 'Open Now' : 'Closed'}
                         </span>
                       )}
+                      {onVote && candidate.voteCount !== undefined && (
+                        <span className="flex items-center gap-1 font-medium text-purple-600">
+                          🗳️ {candidate.voteCount} {candidate.voteCount === 1 ? 'vote' : 'votes'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex gap-2 flex-wrap">
                   <a
                     href={getGoogleMapsUrl(candidate)}
                     target="_blank"
@@ -159,6 +172,30 @@ export default function CandidatesPanel({
                   >
                     View on Maps
                   </a>
+                  {onVote && participantId && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onVote(candidate.id);
+                      }}
+                      className="px-3 py-1 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors"
+                    >
+                      Vote
+                    </button>
+                  )}
+                  {isHost && onRemoveCandidate && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Remove ${candidate.name}?`)) {
+                          onRemoveCandidate(candidate.id);
+                        }
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             ))

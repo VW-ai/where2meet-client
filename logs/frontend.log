@@ -1,0 +1,18 @@
+
+> where2meet-client@1.0.0 dev /Users/victor/work/where2meet-clientside/where2meet-client
+> next dev -p 4000
+
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:4000
+   - Network:      http://10.13.0.99:4000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1391ms
+ ○ Compiling / ...
+ ✓ Compiled / in 832ms (609 modules)
+ GET / 200 in 1040ms
+ ✓ Compiled in 59ms (242 modules)
+ ✓ Compiled /login in 257ms (602 modules)
+ GET /login 200 in 406ms
+ GET / 200 in 13ms

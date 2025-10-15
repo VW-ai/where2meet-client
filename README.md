@@ -99,7 +99,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
 **API Key Requirements:**
 - Enable **Maps JavaScript API**
 - Enable **Places API**
-- Restrict by HTTP referrers (e.g., `http://localhost:3000/*`)
+- Restrict by HTTP referrers (e.g., `http://localhost:4000/*`)
 
 ### 3. Run Development Server
 
@@ -107,7 +107,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:4000](http://localhost:4000) in your browser.
 
 ## Usage
 

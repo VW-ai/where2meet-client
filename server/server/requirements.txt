@@ -1,0 +1,34 @@
+# FastAPI and web framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+
+# Database
+sqlalchemy==2.0.35
+alembic==1.13.3
+psycopg2-binary==2.9.9
+
+# Redis
+redis==5.2.0
+hiredis==3.0.0
+
+# Security and validation
+pydantic==2.9.2
+pydantic-settings==2.6.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+itsdangerous==2.2.0
+
+# HTTP client for Google Maps API
+httpx==0.27.2
+
+# CORS
+python-dotenv==1.0.1
+
+# Logging and monitoring
+structlog==24.4.0
+
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.27.2

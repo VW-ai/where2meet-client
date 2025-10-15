@@ -19,6 +19,7 @@ export interface Candidate {
   openNow?: boolean;
   vicinity?: string;
   types?: string[];
+  voteCount?: number;
 }
 
 export interface Circle {
