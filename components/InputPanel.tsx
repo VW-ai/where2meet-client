@@ -196,11 +196,11 @@ export default function InputPanel({
     <div className="space-y-3">
       <div>
         <h2 className="text-base font-bold text-gray-900">
-          {isHost ? '👑 Add Participant Locations' : t.addYourStartingLocation}
+          {isHost ? t.addParticipantLocations : t.addYourStartingLocation}
         </h2>
         <p className="text-sm text-blue-600 font-medium mt-1">
           {isHost
-            ? '💡 As organizer, you can add multiple locations for different participants'
+            ? t.organizerCanAddMultiple
             : t.startingLocationEmphasis}
         </p>
       </div>
@@ -208,29 +208,11 @@ export default function InputPanel({
       {/* Nickname Prompt Modal */}
       {showNicknamePrompt && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={handleCancelNickname}>
-          <div className={`bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border-4 ${
-            editingLocationId
-              ? 'border-amber-400'
-              : 'border-blue-400'
-          }`} onClick={(e) => e.stopPropagation()}>
-            {/* Header with badge */}
-            <div className="flex items-center gap-3 mb-3">
-              {editingLocationId ? (
-                <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 border-2 border-amber-400 rounded-full">
-                  <span className="text-lg">✏️</span>
-                  <span className="text-sm font-bold text-amber-900">EDIT MODE</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 border-2 border-blue-400 rounded-full">
-                  <span className="text-lg">➕</span>
-                  <span className="text-sm font-bold text-blue-900">ADD NEW</span>
-                </div>
-              )}
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <div className="bg-white rounded-lg p-4 max-w-xs w-full mx-4 shadow-xl border-2 border-gray-300" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-gray-900 mb-2">
               {editingLocationId ? t.editLocation : t.enterNickname}
             </h3>
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-xs text-gray-600 mb-3">
               {editingLocationId ? t.editLocationDescription : t.nicknameVisible}
             </p>
 
@@ -250,12 +232,9 @@ export default function InputPanel({
                     className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <div className="flex-1">
-                    <span className="text-sm font-bold text-blue-900">
-                      📍 This is my own location
+                    <span className="text-sm font-medium text-gray-900">
+                      {t.myLocation}
                     </span>
-                    <p className="text-xs text-blue-700 mt-1">
-                      Your location will be marked as "You" on the map
-                    </p>
                   </div>
                 </label>
               </div>
@@ -265,7 +244,7 @@ export default function InputPanel({
             {!isMyOwnLocation && (
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  {isHost ? 'Participant Name' : 'Your Nickname'}
+                  {isHost ? t.participantName : t.yourNickname}
                 </label>
                 <input
                   type="text"
@@ -286,29 +265,20 @@ export default function InputPanel({
 
             {/* Current/Selected Location Display */}
             {pendingLocation && (
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="text-base">📍</span>
-                  {editingLocationId ? 'Current Location' : 'Selected Location'}
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  {t.location}
                 </label>
-                <div className={`p-3 border-2 rounded-lg ${
-                  editingLocationId
-                    ? 'bg-amber-50 border-amber-300'
-                    : 'bg-blue-50 border-blue-300'
-                }`}>
-                  <p className="text-sm text-gray-900 font-medium">
-                    {pendingLocation.address || 'Unnamed Location'}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {pendingLocation.lat.toFixed(6)}, {pendingLocation.lng.toFixed(6)}
+                <div className="p-2 bg-gray-50 border border-gray-300 rounded">
+                  <p className="text-xs text-gray-900 font-medium">
+                    {pendingLocation.address || t.unnamedLocation}
                   </p>
                 </div>
 
-                {/* Change Location button when editing - inline with location display */}
+                {/* Change Location button when editing */}
                 {editingLocationId && (
                   <button
                     onClick={() => {
-                      // Close modal and focus search box to select new location
                       setShowNicknamePrompt(false);
                       setTimeout(() => {
                         if (autocompleteRef.current) {
@@ -316,31 +286,26 @@ export default function InputPanel({
                         }
                       }, 100);
                     }}
-                    className="w-full mt-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    className="w-full mt-2 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300 transition-colors"
                   >
-                    <span className="text-lg">🔄</span>
-                    <span>Change to Different Location</span>
+                    {t.changeLocation}
                   </button>
                 )}
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2">
               <button
                 onClick={handleConfirmNickname}
                 disabled={!isMyOwnLocation && !nickname.trim()}
-                className={`flex-1 px-5 py-3 text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none ${
-                  editingLocationId
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
-                    : 'bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600'
-                }`}
+                className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                {editingLocationId ? '💾 Save Changes' : `✨ ${t.confirm}`}
+                {t.confirm}
               </button>
               <button
                 onClick={handleCancelNickname}
-                className="px-5 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors border-2 border-gray-300"
+                className="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-300 transition-colors"
               >
                 {t.cancel}
               </button>
@@ -354,14 +319,14 @@ export default function InputPanel({
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xl">📍</span>
           <label className="block text-sm font-bold text-gray-900">
-            {isHost ? 'Search for Participant Location' : t.searchForAddress}
+            {isHost ? t.searchForParticipantLocation : t.searchForAddress}
             {!isReady && <span className="text-xs text-gray-500 ml-2">(Loading...)</span>}
           </label>
         </div>
         <input
           ref={autocompleteRef}
           type="text"
-          placeholder={isReady ? (isHost ? "Type address, city, or place name..." : t.startTypingAddress) : "Loading autocomplete..."}
+          placeholder={isReady ? (isHost ? t.typeAddressPlaceholder : t.startTypingAddress) : "Loading autocomplete..."}
           disabled={!isReady}
           className={`w-full px-4 py-3 text-sm text-gray-900 border-2 rounded-md shadow-sm transition-all ${
             !isReady
@@ -374,7 +339,7 @@ export default function InputPanel({
           <p className="text-xs text-gray-700 leading-relaxed">
             {isReady ? (
               isHost
-                ? 'Type to search for a location, or click anywhere on the map to add a location'
+                ? t.typeOrClickMap
                 : <>{t.clickMapToAdd}</>
             ) : (
               <>Waiting for Google Maps to load...</>
@@ -388,7 +353,7 @@ export default function InputPanel({
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">👥</span>
           <h3 className="text-sm font-bold text-gray-900">
-            {isHost ? 'Participant Locations' : t.addedLocations} ({locations.length})
+            {isHost ? t.participantLocations : t.addedLocations} ({locations.length})
           </h3>
         </div>
         <div className="space-y-2 max-h-80 overflow-y-auto">
@@ -396,11 +361,11 @@ export default function InputPanel({
             <div className="text-center py-8 px-4">
               <div className="text-4xl mb-3">📍</div>
               <p className="text-gray-600 text-sm font-medium mb-1">
-                {isHost ? 'No locations added yet' : t.noLocationsYet}
+                {isHost ? t.noParticipantLocationsYet : t.noLocationsYet}
               </p>
               <p className="text-gray-500 text-xs">
                 {isHost
-                  ? 'Search above or click the map to add participant locations'
+                  ? t.searchOrClickMapToAdd
                   : 'Add your starting location using the search box or map'}
               </p>
             </div>
@@ -422,7 +387,7 @@ export default function InputPanel({
                     <div className="flex items-center gap-2">
                       {isOrganizerLocation && <span className="text-lg">👑</span>}
                       <p className={`font-bold truncate ${isOrganizerLocation ? 'text-green-900' : 'text-gray-900'}`}>
-                        {location.name || location.address || 'Unnamed Location'}
+                        {location.name || location.address || t.unnamedLocation}
                       </p>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">

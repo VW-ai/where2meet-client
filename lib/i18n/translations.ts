@@ -53,6 +53,32 @@ export interface Translations {
   customAdd: string;
   added: string;
 
+  // Organizer-specific (InputPanel)
+  addParticipantLocations: string;
+  organizerCanAddMultiple: string;
+  myLocation: string;
+  participantName: string;
+  yourNickname: string;
+  location: string;
+  unnamedLocation: string;
+  changeLocation: string;
+  searchForParticipantLocation: string;
+  typeAddressPlaceholder: string;
+  typeOrClickMap: string;
+  participantLocations: string;
+  noParticipantLocationsYet: string;
+  searchOrClickMapToAdd: string;
+
+  // CandidatesPanel
+  searchVenues: string;
+  venueType: string;
+  searchInCircle: string;
+  on: string;
+  off: string;
+  candidateVenues: string;
+  viewOnMaps: string;
+  save: string;
+
   // Search results tab
   searchPlaceholder: string;
   searchButton: string;
@@ -151,6 +177,32 @@ export const translations: Record<Language, Translations> = {
     customAdd: 'Custom Add',
     added: 'Added',
 
+    // Organizer-specific (InputPanel)
+    addParticipantLocations: '👑 Add Participant Locations',
+    organizerCanAddMultiple: '💡 As organizer, you can add multiple locations for different participants',
+    myLocation: 'My location',
+    participantName: 'Participant Name',
+    yourNickname: 'Your Nickname',
+    location: 'Location',
+    unnamedLocation: 'Unnamed Location',
+    changeLocation: 'Change Location',
+    searchForParticipantLocation: 'Search for Participant Location',
+    typeAddressPlaceholder: 'Type address, city, or place name...',
+    typeOrClickMap: 'Type to search for a location, or click anywhere on the map to add a location',
+    participantLocations: 'Participant Locations',
+    noParticipantLocationsYet: 'No locations added yet',
+    searchOrClickMapToAdd: 'Search above or click the map to add participant locations',
+
+    // CandidatesPanel
+    searchVenues: 'Search Venues',
+    venueType: 'Venue Type',
+    searchInCircle: 'Search in Circle',
+    on: 'On',
+    off: 'Off',
+    candidateVenues: 'Candidate Venues',
+    viewOnMaps: 'View on Maps',
+    save: 'Save',
+
     // Search results tab
     searchPlaceholder: 'e.g., restaurants, cafes, parks',
     searchButton: 'Search',
@@ -246,6 +298,32 @@ export const translations: Record<Language, Translations> = {
     search: '搜索',
     customAdd: '自定义添加',
     added: '已添加',
+
+    // Organizer-specific (InputPanel)
+    addParticipantLocations: '👑 添加参与者位置',
+    organizerCanAddMultiple: '💡 作为组织者，您可以为不同的参与者添加多个位置',
+    myLocation: '我的位置',
+    participantName: '参与者姓名',
+    yourNickname: '您的昵称',
+    location: '位置',
+    unnamedLocation: '未命名位置',
+    changeLocation: '更改位置',
+    searchForParticipantLocation: '搜索参与者位置',
+    typeAddressPlaceholder: '输入地址、城市或地点名称...',
+    typeOrClickMap: '输入搜索位置，或点击地图上的任意位置添加位置',
+    participantLocations: '参与者位置',
+    noParticipantLocationsYet: '尚未添加位置',
+    searchOrClickMapToAdd: '使用上方搜索框或点击地图添加参与者位置',
+
+    // CandidatesPanel
+    searchVenues: '搜索地点',
+    venueType: '地点类型',
+    searchInCircle: '在圆圈内搜索',
+    on: '开',
+    off: '关',
+    candidateVenues: '候选地点',
+    viewOnMaps: '在地图上查看',
+    save: '保存',
 
     // Search results tab
     searchPlaceholder: '例如：餐厅、咖啡馆、公园',

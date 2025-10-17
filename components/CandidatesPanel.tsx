@@ -64,12 +64,12 @@ export default function CandidatesPanel({
 
   return (
     <div className="h-full flex flex-col space-y-3">
-      <h2 className="text-base font-bold text-gray-900">Search Venues</h2>
+      <h2 className="text-base font-bold text-gray-900">{t.searchVenues}</h2>
 
       {/* Search Input */}
       <div className="flex-shrink-0">
         <label className="block text-sm font-semibold text-gray-900 mb-2">
-          Venue Type
+          {t.venueType}
         </label>
         <div className="flex gap-2">
           <input
@@ -107,35 +107,17 @@ export default function CandidatesPanel({
       {/* MEC Circle Filter Toggle */}
       {onOnlyInCircleChange && (
         <div className="flex-shrink-0">
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={onlyInCircle ?? true}
-                onChange={(e) => onOnlyInCircleChange(e.target.checked)}
-                className="w-5 h-5 mt-0.5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🔵</span>
-                  <span className="text-sm font-bold text-gray-900">
-                    {t.onlyInCircle}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-700 leading-relaxed mb-2">
-                  {t.onlyInCircleDescription}
-                </p>
-                <div className="flex items-start gap-1.5 bg-purple-100 border border-purple-300 rounded-md px-2 py-1.5">
-                  <span className="text-xs mt-0.5">💡</span>
-                  <p className="text-xs text-purple-900 leading-relaxed">
-                    <strong>What's this?</strong> The purple circle on the map shows the optimal meeting area.
-                    When checked, search results will only include venues inside this circle.
-                    Uncheck to see all nearby venues.
-                  </p>
-                </div>
-              </div>
-            </label>
-          </div>
+          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 border border-gray-300 rounded-md px-3 py-2">
+            <input
+              type="checkbox"
+              checked={onlyInCircle ?? true}
+              onChange={(e) => onOnlyInCircleChange(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium text-gray-900">
+              {t.searchInCircle}: {onlyInCircle ? t.on : t.off}
+            </span>
+          </label>
         </div>
       )}
 
@@ -143,7 +125,7 @@ export default function CandidatesPanel({
       {candidates.length > 0 && (
         <div className="flex-shrink-0">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Sort By
+            {t.sortBy}
           </label>
           <div className="flex gap-2">
             <button
@@ -154,7 +136,7 @@ export default function CandidatesPanel({
                   : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
-              Rating
+              {t.rating}
             </button>
             <button
               onClick={() => onSortChange('distance')}
@@ -164,7 +146,7 @@ export default function CandidatesPanel({
                   : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
-              Distance
+              {t.distance}
             </button>
             <button
               onClick={() => onSortChange('vote')}
@@ -174,7 +156,7 @@ export default function CandidatesPanel({
                   : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
-              Votes
+              {t.votes}
             </button>
           </div>
         </div>
@@ -183,7 +165,7 @@ export default function CandidatesPanel({
       {/* Candidates List */}
       <div className="flex-1 flex flex-col min-h-0">
         <h3 className="text-sm font-semibold text-gray-900 mb-2">
-          Candidate Venues ({candidates.length})
+          {t.candidateVenues} ({candidates.length})
         </h3>
         <div className="space-y-2 flex-1 overflow-y-auto">
           {candidates.length === 0 ? (
@@ -253,7 +235,7 @@ export default function CandidatesPanel({
                     className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    View on Maps
+                    {t.viewOnMaps}
                   </a>
                   {onSaveCandidate && (
                     <button
@@ -263,7 +245,7 @@ export default function CandidatesPanel({
                       }}
                       className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
                     >
-                      💾 Save
+                      💾 {t.save}
                     </button>
                   )}
                   {onVote && participantId && (

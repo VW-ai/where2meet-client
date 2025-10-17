@@ -88,7 +88,7 @@ export default function VenueSearchBox({ apiKey, onPlaceSelected, disabled }: Ve
         type="text"
         placeholder={isGoogleLoaded ? "Search for a specific venue..." : "Loading..."}
         disabled={disabled || isLoading || !isGoogleLoaded}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
       {isLoading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
