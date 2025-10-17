@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { Location, Circle, Candidate } from '@/types';
 
@@ -18,6 +18,7 @@ interface MapViewProps {
   onTravelModeChange?: (mode: google.maps.TravelMode) => void;
   onCentroidDrag?: (lat: number, lng: number) => void;
   isHost?: boolean;
+  language?: string;
 }
 
 function MapContent({
@@ -34,11 +35,20 @@ function MapContent({
   userLocation,
   onCentroidDrag,
   isHost,
+  onMapReady,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
+  onMapReady?: (map: google.maps.Map) => void;
 }) {
   const map = useMap();
+
+  // Notify parent when map is ready
+  useEffect(() => {
+    if (map && onMapReady) {
+      onMapReady(map);
+    }
+  }, [map, onMapReady]);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
 
@@ -273,32 +283,58 @@ function MapContent({
 }
 
 export default function MapView(props: MapViewProps) {
-  const [defaultCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: San Francisco
+  const [defaultCenter, setDefaultCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: San Francisco
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   // Get user's current location on mount
   useEffect(() => {
+    getUserLocation();
+  }, []);
+
+  const getUserLocation = () => {
     if (typeof window !== 'undefined' && navigator.geolocation) {
+      setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
-          setUserLocation({
+          console.log('📍 User location obtained:', position.coords.latitude, position.coords.longitude);
+          const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          });
+          };
+          setUserLocation(location);
+          setDefaultCenter(location); // Set as default center
+          setIsLocating(false);
         },
         (error) => {
-          console.log('Geolocation error (using default center):', error.message);
+          console.log('⚠️ Geolocation error (using default center):', error.message);
+          setIsLocating(false);
           // Keep default center (San Francisco) if geolocation fails
         },
         {
-          timeout: 5000,
-          maximumAge: 60000, // Cache for 1 minute
+          timeout: 10000,
+          maximumAge: 0, // Don't use cached position, get fresh location
+          enableHighAccuracy: true,
         }
       );
     }
+  };
+
+  const centerOnUserLocation = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.setCenter(userLocation);
+      mapRef.current.setZoom(14);
+    } else {
+      // Get fresh location
+      getUserLocation();
+    }
+  };
+
+  const handleMapReady = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
   }, []);
 
   // Check if Google Maps is loaded
@@ -336,10 +372,14 @@ export default function MapView(props: MapViewProps) {
     props.onTravelModeChange?.(modeEnum);
   }, [isGoogleLoaded, props.onTravelModeChange]);
 
+  // Map language codes for Google Maps API
+  const mapLanguage = props.language === 'zh' ? 'zh-CN' : props.language || 'en';
+
   return (
     <APIProvider
       apiKey={props.apiKey}
       libraries={['places', 'marker']}
+      language={mapLanguage}
     >
       <div className="w-full h-full relative">
         <Map
@@ -351,8 +391,33 @@ export default function MapView(props: MapViewProps) {
           disableDefaultUI={false}
           clickableIcons={false}
         >
-          <MapContent {...props} onRouteInfoChange={setRouteInfo} userLocation={userLocation} />
+          <MapContent
+            {...props}
+            onRouteInfoChange={setRouteInfo}
+            userLocation={userLocation}
+            onMapReady={handleMapReady}
+          />
         </Map>
+
+        {/* Locate Me Button */}
+        <button
+          onClick={centerOnUserLocation}
+          disabled={isLocating}
+          className="absolute bottom-32 right-4 bg-white hover:bg-gray-50 text-gray-700 font-medium p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
+          title="Center map on my location"
+        >
+          {isLocating ? (
+            <svg className="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          )}
+        </button>
 
         {/* Route Info Display with Transportation Mode Selector */}
         {routeInfo && props.selectedCandidate && props.myParticipantId && (

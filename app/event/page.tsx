@@ -14,6 +14,7 @@ import { computeCentroid, computeMinimumEnclosingCircle } from '@/lib/algorithms
 import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import Instructions from '@/components/Instructions';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -25,7 +26,7 @@ function EventPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sseRef = useRef<EventSource | null>(null);
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // Event state
   const [eventId, setEventId] = useState<string | null>(null);
@@ -170,22 +171,26 @@ function EventPageContent() {
       sseRef.current.close();
     }
 
+    console.log('🔌 Connecting to SSE for event:', id);
+
     const eventSource = api.connectSSE(
       id,
       (message) => {
-        console.log('SSE message received:', message);
+        console.log('📡 SSE message received:', message.event, message);
 
         switch (message.event) {
           case 'participant_joined':
-            console.log('Participant joined - reloading event data');
+            console.log('👤 Participant joined - reloading event data');
             loadEventData(id); // Reload all data to show new participant
+            const joinedName = message.data?.name || 'Someone';
+            toast.success(`${joinedName} ${t.joinedTheEvent || 'joined the event'}!`, { duration: 3000 });
             break;
           case 'participant_updated':
-            console.log('Participant updated - reloading event data');
+            console.log('✏️ Participant updated - reloading event data');
             loadEventData(id);
             break;
           case 'candidate_added':
-            console.log('Candidate added - reloading event data');
+            console.log('📍 Candidate added - reloading event data');
             loadEventData(id);
             break;
           case 'candidate_saved':
@@ -223,13 +228,15 @@ function EventPageContent() {
         }
       },
       (error) => {
-        console.error('SSE error:', error);
+        console.error('❌ SSE error:', error);
+        console.log('🔄 Will reconnect in 5 seconds...');
         // Try to reconnect after 5 seconds
         setTimeout(() => connectSSE(id), 5000);
       }
     );
 
     sseRef.current = eventSource;
+    console.log('✅ SSE connection established');
   };
 
   // Convert API candidates to frontend format
@@ -645,6 +652,7 @@ function EventPageContent() {
       {/* Full-Screen Map */}
       <div className="absolute inset-0">
         <MapView
+          key={`map-${language}`}
           apiKey={apiKey}
           locations={locations}
           centroid={centroid}
@@ -658,6 +666,7 @@ function EventPageContent() {
           onTravelModeChange={setTravelMode}
           onCentroidDrag={handleCentroidDrag}
           isHost={role === 'host'}
+          language={language}
         />
       </div>
 
@@ -672,6 +681,7 @@ function EventPageContent() {
             >
               {t.home}
             </button>
+            <LanguageSwitcher />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
               <p className="text-sm font-medium text-gray-700">

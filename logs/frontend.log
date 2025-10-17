@@ -8,26 +8,14 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1028ms
+ ✓ Ready in 1262ms
  ○ Compiling / ...
- ✓ Compiled / in 830ms (615 modules)
- GET / 200 in 1031ms
- ✓ Compiled in 47ms (245 modules)
- GET / 200 in 54ms
- ✓ Compiled /event in 464ms (644 modules)
- GET /event?id=evt_9c1144122ffb4d84 200 in 563ms
- ✓ Compiled in 242ms (658 modules)
- GET /event?id=evt_9c1144122ffb4d84 200 in 62ms
- GET /event?id=evt_9c1144122ffb4d84 200 in 174ms
- ✓ Compiled in 277ms (644 modules)
- ✓ Compiled in 375ms (658 modules)
- ✓ Compiled in 305ms (658 modules)
- ✓ Compiled in 252ms (644 modules)
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- GET /event?id=evt_9c1144122ffb4d84 200 in 254ms
- GET /event?id=evt_9c1144122ffb4d84 200 in 230ms
- GET /event?id=evt_9c1144122ffb4d84 200 in 57ms
- GET /event?id=evt_fc2f4230546b4a0b 200 in 42ms
- GET / 200 in 86ms
- GET / 200 in 37ms
- ✓ Compiled in 241ms (644 modules)
+ ✓ Compiled / in 1836ms (615 modules)
+ GET / 200 in 2099ms
+ ✓ Compiled in 216ms (245 modules)
+ ○ Compiling /event ...
+ ✓ Compiled /event in 923ms (646 modules)
+ GET /event?id=evt_23364956fdfb4bac 200 in 47ms
+ GET / 200 in 38ms
+ GET /event?id=evt_9b6c8fc2c7af4559 200 in 23ms
+ GET /event?id=evt_9b6c8fc2c7af4559&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF85YjZjOGZjMmM3YWY0NTU5IiwiZXhwIjoxNzYzMzExMzEzLCJ0eXBlIjoiam9pbl9saW5rIn0.QHAVL3tPWvkx6QMIpNAqggeUHiqfywXXGewIGZyAIbA 200 in 68ms

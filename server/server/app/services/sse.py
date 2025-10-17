@@ -96,10 +96,14 @@ class SSEManager:
                     # Wait for message with timeout
                     message = await asyncio.wait_for(queue.get(), timeout=30.0)
 
-                    # Format as SSE
+                    # Format as SSE with event type in data payload
+                    # Don't use custom event types - send everything as default "message" type
                     event_type = message.get("type", "message")
-                    data = json.dumps(message.get("data", {}))
-                    yield f"event: {event_type}\ndata: {data}\n\n"
+                    event_data = {
+                        "event": event_type,
+                        "data": message.get("data", {})
+                    }
+                    yield f"data: {json.dumps(event_data)}\n\n"
 
                 except asyncio.TimeoutError:
                     # Send keepalive

@@ -1,48 +1,414 @@
 INFO:     Will watch for changes in these directories: ['/Users/victor/work/where2meet-clientside/where2meet-client/server/server']
 INFO:     Uvicorn running on http://127.0.0.1:5001 (Press CTRL+C to quit)
-INFO:     Started reloader process [55586] using WatchFiles
-Process SpawnProcess-1:
-Traceback (most recent call last):
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
-    self.run()
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 108, in run
-    self._target(*self._args, **self._kwargs)
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
-    target(sockets=sockets)
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/server.py", line 65, in run
-    return asyncio.run(self.serve(sockets=sockets))
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/runners.py", line 44, in run
-    return loop.run_until_complete(main)
-  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/server.py", line 69, in serve
-    await self._serve(sockets)
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/server.py", line 76, in _serve
-    config.load()
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/config.py", line 434, in load
-    self.loaded_app = import_from_string(self.app)
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/importer.py", line 22, in import_from_string
-    raise exc from None
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/uvicorn/importer.py", line 19, in import_from_string
-    module = importlib.import_module(module_str)
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
-  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/app/main.py", line 6, in <module>
-    from app.api.v1 import events, participants, candidates, votes, sse, auth
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/app/api/v1/events.py", line 8, in <module>
-    from app.db.base import get_db
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/app/db/base.py", line 9, in <module>
-    engine = create_engine(
-  File "<string>", line 2, in create_engine
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/sqlalchemy/engine/create.py", line 599, in create_engine
-    dbapi = dbapi_meth(**dbapi_args)
-  File "/Users/victor/work/where2meet-clientside/where2meet-client/server/server/venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/psycopg.py", line 411, in import_dbapi
-    import psycopg
-ModuleNotFoundError: No module named 'psycopg'
+INFO:     Started reloader process [8536] using WatchFiles
+INFO:     Started server process [8540]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:51459 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "OPTIONS /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51483 - "OPTIONS /api/v1/events/evt_23364956fdfb4bac HTTP/1.1" 200 OK
+2025-10-17 12:41:17,107 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-10-17 12:41:17,107 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-17 12:41:17,111 INFO sqlalchemy.engine.Engine select current_schema()
+2025-10-17 12:41:17,111 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-17 12:41:17,114 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-10-17 12:41:17,114 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-10-17 12:41:17,122 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:17,125 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:17,125 INFO sqlalchemy.engine.Engine [generated in 0.00026s] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-17 12:41:17,148 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:17,148 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:17,149 INFO sqlalchemy.engine.Engine [generated in 0.00010s] {'id_1': 'evt_23364956fdfb4bac', 'param_1': 1}
+2025-10-17 12:41:17,151 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:41:17,152 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51483 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "GET /api/v1/events/evt_23364956fdfb4bac HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "OPTIONS /api/v1/events/evt_23364956fdfb4bac/participants HTTP/1.1" 200 OK
+2025-10-17 12:41:17,158 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:17,158 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:17,158 INFO sqlalchemy.engine.Engine [cached since 0.009505s ago] {'id_1': 'evt_23364956fdfb4bac', 'param_1': 1}
+2025-10-17 12:41:17,160 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:41:17,160 INFO sqlalchemy.engine.Engine [generated in 0.00012s] {'event_id_1': 'evt_23364956fdfb4bac'}
+2025-10-17 12:41:17,163 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51482 - "GET /api/v1/events/evt_23364956fdfb4bac/participants HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "OPTIONS /api/v1/events/evt_23364956fdfb4bac/candidates HTTP/1.1" 200 OK
+2025-10-17 12:41:17,167 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:17,167 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:17,167 INFO sqlalchemy.engine.Engine [cached since 0.0183s ago] {'id_1': 'evt_23364956fdfb4bac', 'param_1': 1}
+2025-10-17 12:41:17,169 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:41:17,169 INFO sqlalchemy.engine.Engine [generated in 0.00008s] {'event_id_1': 'evt_23364956fdfb4bac'}
+2025-10-17 12:41:17,172 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51482 - "GET /api/v1/events/evt_23364956fdfb4bac/candidates HTTP/1.1" 200 OK
+2025-10-17 12:41:17,183 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:17,183 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:17,183 INFO sqlalchemy.engine.Engine [cached since 0.03461s ago] {'id_1': 'evt_23364956fdfb4bac', 'param_1': 1}
+2025-10-17 12:41:17,193 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51482 - "GET /api/v1/events/evt_23364956fdfb4bac/stream HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51513 - "OPTIONS /api/v1/events HTTP/1.1" 200 OK
+2025-10-17 12:41:53,035 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,036 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,036 INFO sqlalchemy.engine.Engine [cached since 35.93s ago] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-17 12:41:53,052 INFO sqlalchemy.engine.Engine INSERT INTO events (id, title, category, deadline, visibility, allow_vote, final_decision, custom_center_lat, custom_center_lng, expires_at, deleted_at, created_by) VALUES (%(id)s::VARCHAR, %(title)s::VARCHAR, %(category)s::VARCHAR, %(deadline)s::TIMESTAMP WITH TIME ZONE, %(visibility)s::VARCHAR, %(allow_vote)s, %(final_decision)s::VARCHAR, %(custom_center_lat)s, %(custom_center_lng)s, %(expires_at)s::TIMESTAMP WITH TIME ZONE, %(deleted_at)s::TIMESTAMP WITH TIME ZONE, %(created_by)s::VARCHAR) RETURNING events.created_at
+2025-10-17 12:41:53,053 INFO sqlalchemy.engine.Engine [generated in 0.00041s] {'id': 'evt_9b6c8fc2c7af4559', 'title': '团建', 'category': 'restaurant', 'deadline': None, 'visibility': 'blur', 'allow_vote': True, 'final_decision': None, 'custom_center_lat': None, 'custom_center_lng': None, 'expires_at': datetime.datetime(2025, 11, 16, 16, 41, 53, 47530), 'deleted_at': None, 'created_by': 'user_4895e0117c48457f'}
+2025-10-17 12:41:53,056 INFO sqlalchemy.engine.Engine COMMIT
+2025-10-17 12:41:53,066 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,067 INFO sqlalchemy.engine.Engine SELECT events.id, events.title, events.category, events.deadline, events.visibility, events.allow_vote, events.final_decision, events.custom_center_lat, events.custom_center_lng, events.created_at, events.expires_at, events.deleted_at, events.created_by 
+FROM events 
+WHERE events.id = %(pk_1)s::VARCHAR
+2025-10-17 12:41:53,067 INFO sqlalchemy.engine.Engine [generated in 0.00009s] {'pk_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:41:53,070 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51513 - "POST /api/v1/events HTTP/1.1" 201 Created
+INFO:     127.0.0.1:51513 - "OPTIONS /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51516 - "OPTIONS /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:41:53,160 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,160 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,160 INFO sqlalchemy.engine.Engine [cached since 36.03s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,163 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51516 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:41:53,167 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,167 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,167 INFO sqlalchemy.engine.Engine [cached since 36.04s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+INFO:     127.0.0.1:51516 - "OPTIONS /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:41:53,169 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51513 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:41:53,171 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,171 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,171 INFO sqlalchemy.engine.Engine [cached since 36.04s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,174 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:41:53,174 INFO sqlalchemy.engine.Engine [cached since 36.03s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:41:53,177 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51516 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:41:53,180 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,180 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,180 INFO sqlalchemy.engine.Engine [cached since 36.05s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,182 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:41:53,182 INFO sqlalchemy.engine.Engine [cached since 36.04s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+INFO:     127.0.0.1:51516 - "OPTIONS /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:41:53,184 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:41:53,186 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,186 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,186 INFO sqlalchemy.engine.Engine [cached since 36.06s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,188 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:41:53,188 INFO sqlalchemy.engine.Engine [cached since 36.04s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+INFO:     127.0.0.1:51513 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:41:53,189 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51516 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:41:53,193 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,193 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,193 INFO sqlalchemy.engine.Engine [cached since 36.06s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,195 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:41:53,195 INFO sqlalchemy.engine.Engine [cached since 36.04s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:41:53,200 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51513 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:41:53,218 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,218 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,218 INFO sqlalchemy.engine.Engine [cached since 36.09s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,220 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51513 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/stream HTTP/1.1" 200 OK
+2025-10-17 12:41:53,245 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:41:53,248 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:41:53,248 INFO sqlalchemy.engine.Engine [cached since 36.12s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:41:53,251 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51516 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/stream HTTP/1.1" 200 OK
+2025-10-17 12:42:16,246 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,247 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,248 INFO sqlalchemy.engine.Engine [cached since 59.12s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,256 INFO sqlalchemy.engine.Engine INSERT INTO participants (id, event_id, lat, lng, fuzzy_lat, fuzzy_lng, name) VALUES (%(id)s::VARCHAR, %(event_id)s::VARCHAR, %(lat)s, %(lng)s, %(fuzzy_lat)s, %(fuzzy_lng)s, %(name)s::VARCHAR) RETURNING participants.joined_at
+2025-10-17 12:42:16,256 INFO sqlalchemy.engine.Engine [generated in 0.00022s] {'id': 'p_24bec7499e8f', 'event_id': 'evt_9b6c8fc2c7af4559', 'lat': 40.744679, 'lng': -73.9485424, 'fuzzy_lat': 40.743588497754764, 'fuzzy_lng': -73.9496878833467, 'name': 'You'}
+2025-10-17 12:42:16,261 INFO sqlalchemy.engine.Engine COMMIT
+2025-10-17 12:42:16,265 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,266 INFO sqlalchemy.engine.Engine SELECT participants.id, participants.event_id, participants.lat, participants.lng, participants.fuzzy_lat, participants.fuzzy_lng, participants.name, participants.joined_at 
+FROM participants 
+WHERE participants.id = %(pk_1)s::VARCHAR
+2025-10-17 12:42:16,266 INFO sqlalchemy.engine.Engine [generated in 0.00023s] {'pk_1': 'p_24bec7499e8f'}
+2025-10-17 12:42:16,270 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(pk_1)s::VARCHAR
+2025-10-17 12:42:16,270 INFO sqlalchemy.engine.Engine [generated in 0.00021s] {'pk_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:16,272 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51532 - "POST /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 201 Created
+2025-10-17 12:42:16,285 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,286 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,287 INFO sqlalchemy.engine.Engine [cached since 59.16s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,291 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51532 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:42:16,299 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,299 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,301 INFO sqlalchemy.engine.Engine [cached since 59.18s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,306 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:42:16,310 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,311 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,311 INFO sqlalchemy.engine.Engine [cached since 59.19s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,314 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:16,314 INFO sqlalchemy.engine.Engine [cached since 59.18s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+INFO:     127.0.0.1:51534 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:42:16,316 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51532 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:16,320 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,321 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,322 INFO sqlalchemy.engine.Engine [cached since 59.2s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,326 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:16,326 INFO sqlalchemy.engine.Engine [cached since 59.19s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:16,328 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:42:16,330 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,330 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,330 INFO sqlalchemy.engine.Engine [cached since 59.2s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,332 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:16,332 INFO sqlalchemy.engine.Engine [cached since 59.19s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+INFO:     127.0.0.1:51532 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:16,335 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51534 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:42:16,355 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:16,355 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:16,355 INFO sqlalchemy.engine.Engine [cached since 59.23s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:16,358 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:16,358 INFO sqlalchemy.engine.Engine [cached since 59.21s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:16,361 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51534 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:42:24,112 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:24,112 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:24,112 INFO sqlalchemy.engine.Engine [cached since 67.01s ago] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-17 12:42:24,115 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:42:24,117 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:24,117 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:24,117 INFO sqlalchemy.engine.Engine [cached since 66.99s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+INFO:     127.0.0.1:51544 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+2025-10-17 12:42:24,122 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51546 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:42:24,151 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:24,153 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:24,155 INFO sqlalchemy.engine.Engine [cached since 67.03s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:24,164 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:24,164 INFO sqlalchemy.engine.Engine [cached since 67.03s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:24,176 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51546 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:24,186 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:24,187 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:24,187 INFO sqlalchemy.engine.Engine [cached since 67.06s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:24,191 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:24,191 INFO sqlalchemy.engine.Engine [cached since 67.05s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:24,193 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51546 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:42:24,210 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:24,210 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:24,210 INFO sqlalchemy.engine.Engine [cached since 67.09s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:24,213 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51546 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/stream HTTP/1.1" 200 OK
+2025-10-17 12:42:37,755 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,755 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,755 INFO sqlalchemy.engine.Engine [cached since 80.63s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,759 INFO sqlalchemy.engine.Engine INSERT INTO participants (id, event_id, lat, lng, fuzzy_lat, fuzzy_lng, name) VALUES (%(id)s::VARCHAR, %(event_id)s::VARCHAR, %(lat)s, %(lng)s, %(fuzzy_lat)s, %(fuzzy_lng)s, %(name)s::VARCHAR) RETURNING participants.joined_at
+2025-10-17 12:42:37,759 INFO sqlalchemy.engine.Engine [cached since 21.5s ago] {'id': 'p_e51ea187ec62', 'event_id': 'evt_9b6c8fc2c7af4559', 'lat': 40.7291002, 'lng': -73.9962513, 'fuzzy_lat': 40.72612883904938, 'fuzzy_lng': -73.99204514240739, 'name': 'wayne'}
+2025-10-17 12:42:37,763 INFO sqlalchemy.engine.Engine COMMIT
+2025-10-17 12:42:37,768 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,768 INFO sqlalchemy.engine.Engine SELECT participants.id, participants.event_id, participants.lat, participants.lng, participants.fuzzy_lat, participants.fuzzy_lng, participants.name, participants.joined_at 
+FROM participants 
+WHERE participants.id = %(pk_1)s::VARCHAR
+2025-10-17 12:42:37,768 INFO sqlalchemy.engine.Engine [cached since 21.5s ago] {'pk_1': 'p_e51ea187ec62'}
+2025-10-17 12:42:37,771 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(pk_1)s::VARCHAR
+2025-10-17 12:42:37,771 INFO sqlalchemy.engine.Engine [cached since 21.5s ago] {'pk_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,774 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51552 - "POST /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 201 Created
+2025-10-17 12:42:37,779 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,780 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,780 INFO sqlalchemy.engine.Engine [cached since 80.66s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,782 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51554 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:42:37,786 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,786 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,786 INFO sqlalchemy.engine.Engine [cached since 80.66s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,789 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51552 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+2025-10-17 12:42:37,795 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,795 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,795 INFO sqlalchemy.engine.Engine [cached since 80.67s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,798 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:37,798 INFO sqlalchemy.engine.Engine [cached since 80.66s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,799 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51552 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:37,808 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,808 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,808 INFO sqlalchemy.engine.Engine [cached since 80.68s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,810 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:37,811 INFO sqlalchemy.engine.Engine [cached since 80.67s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,813 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51552 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:42:37,818 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,818 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,818 INFO sqlalchemy.engine.Engine [cached since 80.69s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,822 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,823 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,823 INFO sqlalchemy.engine.Engine [cached since 80.7s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,826 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:37,826 INFO sqlalchemy.engine.Engine [cached since 80.69s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,828 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:42:37,829 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51554 - "GET /api/v1/events/evt_9b6c8fc2c7af4559 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51556 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:37,835 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,835 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,835 INFO sqlalchemy.engine.Engine [cached since 80.71s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,838 INFO sqlalchemy.engine.Engine SELECT participants.id AS participants_id, participants.event_id AS participants_event_id, participants.lat AS participants_lat, participants.lng AS participants_lng, participants.fuzzy_lat AS participants_fuzzy_lat, participants.fuzzy_lng AS participants_fuzzy_lng, participants.name AS participants_name, participants.joined_at AS participants_joined_at 
+FROM participants 
+WHERE participants.event_id = %(event_id_1)s::VARCHAR
+2025-10-17 12:42:37,838 INFO sqlalchemy.engine.Engine [cached since 80.7s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,841 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-10-17 12:42:37,843 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,843 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,844 INFO sqlalchemy.engine.Engine [cached since 80.72s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,846 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:37,846 INFO sqlalchemy.engine.Engine [cached since 80.7s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+INFO:     127.0.0.1:51556 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/participants HTTP/1.1" 200 OK
+2025-10-17 12:42:37,849 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51554 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK
+2025-10-17 12:42:37,863 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-17 12:42:37,864 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.id = %(id_1)s::VARCHAR AND events.deleted_at IS NULL 
+ LIMIT %(param_1)s::INTEGER
+2025-10-17 12:42:37,864 INFO sqlalchemy.engine.Engine [cached since 80.74s ago] {'id_1': 'evt_9b6c8fc2c7af4559', 'param_1': 1}
+2025-10-17 12:42:37,867 INFO sqlalchemy.engine.Engine SELECT candidates.id AS candidates_id, candidates.event_id AS candidates_event_id, candidates.place_id AS candidates_place_id, candidates.name AS candidates_name, candidates.address AS candidates_address, candidates.lat AS candidates_lat, candidates.lng AS candidates_lng, candidates.rating AS candidates_rating, candidates.user_ratings_total AS candidates_user_ratings_total, candidates.distance_from_center AS candidates_distance_from_center, candidates.in_circle AS candidates_in_circle, candidates.opening_hours AS candidates_opening_hours, candidates.added_by AS candidates_added_by, candidates.created_at AS candidates_created_at 
+FROM candidates 
+WHERE candidates.event_id = %(event_id_1)s::VARCHAR ORDER BY candidates.rating DESC
+2025-10-17 12:42:37,867 INFO sqlalchemy.engine.Engine [cached since 80.72s ago] {'event_id_1': 'evt_9b6c8fc2c7af4559'}
+2025-10-17 12:42:37,869 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51554 - "GET /api/v1/events/evt_9b6c8fc2c7af4559/candidates HTTP/1.1" 200 OK

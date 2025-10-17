@@ -369,21 +369,31 @@ export class Where2MeetAPI {
     onMessage: (message: SSEMessage) => void,
     onError?: (error: globalThis.Event) => void
   ): EventSource {
-    const eventSource = new EventSource(
-      `${this.baseUrl}/api/v1/events/${eventId}/stream`
-    );
+    const url = `${this.baseUrl}/api/v1/events/${eventId}/stream`;
+    console.log('🔌 Establishing SSE connection to:', url);
+
+    const eventSource = new EventSource(url);
+
+    eventSource.onopen = () => {
+      console.log('✅ SSE connection opened successfully');
+    };
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         onMessage({ event: data.event || 'message', data: data.data || data });
       } catch (error) {
-        console.error('Failed to parse SSE message:', error);
+        console.error('❌ Failed to parse SSE message:', error, 'Raw data:', event.data);
       }
     };
 
     if (onError) {
       eventSource.onerror = onError as (this: EventSource, ev: globalThis.Event) => any;
+    } else {
+      eventSource.onerror = (error) => {
+        console.error('❌ SSE connection error:', error);
+        console.log('Connection state:', eventSource.readyState === 0 ? 'CONNECTING' : eventSource.readyState === 1 ? 'OPEN' : 'CLOSED');
+      };
     }
 
     return eventSource;

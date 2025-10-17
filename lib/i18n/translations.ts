@@ -120,6 +120,7 @@ export interface Translations {
   pleaseEnterNickname: string;
   centerPointAdjusted: string;
   centerPointReset: string;
+  joinedTheEvent: string;
 
   // Errors
   apiKeyMissing: string;
@@ -247,6 +248,7 @@ export const translations: Record<Language, Translations> = {
     pleaseEnterNickname: 'Please enter a nickname',
     centerPointAdjusted: 'Center point adjusted',
     centerPointReset: 'Center point reset to auto-calculated position',
+    joinedTheEvent: 'joined the event',
 
     // Errors
     apiKeyMissing: 'API Key Missing',
@@ -372,6 +374,7 @@ export const translations: Record<Language, Translations> = {
     pleaseEnterNickname: '请输入昵称',
     centerPointAdjusted: '中心点已调整',
     centerPointReset: '中心点已重置为自动计算位置',
+    joinedTheEvent: '加入了活动',
 
     // Errors
     apiKeyMissing: 'API密钥缺失',
