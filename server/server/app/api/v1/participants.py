@@ -6,7 +6,7 @@ from typing import List
 
 from app.db.base import get_db
 from app.models.event import Event, Participant
-from app.schemas.event import ParticipantCreate, ParticipantResponse
+from app.schemas.event import ParticipantCreate, ParticipantUpdate, ParticipantResponse
 from app.core.security import generate_participant_id
 from app.services.sse import sse_manager
 from app.services.algorithms import apply_fuzzing
@@ -127,6 +127,78 @@ async def get_participants(
         ))
 
     return responses
+
+
+@router.patch("/events/{event_id}/participants/{participant_id}", response_model=ParticipantResponse)
+async def update_participant(
+    event_id: str,
+    participant_id: str,
+    update_data: ParticipantUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update participant location or name.
+    """
+    # Check if event exists
+    event = db.query(Event).filter(
+        Event.id == event_id,
+        Event.deleted_at.is_(None)
+    ).first()
+
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+
+    # Get participant
+    participant = db.query(Participant).filter(
+        Participant.id == participant_id,
+        Participant.event_id == event_id
+    ).first()
+
+    if not participant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Participant not found"
+        )
+
+    # Update fields
+    if update_data.lat is not None and update_data.lng is not None:
+        participant.lat = update_data.lat
+        participant.lng = update_data.lng
+
+        # Apply fuzzing if visibility is blur
+        if event.visibility == "blur":
+            fuzzy_lat, fuzzy_lng = apply_fuzzing(update_data.lat, update_data.lng)
+            participant.fuzzy_lat = fuzzy_lat
+            participant.fuzzy_lng = fuzzy_lng
+        else:
+            participant.fuzzy_lat = update_data.lat
+            participant.fuzzy_lng = update_data.lng
+
+    if update_data.name is not None:
+        participant.name = update_data.name
+
+    db.commit()
+    db.refresh(participant)
+
+    # Broadcast participant updated
+    await sse_manager.broadcast(event_id, "participant_updated", {
+        "participant_id": participant_id,
+        "lat": participant.fuzzy_lat if event.visibility == "blur" else participant.lat,
+        "lng": participant.fuzzy_lng if event.visibility == "blur" else participant.lng,
+        "name": participant.name
+    })
+
+    return ParticipantResponse(
+        id=participant.id,
+        event_id=participant.event_id,
+        lat=participant.fuzzy_lat if event.visibility == "blur" else participant.lat,
+        lng=participant.fuzzy_lng if event.visibility == "blur" else participant.lng,
+        name=participant.name,
+        joined_at=participant.joined_at
+    )
 
 
 @router.delete("/events/{event_id}/participants/{participant_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -24,6 +24,8 @@ class EventResponse(BaseModel):
     visibility: str
     allow_vote: bool
     final_decision: Optional[str]
+    custom_center_lat: Optional[float]
+    custom_center_lng: Optional[float]
     created_at: datetime
     expires_at: Optional[datetime]
 
@@ -43,6 +45,13 @@ class ParticipantCreate(BaseModel):
     """Schema for participant location submission."""
     lat: float = Field(..., ge=-90, le=90)
     lng: float = Field(..., ge=-180, le=180)
+    name: Optional[str] = Field(None, max_length=100)
+
+
+class ParticipantUpdate(BaseModel):
+    """Schema for updating participant location."""
+    lat: Optional[float] = Field(None, ge=-90, le=90)
+    lng: Optional[float] = Field(None, ge=-180, le=180)
     name: Optional[str] = Field(None, max_length=100)
 
 
@@ -84,7 +93,10 @@ class CandidateResponse(BaseModel):
 class CandidateSearch(BaseModel):
     """Schema for candidate search request."""
     keyword: str = Field(..., min_length=1, max_length=100)
-    radius_multiplier: float = Field(default=1.1, ge=1.0, le=2.0)
+    radius_multiplier: float = Field(default=1.0, ge=1.0, le=2.0)  # Search exactly within MEC by default
+    custom_center_lat: Optional[float] = Field(None, ge=-90, le=90)  # Optional custom center point
+    custom_center_lng: Optional[float] = Field(None, ge=-180, le=180)
+    only_in_circle: bool = Field(default=True)  # Filter to only show venues within MEC circle
 
 
 class CandidateAdd(BaseModel):
@@ -122,6 +134,8 @@ class EventUpdate(BaseModel):
     visibility: Optional[str] = Field(None, pattern="^(blur|show)$")
     allow_vote: Optional[bool] = None
     final_decision: Optional[str] = None
+    custom_center_lat: Optional[float] = Field(None, ge=-90, le=90)
+    custom_center_lng: Optional[float] = Field(None, ge=-180, le=180)
 
 
 class EventPublish(BaseModel):

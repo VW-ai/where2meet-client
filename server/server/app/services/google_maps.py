@@ -141,6 +141,252 @@ class GoogleMapsService:
                 "opening_hours": result.get("opening_hours"),
             }
 
+    async def reverse_geocode(self, lat: float, lng: float) -> Optional[Dict[str, Any]]:
+        """
+        Reverse geocode a location to get address information.
+        Used to check if a location is on land or water.
+
+        Args:
+            lat: Latitude
+            lng: Longitude
+
+        Returns:
+            Geocoding result with address components, or None
+        """
+        url = f"{self.base_url}/geocode/json"
+        params = {
+            "latlng": f"{lat},{lng}",
+            "key": self.api_key
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("status") != "OK":
+                return None
+
+            results = data.get("results", [])
+            if not results:
+                return None
+
+            # Return the first (most specific) result
+            result = results[0]
+            return {
+                "formatted_address": result.get("formatted_address"),
+                "address_components": result.get("address_components", []),
+                "types": result.get("types", []),
+                "geometry": result.get("geometry", {}),
+            }
+
+    def is_water_location(self, geocode_result: Optional[Dict[str, Any]]) -> bool:
+        """
+        Check if a geocoding result indicates a water location.
+
+        Args:
+            geocode_result: Result from reverse_geocode
+
+        Returns:
+            True if location is water, False otherwise
+        """
+        if not geocode_result:
+            # No geocoding result means likely water or unpopulated area
+            return True
+
+        types = geocode_result.get("types", [])
+        address = geocode_result.get("formatted_address", "").lower()
+
+        # Check for water-related types
+        water_types = {
+            "natural_feature",
+            "body_of_water",
+            "bay",
+            "sea",
+            "ocean",
+        }
+
+        if any(t in water_types for t in types):
+            return True
+
+        # Check for water keywords in address
+        water_keywords = [
+            "ocean",
+            "sea",
+            "bay",
+            "lake",
+            "river",
+            "strait",
+            "channel",
+            "harbor",
+            "harbour",
+            "sound",
+            "inlet",
+        ]
+
+        if any(keyword in address for keyword in water_keywords):
+            return True
+
+        # CRITICAL: If the ONLY type is "plus_code", it's likely water
+        # Plus codes are generic coordinates, not actual addresses
+        if types == ["plus_code"]:
+            return True
+
+        # Check if it has any proper address components (indicates land)
+        address_components = geocode_result.get("address_components", [])
+
+        # Look for actual street-level addressing (strong indicator of land)
+        has_street = any(
+            "route" in comp.get("types", []) or
+            "street_address" in comp.get("types", []) or
+            "street_number" in comp.get("types", []) or
+            "premise" in comp.get("types", [])
+            for comp in address_components
+        )
+
+        # If it has a street address, it's definitely on land
+        if has_street:
+            return False
+
+        # Check for neighborhood or sublocality (more specific than just "locality")
+        has_neighborhood = any(
+            "neighborhood" in comp.get("types", []) or
+            "sublocality" in comp.get("types", []) or
+            "postal_code" in comp.get("types", [])
+            for comp in address_components
+        )
+
+        # If it has neighborhood-level detail, it's on land
+        if has_neighborhood:
+            return False
+
+        # If we only have broad political areas (city, state, country) but no specific
+        # neighborhood or street, it's likely water
+        has_only_broad_political = any(
+            any(t in ["locality", "administrative_area_level_1", "country"] for t in comp.get("types", []))
+            for comp in address_components
+        )
+
+        # Broad political areas without specific location = water
+        if has_only_broad_political and not has_neighborhood and not has_street:
+            return True
+
+        # Default to water if uncertain
+        return True
+
+    async def find_nearest_land_point(
+        self,
+        lat: float,
+        lng: float,
+        max_radius: float = 5.0
+    ) -> Optional[Dict[str, float]]:
+        """
+        Find the nearest land-based location to a given point.
+        Uses a spiral search pattern to find the closest addressable location.
+
+        Args:
+            lat: Center latitude
+            lng: Center longitude
+            max_radius: Maximum search radius in kilometers (default 5km)
+
+        Returns:
+            Dict with 'lat' and 'lng' of nearest land point, or None
+        """
+        # Try to find any nearby place (establishments are always on land)
+        url = f"{self.base_url}/place/nearbysearch/json"
+        params = {
+            "location": f"{lat},{lng}",
+            "radius": int(max_radius * 1000),  # Convert to meters
+            "type": "establishment",  # Any business/place (always on land)
+            "key": self.api_key
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("status") == "OK" and data.get("results"):
+                # Return the closest result (first in list)
+                first_result = data["results"][0]
+                location = first_result["geometry"]["location"]
+                return {
+                    "lat": location["lat"],
+                    "lng": location["lng"]
+                }
+
+            # If no establishments found, try geocoding nearby points
+            # Try points in 8 directions at increasing distances
+            directions = [
+                (0, 1),    # North
+                (1, 1),    # NE
+                (1, 0),    # East
+                (1, -1),   # SE
+                (0, -1),   # South
+                (-1, -1),  # SW
+                (-1, 0),   # West
+                (-1, 1),   # NW
+            ]
+
+            # Try increasing distances
+            for distance_km in [0.5, 1.0, 2.0, 3.0, 5.0]:
+                # ~111 km per degree of latitude
+                lat_offset = distance_km / 111.0
+
+                for dx, dy in directions:
+                    # Adjust longitude offset by latitude (cosine correction)
+                    import math
+                    lng_offset = distance_km / (111.0 * math.cos(math.radians(lat)))
+
+                    test_lat = lat + (dy * lat_offset)
+                    test_lng = lng + (dx * lng_offset)
+
+                    # Check if this point is on land
+                    geocode = await self.reverse_geocode(test_lat, test_lng)
+                    if geocode and not self.is_water_location(geocode):
+                        return {
+                            "lat": test_lat,
+                            "lng": test_lng
+                        }
+
+            # Could not find land within max_radius
+            return None
+
+    async def snap_to_land(
+        self,
+        lat: float,
+        lng: float,
+        max_radius: float = 5.0
+    ) -> Dict[str, float]:
+        """
+        Ensure a coordinate is on land, not water.
+        If the point is on water, find the nearest land location.
+
+        Args:
+            lat: Latitude
+            lng: Longitude
+            max_radius: Maximum search radius for land (km)
+
+        Returns:
+            Dict with 'lat' and 'lng' (on land)
+        """
+        # Check if current location is on land
+        geocode = await self.reverse_geocode(lat, lng)
+
+        if geocode and not self.is_water_location(geocode):
+            # Already on land
+            return {"lat": lat, "lng": lng}
+
+        # Point is on water, find nearest land
+        land_point = await self.find_nearest_land_point(lat, lng, max_radius)
+
+        if land_point:
+            return land_point
+
+        # Fallback: return original coordinates
+        # (better to have some result than none)
+        return {"lat": lat, "lng": lng}
+
 
 # Singleton instance
 google_maps_service = GoogleMapsService()

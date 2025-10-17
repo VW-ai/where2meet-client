@@ -8,11 +8,63 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1391ms
+ ✓ Ready in 1158ms
  ○ Compiling / ...
- ✓ Compiled / in 832ms (609 modules)
- GET / 200 in 1040ms
- ✓ Compiled in 59ms (242 modules)
- ✓ Compiled /login in 257ms (602 modules)
- GET /login 200 in 406ms
- GET / 200 in 13ms
+ ✓ Compiled / in 800ms (615 modules)
+ GET / 200 in 996ms
+ ✓ Compiled in 43ms (245 modules)
+ ✓ Compiled /event in 429ms (644 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 595ms
+ ✓ Compiled in 248ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 83ms
+ ✓ Compiled in 155ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 44ms
+ ✓ Compiled in 159ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 28ms
+ ✓ Compiled in 141ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 31ms
+ GET /event?id=evt_332ac31817704a4a 200 in 140ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 42ms
+ GET /event?id=evt_332ac31817704a4a 200 in 55ms
+ ✓ Compiled in 307ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 75ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 75ms
+ ✓ Compiled in 195ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 66ms
+ GET /event?id=evt_332ac31817704a4a 200 in 67ms
+ ✓ Compiled in 399ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 101ms
+ GET /event?id=evt_332ac31817704a4a 200 in 105ms
+ ✓ Compiled in 157ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 54ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 54ms
+ ✓ Compiled in 185ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 50ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 51ms
+ ✓ Compiled in 117ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 46ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 47ms
+ ✓ Compiled in 195ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 74ms
+ GET /event?id=evt_332ac31817704a4a 200 in 77ms
+ ✓ Compiled in 226ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 57ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 57ms
+ ✓ Compiled in 455ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 79ms
+ GET /event?id=evt_332ac31817704a4a 200 in 78ms
+ ✓ Compiled in 165ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 54ms
+ GET /event?id=evt_332ac31817704a4a 200 in 54ms
+ ✓ Compiled in 158ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 107ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 107ms
+ ✓ Compiled in 175ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 130ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 128ms
+ ✓ Compiled in 210ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 76ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 76ms
+ ✓ Compiled in 392ms (603 modules)
+ GET /event?id=evt_332ac31817704a4a 200 in 62ms
+ GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 62ms

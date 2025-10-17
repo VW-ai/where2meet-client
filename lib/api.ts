@@ -21,6 +21,8 @@ export interface Event {
   allow_vote: boolean;
   deadline?: string;
   final_decision?: string;
+  custom_center_lat?: number;
+  custom_center_lng?: number;
   created_at: string;
   expires_at: string;
 }
@@ -83,6 +85,9 @@ export interface AddParticipantRequest {
 export interface SearchCandidatesRequest {
   keyword: string;
   radius_multiplier?: number;
+  custom_center_lat?: number;
+  custom_center_lng?: number;
+  only_in_circle?: boolean;
 }
 
 export interface SSEMessage {
@@ -167,6 +172,11 @@ export class Where2MeetAPI {
       throw new Error(errorMessage);
     }
 
+    // Handle 204 No Content responses (no JSON body)
+    if (response.status === 204) {
+      return {} as T;
+    }
+
     return response.json();
   }
 
@@ -240,6 +250,20 @@ export class Where2MeetAPI {
     return this.request<Participant[]>(`/api/v1/events/${eventId}/participants`);
   }
 
+  async updateParticipant(
+    eventId: string,
+    participantId: string,
+    data: Partial<AddParticipantRequest>
+  ): Promise<Participant> {
+    return this.request<Participant>(
+      `/api/v1/events/${eventId}/participants/${participantId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
   async removeParticipant(eventId: string, participantId: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(
       `/api/v1/events/${eventId}/participants/${participantId}`,
@@ -293,6 +317,20 @@ export class Where2MeetAPI {
     return this.request<{ message: string }>(
       `/api/v1/events/${eventId}/candidates/${candidateId}`,
       { method: 'DELETE' }
+    );
+  }
+
+  async saveCandidate(eventId: string, candidateId: string): Promise<Candidate> {
+    return this.request<Candidate>(
+      `/api/v1/events/${eventId}/candidates/${candidateId}/save`,
+      { method: 'POST' }
+    );
+  }
+
+  async unsaveCandidate(eventId: string, candidateId: string): Promise<Candidate> {
+    return this.request<Candidate>(
+      `/api/v1/events/${eventId}/candidates/${candidateId}/unsave`,
+      { method: 'POST' }
     );
   }
 

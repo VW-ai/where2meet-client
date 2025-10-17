@@ -50,30 +50,76 @@ async def search_candidates(
             detail="Need at least one participant to search"
         )
 
-    # Compute MEC
-    locations = [(p.lat, p.lng) for p in participants]
-    mec_result = compute_mec(locations)
+    # Use custom center if provided, otherwise compute MEC
+    if search_data.custom_center_lat is not None and search_data.custom_center_lng is not None:
+        # Use custom center from dragged centroid
+        center_lat = search_data.custom_center_lat
+        center_lng = search_data.custom_center_lng
 
-    if not mec_result:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to compute MEC"
-        )
+        # Still compute MEC to get the radius
+        locations = [(p.lat, p.lng) for p in participants]
+        mec_result = compute_mec(locations)
 
-    center_lat, center_lng, radius_km = mec_result
-    search_radius = radius_km * search_data.radius_multiplier
+        if not mec_result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to compute MEC"
+            )
 
-    # Search Google Places
-    places = await google_maps_service.search_places_nearby(
+        _, _, radius_km = mec_result  # Use MEC radius but custom center
+        print(f"🎯 Using custom center: ({center_lat:.6f}, {center_lng:.6f}) with MEC radius: {radius_km:.2f}km")
+    else:
+        # Compute MEC normally
+        locations = [(p.lat, p.lng) for p in participants]
+        mec_result = compute_mec(locations)
+
+        if not mec_result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to compute MEC"
+            )
+
+        center_lat, center_lng, radius_km = mec_result
+        print(f"📍 Using computed MEC center: ({center_lat:.6f}, {center_lng:.6f}) with radius: {radius_km:.2f}km")
+
+    # Snap center point to land (avoid water)
+    # This ensures the search center is always on land
+    land_center = await google_maps_service.snap_to_land(
         lat=center_lat,
         lng=center_lng,
+        max_radius=min(radius_km * 2, 10.0)  # Search up to 2x MEC radius or 10km
+    )
+
+    # Use land-based center for search
+    search_center_lat = land_center["lat"]
+    search_center_lng = land_center["lng"]
+    search_radius = radius_km * search_data.radius_multiplier
+
+    # Log if center was adjusted
+    if abs(search_center_lat - center_lat) > 0.0001 or abs(search_center_lng - center_lng) > 0.0001:
+        print(f"🌊 Center adjusted from water ({center_lat:.6f}, {center_lng:.6f}) to land ({search_center_lat:.6f}, {search_center_lng:.6f})")
+
+    # Clear previous search results (system-added candidates only)
+    # This ensures each search shows only new results, not accumulated ones
+    db.query(Candidate).filter(
+        Candidate.event_id == event_id,
+        Candidate.added_by == "system"
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    # Search Google Places using land-based center
+    places = await google_maps_service.search_places_nearby(
+        lat=search_center_lat,
+        lng=search_center_lng,
         radius=search_radius,
         keyword=search_data.keyword
     )
 
-    # Store candidates in database
-    candidates = []
+    # Store new candidates in database and track all place IDs
+    place_ids_from_search = []
     for place in places:
+        place_ids_from_search.append(place["place_id"])
+
         # Check if already exists
         existing = db.query(Candidate).filter(
             Candidate.event_id == event_id,
@@ -83,13 +129,13 @@ async def search_candidates(
         if existing:
             continue
 
-        # Calculate distance from center
+        # Calculate distance from land-based center
         distance = haversine_distance(
-            center_lat, center_lng,
+            search_center_lat, search_center_lng,
             place["lat"], place["lng"]
         )
 
-        # Check if in circle
+        # Check if in circle (use original MEC radius)
         in_circle = distance <= radius_km
 
         # Create candidate
@@ -110,26 +156,41 @@ async def search_candidates(
         )
 
         db.add(candidate)
-        candidates.append(candidate)
 
     db.commit()
+
+    # Fetch candidates from this search
+    query = db.query(Candidate).filter(
+        Candidate.event_id == event_id,
+        Candidate.place_id.in_(place_ids_from_search)
+    )
+
+    # Filter to only in-circle candidates if requested
+    if search_data.only_in_circle:
+        query = query.filter(Candidate.in_circle == True)
+
+    candidates = query.all()
 
     # Broadcast candidates added
     await sse_manager.broadcast(event_id, "candidates_added", {
         "count": len(candidates),
-        "keyword": search_data.keyword
+        "keyword": search_data.keyword,
+        "only_in_circle": search_data.only_in_circle
     })
 
     # Get vote counts
     candidate_ids = [c.id for c in candidates]
-    vote_counts = db.query(
-        Vote.candidate_id,
-        func.count(Vote.id).label("vote_count")
-    ).filter(
-        Vote.candidate_id.in_(candidate_ids)
-    ).group_by(Vote.candidate_id).all()
+    vote_count_map = {}
 
-    vote_count_map = {cid: count for cid, count in vote_counts}
+    if candidate_ids:
+        vote_counts = db.query(
+            Vote.candidate_id,
+            func.count(Vote.id).label("vote_count")
+        ).filter(
+            Vote.candidate_id.in_(candidate_ids)
+        ).group_by(Vote.candidate_id).all()
+
+        vote_count_map = {cid: count for cid, count in vote_counts}
 
     # Build responses
     responses = []
@@ -190,14 +251,17 @@ async def get_candidates(
 
     # Get vote counts
     candidate_ids = [c.id for c in candidates]
-    vote_counts = db.query(
-        Vote.candidate_id,
-        func.count(Vote.id).label("vote_count")
-    ).filter(
-        Vote.candidate_id.in_(candidate_ids)
-    ).group_by(Vote.candidate_id).all()
+    vote_count_map = {}
 
-    vote_count_map = {cid: count for cid, count in vote_counts}
+    if candidate_ids:
+        vote_counts = db.query(
+            Vote.candidate_id,
+            func.count(Vote.id).label("vote_count")
+        ).filter(
+            Vote.candidate_id.in_(candidate_ids)
+        ).group_by(Vote.candidate_id).all()
+
+        vote_count_map = {cid: count for cid, count in vote_counts}
 
     # Build responses
     responses = []
@@ -297,6 +361,116 @@ async def add_candidate_manually(
     )
 
 
+@router.post("/events/{event_id}/candidates/{candidate_id}/save", response_model=CandidateResponse)
+async def save_candidate_to_added(
+    event_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Save a search result candidate to the added venues list.
+    Changes added_by from 'system' to 'organizer'.
+    """
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id,
+        Candidate.event_id == event_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Candidate not found"
+        )
+
+    # Change to organizer-added
+    candidate.added_by = "organizer"
+    db.commit()
+    db.refresh(candidate)
+
+    # Broadcast candidate saved
+    await sse_manager.broadcast(event_id, "candidate_saved", {
+        "candidate_id": candidate_id,
+        "name": candidate.name
+    })
+
+    # Get vote count
+    vote_count = db.query(func.count(Vote.id)).filter(
+        Vote.candidate_id == candidate_id
+    ).scalar() or 0
+
+    return CandidateResponse(
+        id=candidate.id,
+        event_id=candidate.event_id,
+        place_id=candidate.place_id,
+        name=candidate.name,
+        address=candidate.address,
+        lat=candidate.lat,
+        lng=candidate.lng,
+        rating=candidate.rating,
+        user_ratings_total=candidate.user_ratings_total,
+        distance_from_center=candidate.distance_from_center,
+        in_circle=candidate.in_circle,
+        opening_hours=candidate.opening_hours,
+        added_by=candidate.added_by,
+        vote_count=vote_count
+    )
+
+
+@router.post("/events/{event_id}/candidates/{candidate_id}/unsave", response_model=CandidateResponse)
+async def unsave_candidate_from_added(
+    event_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Remove a candidate from the added venues list (but keep in database).
+    Changes added_by from 'organizer' to 'system'.
+    """
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id,
+        Candidate.event_id == event_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Candidate not found"
+        )
+
+    # Change back to system-added (search result)
+    candidate.added_by = "system"
+    db.commit()
+    db.refresh(candidate)
+
+    # Broadcast candidate unsaved
+    await sse_manager.broadcast(event_id, "candidate_unsaved", {
+        "candidate_id": candidate_id,
+        "name": candidate.name
+    })
+
+    # Get vote count
+    vote_count = db.query(func.count(Vote.id)).filter(
+        Vote.candidate_id == candidate_id
+    ).scalar() or 0
+
+    return CandidateResponse(
+        id=candidate.id,
+        event_id=candidate.event_id,
+        place_id=candidate.place_id,
+        name=candidate.name,
+        address=candidate.address,
+        lat=candidate.lat,
+        lng=candidate.lng,
+        rating=candidate.rating,
+        user_ratings_total=candidate.user_ratings_total,
+        distance_from_center=candidate.distance_from_center,
+        in_circle=candidate.in_circle,
+        opening_hours=candidate.opening_hours,
+        added_by=candidate.added_by,
+        vote_count=vote_count
+    )
+
+
 @router.delete("/events/{event_id}/candidates/{candidate_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_candidate(
     event_id: str,
@@ -304,7 +478,7 @@ async def remove_candidate(
     db: Session = Depends(get_db)
 ):
     """
-    Remove a candidate from an event.
+    Remove a candidate from an event (permanent delete).
     """
     candidate = db.query(Candidate).filter(
         Candidate.id == candidate_id,

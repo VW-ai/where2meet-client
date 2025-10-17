@@ -185,7 +185,7 @@ export default function Home() {
               </select>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -195,30 +195,6 @@ export default function Home() {
                 />
                 <span className="text-sm text-gray-700">Allow voting</span>
               </label>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">Privacy:</span>
-                <button
-                  onClick={() => setVisibility('blur')}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    visibility === 'blur'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Blur locations
-                </button>
-                <button
-                  onClick={() => setVisibility('show')}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    visibility === 'show'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Show exact
-                </button>
-              </div>
             </div>
           </div>
 

@@ -122,6 +122,10 @@ async def update_event(
         event.allow_vote = update_data.allow_vote
     if update_data.final_decision is not None:
         event.final_decision = update_data.final_decision
+    if update_data.custom_center_lat is not None:
+        event.custom_center_lat = update_data.custom_center_lat
+    if update_data.custom_center_lng is not None:
+        event.custom_center_lng = update_data.custom_center_lng
 
     db.commit()
     db.refresh(event)
@@ -130,7 +134,9 @@ async def update_event(
     await sse_manager.broadcast(event_id, "event_updated", {
         "event_id": event_id,
         "visibility": event.visibility,
-        "allow_vote": event.allow_vote
+        "allow_vote": event.allow_vote,
+        "custom_center_lat": event.custom_center_lat,
+        "custom_center_lng": event.custom_center_lng
     })
 
     return event

@@ -195,7 +195,7 @@ export function computeMinimumEnclosingCircle(locations: Location[]): Circle | n
   if (locations.length === 1) {
     return {
       center: { lat: locations[0].lat, lng: locations[0].lng },
-      radius: 10, // Very small default radius of 10m for single point
+      radius: 0, // Single point has no radius (will be overridden by slider)
     };
   }
 
@@ -205,10 +205,11 @@ export function computeMinimumEnclosingCircle(locations: Location[]): Circle | n
 
   if (!circle) return null;
 
-  // Ensure minimum radius of 10m (very tight circles)
+  // Return the natural MEC radius without minimum constraint
+  // The slider controls the actual search radius independently
   return {
     center: circle.center,
-    radius: Math.max(circle.radius, 10),
+    radius: circle.radius,
   };
 }
 

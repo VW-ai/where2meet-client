@@ -16,6 +16,8 @@ interface MapViewProps {
   myParticipantId?: string;
   travelMode?: google.maps.TravelMode;
   onTravelModeChange?: (mode: google.maps.TravelMode) => void;
+  onCentroidDrag?: (lat: number, lng: number) => void;
+  isHost?: boolean;
 }
 
 function MapContent({
@@ -29,11 +31,26 @@ function MapContent({
   myParticipantId,
   travelMode,
   onRouteInfoChange,
+  userLocation,
+  onCentroidDrag,
+  isHost,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
+  userLocation?: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
+  const [hasInitialCentered, setHasInitialCentered] = useState(false);
+
+  // Center map on user location when obtained (only once, only if no locations added yet)
+  useEffect(() => {
+    if (map && userLocation && !hasInitialCentered && locations.length === 0) {
+      console.log('Centering map on user location:', userLocation);
+      map.setCenter(userLocation);
+      map.setZoom(12); // Reduced from 14 to 12 for less aggressive zoom
+      setHasInitialCentered(true);
+    }
+  }, [map, userLocation, hasInitialCentered, locations.length]);
 
   // Initialize directions renderer
   useEffect(() => {
@@ -43,9 +60,9 @@ function MapContent({
       map: map,
       suppressMarkers: true, // We'll use our own markers
       polylineOptions: {
-        strokeColor: '#10B981',
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
+        strokeColor: '#3B82F6', // Bright blue for better visibility
+        strokeWeight: 6, // Thicker line (increased from 4)
+        strokeOpacity: 1.0, // Fully opaque (increased from 0.8)
       },
     });
 
@@ -147,7 +164,7 @@ function MapContent({
       // For single location without candidates, use moderate zoom instead of fitBounds
       if (locations.length === 1 && candidates.length === 0) {
         map.setCenter(locations[0]);
-        map.setZoom(14); // Closer zoom level for single participant (was 11, now 14 for better view)
+        map.setZoom(12); // Moderate zoom level for single participant - not too aggressive
       } else {
         map.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
       }
@@ -156,9 +173,10 @@ function MapContent({
 
   return (
     <>
-      {/* Participant location markers - Differentiate between own and others */}
+      {/* Participant location markers - Triangle shapes */}
       {locations.map((location) => {
-        const isMyLocation = myParticipantId && location.id === myParticipantId;
+        // "You" marker: either participant's own location OR organizer's marked location
+        const isMyLocation = (myParticipantId && location.id === myParticipantId) || location.name === 'You';
         return (
           <AdvancedMarker
             key={location.id}
@@ -166,14 +184,27 @@ function MapContent({
             title={location.name || location.address || `Participant ${location.id.slice(0, 8)}`}
           >
             <div className="flex flex-col items-center">
-              {/* Marker */}
-              <div
-                className={`w-7 h-7 rounded-full border-3 border-white shadow-lg ${
-                  isMyLocation
-                    ? 'bg-emerald-500 ring-2 ring-emerald-300'
-                    : 'bg-blue-500'
+              {/* Triangle Marker */}
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                className={`drop-shadow-lg ${
+                  isMyLocation ? 'filter drop-shadow-[0_0_4px_rgba(16,185,129,0.6)]' : ''
                 }`}
-              />
+              >
+                {/* Triangle pointing up */}
+                <path
+                  d="M 16 4 L 28 28 L 4 28 Z"
+                  fill={isMyLocation ? '#10b981' : '#3b82f6'}
+                  stroke="white"
+                  strokeWidth="2"
+                />
+                {/* Inner highlight for "you" marker */}
+                {isMyLocation && (
+                  <circle cx="16" cy="22" r="2" fill="white" />
+                )}
+              </svg>
               {/* Name label */}
               {location.name && (
                 <div className={`mt-1 px-2 py-1 rounded text-xs font-semibold shadow-md ${
@@ -189,40 +220,86 @@ function MapContent({
         );
       })}
 
-      {/* Centroid marker (purple) */}
+      {/* Centroid marker (purple) - Draggable for hosts */}
       {centroid && (
-        <AdvancedMarker position={centroid} title="Center Point">
-          <div className="w-8 h-8 bg-purple-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+        <AdvancedMarker
+          position={centroid}
+          title={isHost ? "Center Point (Drag to adjust)" : "Center Point"}
+          draggable={isHost}
+          onDragEnd={(e: google.maps.MapMouseEvent) => {
+            if (e.latLng && onCentroidDrag) {
+              onCentroidDrag(e.latLng.lat(), e.latLng.lng());
+            }
+          }}
+        >
+          <div className={`w-8 h-8 bg-purple-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${isHost ? 'cursor-move hover:scale-110 transition-transform' : ''}`}>
             <div className="w-2 h-2 bg-white rounded-full" />
           </div>
         </AdvancedMarker>
       )}
 
-      {/* Candidate markers (orange/red) */}
-      {candidates.map((candidate) => (
-        <AdvancedMarker
-          key={candidate.id}
-          position={{ lat: candidate.lat, lng: candidate.lng }}
-          title={candidate.name}
-          onClick={() => onCandidateClick(candidate)}
-        >
-          <div
-            className={`w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer transition-transform hover:scale-125 ${
-              selectedCandidate?.id === candidate.id
-                ? 'bg-red-600 scale-125'
-                : 'bg-orange-500'
-            }`}
-          />
-        </AdvancedMarker>
-      ))}
+      {/* Candidate markers - Differentiate user-added (pink squares) from search results (orange circles) */}
+      {candidates.map((candidate) => {
+        const isUserAdded = candidate.addedBy === 'organizer';
+        const isSelected = selectedCandidate?.id === candidate.id;
+
+        return (
+          <AdvancedMarker
+            key={candidate.id}
+            position={{ lat: candidate.lat, lng: candidate.lng }}
+            title={`${candidate.name}${isUserAdded ? ' (User Added)' : ''}`}
+            onClick={() => onCandidateClick(candidate)}
+          >
+            <div
+              className={`border-2 border-white shadow-lg cursor-pointer transition-all duration-200 hover:scale-150 ${
+                isUserAdded
+                  ? 'rounded-sm' // Square for user-added
+                  : 'rounded-full' // Circle for search results
+              } ${
+                isSelected
+                  ? isUserAdded
+                    ? 'w-7 h-7 bg-pink-600 ring-2 ring-pink-300 scale-90'
+                    : 'w-7 h-7 bg-red-600 ring-2 ring-red-300 scale-150'
+                  : isUserAdded
+                  ? 'w-4 h-4 bg-pink-500'
+                  : 'w-4 h-4 bg-orange-500'
+              }`}
+            />
+          </AdvancedMarker>
+        );
+      })}
     </>
   );
 }
 
 export default function MapView(props: MapViewProps) {
-  const [defaultCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // San Francisco
+  const [defaultCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: San Francisco
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+
+  // Get user's current location on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.log('Geolocation error (using default center):', error.message);
+          // Keep default center (San Francisco) if geolocation fails
+        },
+        {
+          timeout: 5000,
+          maximumAge: 60000, // Cache for 1 minute
+        }
+      );
+    }
+  }, []);
 
   // Check if Google Maps is loaded
   useEffect(() => {
@@ -274,7 +351,7 @@ export default function MapView(props: MapViewProps) {
           disableDefaultUI={false}
           clickableIcons={false}
         >
-          <MapContent {...props} onRouteInfoChange={setRouteInfo} />
+          <MapContent {...props} onRouteInfoChange={setRouteInfo} userLocation={userLocation} />
         </Map>
 
         {/* Route Info Display with Transportation Mode Selector */}

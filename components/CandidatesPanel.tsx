@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Candidate, SortMode } from '@/types';
+import EmptyState from './EmptyState';
+import { useTranslation } from '@/lib/i18n';
 
 interface CandidatesPanelProps {
   candidates: Candidate[];
@@ -16,7 +18,10 @@ interface CandidatesPanelProps {
   onVote?: (candidateId: string) => void;
   participantId?: string;
   onRemoveCandidate?: (candidateId: string) => void;
+  onSaveCandidate?: (candidateId: string) => void;
   isHost?: boolean;
+  onlyInCircle?: boolean;
+  onOnlyInCircleChange?: (value: boolean) => void;
 }
 
 export default function CandidatesPanel({
@@ -32,8 +37,23 @@ export default function CandidatesPanel({
   onVote,
   participantId,
   onRemoveCandidate,
+  onSaveCandidate,
   isHost,
+  onlyInCircle,
+  onOnlyInCircleChange,
 }: CandidatesPanelProps) {
+  const selectedRef = useRef<HTMLDivElement>(null);
+  const t = useTranslation();
+
+  // Auto-scroll to selected candidate when it changes
+  useEffect(() => {
+    if (selectedCandidate && selectedRef.current) {
+      selectedRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [selectedCandidate]);
   const getGoogleMapsUrl = (candidate: Candidate, origin?: { lat: number; lng: number }) => {
     const dest = `${candidate.lat},${candidate.lng}`;
     if (origin) {
@@ -63,12 +83,61 @@ export default function CandidatesPanel({
           <button
             onClick={onSearch}
             disabled={isSearching || !keyword.trim()}
-            className="px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className={`px-6 py-2 text-white font-medium rounded-md transition-all ${
+              isSearching
+                ? 'bg-blue-600 animate-pulse cursor-wait'
+                : 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
+            }`}
           >
-            {isSearching ? 'Searching...' : 'Search'}
+            {isSearching ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="font-bold">Searching...</span>
+              </span>
+            ) : (
+              'Search'
+            )}
           </button>
         </div>
       </div>
+
+      {/* MEC Circle Filter Toggle */}
+      {onOnlyInCircleChange && (
+        <div className="flex-shrink-0">
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={onlyInCircle ?? true}
+                onChange={(e) => onOnlyInCircleChange(e.target.checked)}
+                className="w-5 h-5 mt-0.5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🔵</span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {t.onlyInCircle}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-700 leading-relaxed mb-2">
+                  {t.onlyInCircleDescription}
+                </p>
+                <div className="flex items-start gap-1.5 bg-purple-100 border border-purple-300 rounded-md px-2 py-1.5">
+                  <span className="text-xs mt-0.5">💡</span>
+                  <p className="text-xs text-purple-900 leading-relaxed">
+                    <strong>What's this?</strong> The purple circle on the map shows the optimal meeting area.
+                    When checked, search results will only include venues inside this circle.
+                    Uncheck to see all nearby venues.
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+      )}
 
       {/* Sort Controls */}
       {candidates.length > 0 && (
@@ -97,6 +166,16 @@ export default function CandidatesPanel({
             >
               Distance
             </button>
+            <button
+              onClick={() => onSortChange('vote')}
+              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
+                sortMode === 'vote'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+              }`}
+            >
+              Votes
+            </button>
           </div>
         </div>
       )}
@@ -108,13 +187,17 @@ export default function CandidatesPanel({
         </h3>
         <div className="space-y-2 flex-1 overflow-y-auto">
           {candidates.length === 0 ? (
-            <p className="text-gray-700 text-sm italic">
-              No venues found. Add at least 2 locations and search for a venue type.
-            </p>
+            <EmptyState
+              icon="🔍"
+              title="No Venues Found"
+              message="Search by keyword to discover meeting venues in the area"
+              suggestions={["coffee", "restaurant", "park", "cinema", "gym"]}
+            />
           ) : (
             candidates.map((candidate) => (
               <div
                 key={candidate.id}
+                ref={selectedCandidate?.id === candidate.id ? selectedRef : null}
                 onClick={() => onCandidateClick(candidate)}
                 className={`p-3 rounded-md cursor-pointer transition-all ${
                   selectedCandidate?.id === candidate.id
@@ -172,6 +255,17 @@ export default function CandidatesPanel({
                   >
                     View on Maps
                   </a>
+                  {onSaveCandidate && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSaveCandidate(candidate.id);
+                      }}
+                      className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
+                    >
+                      💾 Save
+                    </button>
+                  )}
                   {onVote && participantId && (
                     <button
                       onClick={(e) => {

@@ -18,6 +18,8 @@ class Event(Base):
     visibility = Column(String(20), default="blur")  # blur, show
     allow_vote = Column(Boolean, default=True)
     final_decision = Column(Text, nullable=True)
+    custom_center_lat = Column(Float, nullable=True)  # Custom center point (dragged by host)
+    custom_center_lng = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)

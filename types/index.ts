@@ -20,6 +20,7 @@ export interface Candidate {
   vicinity?: string;
   types?: string[];
   voteCount?: number;
+  addedBy?: string; // 'system' or 'organizer'
 }
 
 export interface Circle {
@@ -27,4 +28,4 @@ export interface Circle {
   radius: number; // in meters
 }
 
-export type SortMode = 'rating' | 'distance';
+export type SortMode = 'rating' | 'distance' | 'vote';
