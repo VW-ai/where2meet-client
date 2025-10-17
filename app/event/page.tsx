@@ -703,12 +703,31 @@ function EventPageContent() {
               </div>
             )}
             {role === 'host' && (
-              <>
+              <div className="flex items-center gap-4 relative">
+                {/* Animated Arrow & Instruction - Left of Share Button */}
+                {participants.length <= 1 && (
+                  <div className="flex items-center gap-2 animate-pulse">
+                    <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold whitespace-nowrap">
+                      Invite people with a link!
+                    </div>
+                    <svg className="w-8 h-8 text-blue-600 transform -translate-x-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 relative group"
+                  title="Share this link to invite people to join your event"
                 >
-                  {t.shareLink}
+                  <span className="flex items-center gap-2">
+                    🔗 {t.shareLink}
+                  </span>
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
+                    Share link to invite participants
+                  </div>
                 </button>
                 {selectedCandidate && !event.final_decision && (
                   <button
@@ -718,7 +737,7 @@ function EventPageContent() {
                     {t.publishDecision}
                   </button>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>

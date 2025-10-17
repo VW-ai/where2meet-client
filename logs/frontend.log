@@ -25,3 +25,9 @@
  ✓ Compiled in 209ms (660 modules)
  ✓ Compiled in 152ms (660 modules)
  ✓ Compiled in 461ms (660 modules)
+ ✓ Compiled in 934ms (660 modules)
+ GET /event?id=evt_155a58edc8624d8f 200 in 258ms
+ GET / 200 in 30ms
+ GET /event?id=evt_7dedc3c698304402 200 in 23ms
+ ✓ Compiled in 858ms (660 modules)
+ GET /event?id=evt_7dedc3c698304402 200 in 111ms
