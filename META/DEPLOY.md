@@ -205,31 +205,369 @@ ALLOWED_ORIGINS=https://where2meet.vercel.app,https://your-domain.com,https://ww
 
 ### Step 5: Configure Custom Domain
 
-**In Vercel**:
-1. Go to Project Settings → Domains
-2. Add your domain: `your-domain.com`
-3. Add `www.your-domain.com` (optional)
-4. Vercel will provide DNS records
+You have two options: **Direct DNS** (simpler) or **Cloudflare** (better performance + security).
 
-**In your domain registrar** (e.g., Namecheap, GoDaddy):
-1. Add the DNS records Vercel provides:
+---
+
+#### **Option A: Direct DNS Configuration (Simpler)**
+
+**Step 5.1: Add Domain in Vercel**
+
+1. Go to your project in [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click on your project (`where2meet`)
+3. Go to **Settings** → **Domains**
+4. Click **Add Domain**
+5. Enter your domain: `your-domain.com`
+6. Click **Add**
+
+Vercel will check if you own the domain and show you DNS records to add.
+
+**Step 5.2: Get DNS Records from Vercel**
+
+Vercel will display something like:
+
+```
+🔹 For root domain (your-domain.com):
+Type: A
+Name: @ (or leave blank)
+Value: 76.76.21.21
+
+🔹 For www subdomain (www.your-domain.com):
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com
+```
+
+**Step 5.3: Add DNS Records to Your Domain Registrar**
+
+Choose your registrar:
+
+<details>
+<summary><b>Namecheap</b></summary>
+
+1. Log in to [Namecheap](https://www.namecheap.com/)
+2. Go to **Domain List** → Select your domain
+3. Click **Manage**
+4. Go to **Advanced DNS** tab
+5. Click **Add New Record**
+
+**Add Root Domain (A Record)**:
+- Type: `A Record`
+- Host: `@`
+- Value: `76.76.21.21`
+- TTL: `Automatic`
+
+**Add WWW Subdomain (CNAME Record)**:
+- Type: `CNAME Record`
+- Host: `www`
+- Value: `cname.vercel-dns.com`
+- TTL: `Automatic`
+
+6. Click **Save All Changes**
+
+</details>
+
+<details>
+<summary><b>GoDaddy</b></summary>
+
+1. Log in to [GoDaddy](https://www.godaddy.com/)
+2. Go to **My Products** → **Domains**
+3. Click **DNS** next to your domain
+
+**Add Root Domain (A Record)**:
+- Type: `A`
+- Name: `@`
+- Value: `76.76.21.21`
+- TTL: `1 Hour`
+
+**Add WWW Subdomain (CNAME Record)**:
+- Type: `CNAME`
+- Name: `www`
+- Value: `cname.vercel-dns.com`
+- TTL: `1 Hour`
+
+4. Click **Save**
+
+</details>
+
+<details>
+<summary><b>Google Domains</b></summary>
+
+1. Log in to [Google Domains](https://domains.google.com/)
+2. Select your domain
+3. Go to **DNS** section
+
+**Add Root Domain (A Record)**:
+- Resource name: `@`
+- Resource type: `A`
+- TTL: `1h`
+- IPv4 address: `76.76.21.21`
+
+**Add WWW Subdomain (CNAME Record)**:
+- Resource name: `www`
+- Resource type: `CNAME`
+- TTL: `1h`
+- Canonical name: `cname.vercel-dns.com`
+
+4. Click **Save**
+
+</details>
+
+<details>
+<summary><b>Cloudflare (Direct DNS - without proxy)</b></summary>
+
+1. Log in to [Cloudflare](https://dash.cloudflare.com/)
+2. Select your domain
+3. Go to **DNS** → **Records**
+4. Click **Add record**
+
+**Add Root Domain (A Record)**:
+- Type: `A`
+- Name: `@`
+- IPv4 address: `76.76.21.21`
+- Proxy status: **DNS only** (gray cloud)
+- TTL: `Auto`
+
+**Add WWW Subdomain (CNAME Record)**:
+- Type: `CNAME`
+- Name: `www`
+- Target: `cname.vercel-dns.com`
+- Proxy status: **DNS only** (gray cloud)
+- TTL: `Auto`
+
+5. Click **Save**
+
+</details>
+
+**Step 5.4: Wait for DNS Propagation**
+
+- **Normal wait time**: 5-60 minutes
+- **Maximum**: Up to 48 hours (rare)
+
+**Check propagation status**:
+```bash
+# Check if DNS is propagating
+nslookup your-domain.com
+
+# Or use online tools:
+# https://dnschecker.org/
+```
+
+**Step 5.5: Verify in Vercel**
+
+1. Go back to Vercel → Settings → Domains
+2. Wait for green checkmark ✅ next to your domain
+3. Click **Visit** to test your live site
+
+---
+
+#### **Option B: Cloudflare Configuration (Recommended for Production)**
+
+**Why Cloudflare?**
+- ✅ Free SSL certificates
+- ✅ Global CDN (faster loading worldwide)
+- ✅ DDoS protection
+- ✅ Better caching
+- ✅ Analytics
+- ✅ Firewall rules
+
+**Step 5.1: Sign Up for Cloudflare**
+
+1. Go to [Cloudflare](https://dash.cloudflare.com/sign-up)
+2. Create a free account
+3. Verify your email
+
+**Step 5.2: Add Your Domain to Cloudflare**
+
+1. In Cloudflare dashboard, click **Add a Site**
+2. Enter your domain: `your-domain.com`
+3. Click **Add site**
+4. Select the **Free** plan
+5. Click **Continue**
+
+**Step 5.3: Review DNS Records**
+
+Cloudflare will scan your existing DNS records.
+
+1. **Delete** any old records (if migrating)
+2. Click **Continue**
+
+**Step 5.4: Add Vercel DNS Records**
+
+Click **Add record** for each:
+
+**Root Domain (A Record)**:
+```
+Type: A
+Name: @ (or your-domain.com)
+IPv4 address: 76.76.21.21
+Proxy status: Proxied (🟠 orange cloud)
+TTL: Auto
+```
+
+**WWW Subdomain (CNAME)**:
+```
+Type: CNAME
+Name: www
+Target: cname.vercel-dns.com
+Proxy status: Proxied (🟠 orange cloud)
+TTL: Auto
+```
+
+**Important**: Enable **Proxied** (orange cloud 🟠) for CDN benefits!
+
+**Step 5.5: Update Nameservers at Your Registrar**
+
+Cloudflare will show you 2 nameservers like:
+```
+lara.ns.cloudflare.com
+paul.ns.cloudflare.com
+```
+
+Now update your registrar:
+
+<details>
+<summary><b>Namecheap</b></summary>
+
+1. Go to [Namecheap](https://www.namecheap.com/) → Domain List
+2. Click **Manage** next to your domain
+3. Find **Nameservers** section
+4. Select **Custom DNS**
+5. Add Cloudflare's 2 nameservers:
    ```
-   Type: A
-   Name: @
-   Value: 76.76.21.21
-
-   Type: CNAME
-   Name: www
-   Value: cname.vercel-dns.com
+   lara.ns.cloudflare.com
+   paul.ns.cloudflare.com
    ```
+6. Click **Save** (green checkmark)
+7. Wait 5-60 minutes
 
-2. Wait for DNS propagation (5-60 minutes)
+</details>
 
-**Alternative - Use Cloudflare**:
-1. Add your domain to Cloudflare (free)
-2. Update nameservers at your registrar
-3. Add DNS records pointing to Vercel
-4. Enable "Proxied" status for CDN benefits
+<details>
+<summary><b>GoDaddy</b></summary>
+
+1. Go to [GoDaddy](https://www.godaddy.com/) → My Products
+2. Click **DNS** next to your domain
+3. Scroll to **Nameservers** section
+4. Click **Change**
+5. Select **I'll use my own nameservers**
+6. Add Cloudflare's 2 nameservers:
+   ```
+   lara.ns.cloudflare.com
+   paul.ns.cloudflare.com
+   ```
+7. Click **Save**
+8. Wait 5-60 minutes
+
+</details>
+
+<details>
+<summary><b>Google Domains</b></summary>
+
+1. Go to [Google Domains](https://domains.google.com/)
+2. Select your domain
+3. Go to **DNS** section
+4. Click **Custom name servers**
+5. Add Cloudflare's 2 nameservers:
+   ```
+   lara.ns.cloudflare.com
+   paul.ns.cloudflare.com
+   ```
+6. Click **Save**
+7. Wait 5-60 minutes
+
+</details>
+
+**Step 5.6: Wait for Nameserver Update**
+
+- Cloudflare will send you an email when nameservers are active
+- Usually takes **5-60 minutes**
+- Can take up to **24 hours**
+
+**Step 5.7: Configure SSL in Cloudflare**
+
+1. Go to **SSL/TLS** → **Overview**
+2. Set encryption mode to: **Full (strict)**
+3. Go to **SSL/TLS** → **Edge Certificates**
+4. Enable these settings:
+   - ✅ **Always Use HTTPS**: ON
+   - ✅ **Automatic HTTPS Rewrites**: ON
+   - ✅ **Minimum TLS Version**: TLS 1.2
+   - ✅ **Opportunistic Encryption**: ON
+   - ✅ **TLS 1.3**: ON
+
+**Step 5.8: Configure Caching (Optional)**
+
+1. Go to **Caching** → **Configuration**
+2. Set **Caching Level**: Standard
+3. Set **Browser Cache TTL**: 4 hours
+4. Enable **Always Online**: ON
+
+**Step 5.9: Add Domain to Vercel**
+
+1. Go to Vercel → Settings → Domains
+2. Add domain: `your-domain.com`
+3. Vercel will auto-verify (green checkmark ✅)
+
+**Step 5.10: Test Your Setup**
+
+```bash
+# Check if domain resolves
+nslookup your-domain.com
+
+# Test SSL
+curl -I https://your-domain.com
+
+# Check Cloudflare is working
+curl -I https://your-domain.com | grep -i "cf-"
+# You should see "cf-ray" header
+```
+
+Visit your site: `https://your-domain.com` 🎉
+
+---
+
+#### **Troubleshooting**
+
+**Problem: "Domain is not yet configured"**
+- Wait 5-60 minutes for DNS propagation
+- Check DNS records are correct
+- Use [dnschecker.org](https://dnschecker.org/) to verify
+
+**Problem: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH"**
+- In Cloudflare: Set SSL/TLS to "Full (strict)"
+- Wait 5-10 minutes for changes to propagate
+
+**Problem: "Too many redirects"**
+- In Cloudflare: Change SSL/TLS from "Flexible" to "Full (strict)"
+
+**Problem: "This site can't be reached"**
+- Verify nameservers are updated (can take 24h)
+- Check DNS records point to correct IPs
+- Clear browser cache (Ctrl+Shift+Delete)
+
+**Problem: WWW not working**
+- Make sure you added the CNAME record for `www`
+- In Cloudflare: Enable "Proxied" for www record
+
+---
+
+#### **Summary: Which Option to Choose?**
+
+| Feature | Direct DNS | Cloudflare |
+|---------|-----------|------------|
+| Setup Time | 5-30 min | 30-60 min |
+| Difficulty | Easy | Medium |
+| Speed | Good | Excellent (CDN) |
+| SSL | Vercel SSL | Cloudflare SSL |
+| DDoS Protection | Basic | Advanced |
+| Caching | Vercel | Cloudflare + Vercel |
+| Analytics | Vercel only | Both |
+| Cost | Free | Free |
+
+**Recommendation**:
+- **Hobby/Test**: Direct DNS (Option A)
+- **Production/Real Users**: Cloudflare (Option B)
 
 ---
 

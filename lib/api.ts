@@ -367,7 +367,7 @@ export class Where2MeetAPI {
   connectSSE(
     eventId: string,
     onMessage: (message: SSEMessage) => void,
-    onError?: (error: Event) => void
+    onError?: (error: globalThis.Event) => void
   ): EventSource {
     const eventSource = new EventSource(
       `${this.baseUrl}/api/v1/events/${eventId}/stream`

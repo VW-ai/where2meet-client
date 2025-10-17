@@ -19,3 +19,6 @@
  ✓ Compiled in 242ms (658 modules)
  GET /event?id=evt_9c1144122ffb4d84 200 in 62ms
  GET /event?id=evt_9c1144122ffb4d84 200 in 174ms
+ ✓ Compiled in 277ms (644 modules)
+ ✓ Compiled in 375ms (658 modules)
+ ✓ Compiled in 305ms (658 modules)

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Toaster, toast } from 'sonner';
@@ -21,7 +21,7 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
 });
 
-export default function EventPage() {
+function EventPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sseRef = useRef<EventSource | null>(null);
@@ -1033,5 +1033,41 @@ export default function EventPage() {
         hasCandidates={candidates.length > 0}
       />
     </main>
+  );
+}
+
+// Loading component for Suspense fallback
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="text-center">
+        <div className="mb-6 relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-24 h-24 bg-blue-500/20 rounded-full animate-ping"></div>
+          </div>
+          <div className="relative flex items-center justify-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-4xl">📍</span>
+            </div>
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Where2Meet</h2>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+        <p className="text-gray-600 font-medium">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main export with Suspense boundary
+export default function EventPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EventPageContent />
+    </Suspense>
   );
 }
