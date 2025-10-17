@@ -167,6 +167,8 @@ __pycache__/
    python3 -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
 
+   **Note**: The project uses `psycopg` (psycopg3) for PostgreSQL connectivity, which is compatible with Python 3.13.
+
 6. **Deploy** - Render will automatically build and deploy
    - Copy your backend URL (e.g., `https://where2meet-api.onrender.com`)
 

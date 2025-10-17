@@ -13,8 +13,8 @@ from app.core.config import settings
 # this is the Alembic Config object
 config = context.config
 
-# Override sqlalchemy.url from settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Override sqlalchemy.url from settings (use psycopg3)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://"))
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
