@@ -23,3 +23,11 @@
  ✓ Compiled in 375ms (658 modules)
  ✓ Compiled in 305ms (658 modules)
  ✓ Compiled in 252ms (644 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /event?id=evt_9c1144122ffb4d84 200 in 254ms
+ GET /event?id=evt_9c1144122ffb4d84 200 in 230ms
+ GET /event?id=evt_9c1144122ffb4d84 200 in 57ms
+ GET /event?id=evt_fc2f4230546b4a0b 200 in 42ms
+ GET / 200 in 86ms
+ GET / 200 in 37ms
+ ✓ Compiled in 241ms (644 modules)
