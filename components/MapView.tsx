@@ -36,10 +36,12 @@ function MapContent({
   onCentroidDrag,
   isHost,
   onMapReady,
+  onLocationClick,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
   onMapReady?: (map: google.maps.Map) => void;
+  onLocationClick?: (lat: number, lng: number) => void;
 }) {
   const map = useMap();
 
@@ -185,13 +187,17 @@ function MapContent({
     <>
       {/* Participant location markers - Triangle shapes */}
       {locations.map((location) => {
-        // "You" marker: either participant's own location OR organizer's marked location
-        const isMyLocation = (myParticipantId && location.id === myParticipantId) || location.name === 'You';
+        // "You" marker: only for participant's own location
+        const isMyLocation = myParticipantId && location.id === myParticipantId;
         return (
           <AdvancedMarker
             key={location.id}
             position={{ lat: location.lat, lng: location.lng }}
             title={location.name || location.address || `Participant ${location.id.slice(0, 8)}`}
+            onClick={() => {
+              // Center map on this participant's location when clicked
+              onLocationClick?.(location.lat, location.lng);
+            }}
           >
             <div className="flex flex-col items-center">
               {/* Triangle Marker */}
@@ -333,6 +339,13 @@ export default function MapView(props: MapViewProps) {
     }
   };
 
+  const centerOnLocation = useCallback((lat: number, lng: number) => {
+    if (mapRef.current) {
+      mapRef.current.setCenter({ lat, lng });
+      mapRef.current.setZoom(14);
+    }
+  }, []);
+
   const handleMapReady = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
@@ -396,6 +409,7 @@ export default function MapView(props: MapViewProps) {
             onRouteInfoChange={setRouteInfo}
             userLocation={userLocation}
             onMapReady={handleMapReady}
+            onLocationClick={centerOnLocation}
           />
         </Map>
 

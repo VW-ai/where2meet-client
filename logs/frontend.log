@@ -19,3 +19,9 @@
  GET / 200 in 38ms
  GET /event?id=evt_9b6c8fc2c7af4559 200 in 23ms
  GET /event?id=evt_9b6c8fc2c7af4559&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF85YjZjOGZjMmM3YWY0NTU5IiwiZXhwIjoxNzYzMzExMzEzLCJ0eXBlIjoiam9pbl9saW5rIn0.QHAVL3tPWvkx6QMIpNAqggeUHiqfywXXGewIGZyAIbA 200 in 68ms
+ ✓ Compiled in 703ms (660 modules)
+ ✓ Compiled in 282ms (660 modules)
+ ✓ Compiled in 179ms (660 modules)
+ ✓ Compiled in 209ms (660 modules)
+ ✓ Compiled in 152ms (660 modules)
+ ✓ Compiled in 461ms (660 modules)

@@ -904,6 +904,7 @@ function EventPageContent() {
                         <div className="space-y-2">
                           {sortedCandidates()
                             .filter(c => c.addedBy === 'organizer')
+                            .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
                             .map((candidate) => (
                               <div
                                 key={candidate.id}
