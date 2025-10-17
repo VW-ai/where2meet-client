@@ -31,12 +31,17 @@ class Settings(BaseSettings):
     @field_validator('ALLOWED_ORIGINS', mode='before')
     @classmethod
     def parse_allowed_origins(cls, v):
-        """Parse ALLOWED_ORIGINS from JSON string if needed."""
+        """Parse ALLOWED_ORIGINS from JSON string or comma-separated string."""
         if isinstance(v, str):
+            # Try JSON first
             try:
                 return json.loads(v)
             except json.JSONDecodeError:
-                return [v]
+                # If JSON fails, try comma-separated values
+                if ',' in v:
+                    return [origin.strip() for origin in v.split(',') if origin.strip()]
+                else:
+                    return [v.strip()]
         return v
 
     # Data Lifecycle

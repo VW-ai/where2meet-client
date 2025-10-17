@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Candidate, SortMode } from '@/types';
 import EmptyState from './EmptyState';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n/LanguageProvider';
 
 interface CandidatesPanelProps {
   candidates: Candidate[];
@@ -43,7 +43,7 @@ export default function CandidatesPanel({
   onOnlyInCircleChange,
 }: CandidatesPanelProps) {
   const selectedRef = useRef<HTMLDivElement>(null);
-  const t = useTranslation();
+  const { t } = useTranslation();
 
   // Auto-scroll to selected candidate when it changes
   useEffect(() => {

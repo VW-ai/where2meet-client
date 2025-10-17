@@ -68,6 +68,7 @@ export interface Translations {
   participantLocations: string;
   noParticipantLocationsYet: string;
   searchOrClickMapToAdd: string;
+  typeToSearchNewAddress: string;
 
   // CandidatesPanel
   searchVenues: string;
@@ -117,6 +118,8 @@ export interface Translations {
   tryDifferentSearch: string;
   pleaseSelectVenue: string;
   pleaseEnterNickname: string;
+  centerPointAdjusted: string;
+  centerPointReset: string;
 
   // Errors
   apiKeyMissing: string;
@@ -192,6 +195,7 @@ export const translations: Record<Language, Translations> = {
     participantLocations: 'Participant Locations',
     noParticipantLocationsYet: 'No locations added yet',
     searchOrClickMapToAdd: 'Search above or click the map to add participant locations',
+    typeToSearchNewAddress: 'Type to search for a new address',
 
     // CandidatesPanel
     searchVenues: 'Search Venues',
@@ -241,6 +245,8 @@ export const translations: Record<Language, Translations> = {
     tryDifferentSearch: 'Try a different search term.',
     pleaseSelectVenue: 'Please select a venue first',
     pleaseEnterNickname: 'Please enter a nickname',
+    centerPointAdjusted: 'Center point adjusted',
+    centerPointReset: 'Center point reset to auto-calculated position',
 
     // Errors
     apiKeyMissing: 'API Key Missing',
@@ -314,6 +320,7 @@ export const translations: Record<Language, Translations> = {
     participantLocations: '参与者位置',
     noParticipantLocationsYet: '尚未添加位置',
     searchOrClickMapToAdd: '使用上方搜索框或点击地图添加参与者位置',
+    typeToSearchNewAddress: '输入以搜索新地址',
 
     // CandidatesPanel
     searchVenues: '搜索地点',
@@ -363,6 +370,8 @@ export const translations: Record<Language, Translations> = {
     tryDifferentSearch: '尝试不同的搜索词。',
     pleaseSelectVenue: '请先选择一个地点',
     pleaseEnterNickname: '请输入昵称',
+    centerPointAdjusted: '中心点已调整',
+    centerPointReset: '中心点已重置为自动计算位置',
 
     // Errors
     apiKeyMissing: 'API密钥缺失',

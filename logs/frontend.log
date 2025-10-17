@@ -8,109 +8,14 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1158ms
+ ✓ Ready in 1028ms
  ○ Compiling / ...
- ✓ Compiled / in 800ms (615 modules)
- GET / 200 in 996ms
- ✓ Compiled in 43ms (245 modules)
- ✓ Compiled /event in 429ms (644 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 595ms
- ✓ Compiled in 248ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 83ms
- ✓ Compiled in 155ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 44ms
- ✓ Compiled in 159ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 28ms
- ✓ Compiled in 141ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 31ms
- GET /event?id=evt_332ac31817704a4a 200 in 140ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 42ms
- GET /event?id=evt_332ac31817704a4a 200 in 55ms
- ✓ Compiled in 307ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 75ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 75ms
- ✓ Compiled in 195ms (603 modules)
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 66ms
- GET /event?id=evt_332ac31817704a4a 200 in 67ms
- ✓ Compiled in 399ms (603 modules)
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 101ms
- GET /event?id=evt_332ac31817704a4a 200 in 105ms
- ✓ Compiled in 157ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 54ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 54ms
- ✓ Compiled in 185ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 50ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 51ms
- ✓ Compiled in 117ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 46ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 47ms
- ✓ Compiled in 195ms (603 modules)
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 74ms
- GET /event?id=evt_332ac31817704a4a 200 in 77ms
- ✓ Compiled in 226ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 57ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 57ms
- ✓ Compiled in 455ms (603 modules)
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 79ms
- GET /event?id=evt_332ac31817704a4a 200 in 78ms
- ✓ Compiled in 165ms (603 modules)
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 54ms
- GET /event?id=evt_332ac31817704a4a 200 in 54ms
- ✓ Compiled in 158ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 107ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 107ms
- ✓ Compiled in 175ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 130ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 128ms
- ✓ Compiled in 210ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 76ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 76ms
- ✓ Compiled in 392ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 62ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 62ms
- ✓ Compiled in 444ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 99ms
- ✓ Compiled in 360ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 93ms
- ✓ Compiled in 423ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 113ms
- ✓ Compiled in 327ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 105ms
- ✓ Compiled in 411ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 47ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 59ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 17ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 18ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 17ms
- GET /event?id=evt_332ac31817704a4a&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF8zMzJhYzMxODE3NzA0YTRhIiwiZXhwIjoxNzYzMjY2MTE0LCJ0eXBlIjoiam9pbl9saW5rIn0.2D_VM7O8t3Z-3_Fj8nDHgXe6pkp-BRYIH_JRKW_TA00 200 in 19ms
- ✓ Compiled in 361ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 66ms
- ✓ Compiled in 372ms (589 modules)
- ✓ Compiled in 205ms (589 modules)
- ✓ Compiled in 84ms (589 modules)
- ✓ Compiled in 290ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 67ms
- ✓ Compiled in 88ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 40ms
- ✓ Compiled in 98ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 83ms
- ✓ Compiled in 164ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 43ms
- ✓ Compiled in 120ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 50ms
- ✓ Compiled in 193ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 56ms
- ✓ Compiled in 109ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 70ms
- ✓ Compiled in 154ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 59ms
- ✓ Compiled in 152ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 44ms
- ✓ Compiled in 163ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 43ms
- ✓ Compiled in 140ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 41ms
- ✓ Compiled in 166ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 41ms
- ✓ Compiled in 103ms (603 modules)
- GET /event?id=evt_332ac31817704a4a 200 in 43ms
+ ✓ Compiled / in 830ms (615 modules)
+ GET / 200 in 1031ms
+ ✓ Compiled in 47ms (245 modules)
+ GET / 200 in 54ms
+ ✓ Compiled /event in 464ms (644 modules)
+ GET /event?id=evt_9c1144122ffb4d84 200 in 563ms
+ ✓ Compiled in 242ms (658 modules)
+ GET /event?id=evt_9c1144122ffb4d84 200 in 62ms
+ GET /event?id=evt_9c1144122ffb4d84 200 in 174ms

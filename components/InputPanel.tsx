@@ -23,6 +23,7 @@ export default function InputPanel({
 }: InputPanelProps) {
   const { t } = useTranslation();
   const autocompleteRef = useRef<HTMLInputElement>(null);
+  const modalAutocompleteRef = useRef<HTMLInputElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [nickname, setNickname] = useState('');
   const [showNicknamePrompt, setShowNicknamePrompt] = useState(false);
@@ -30,6 +31,7 @@ export default function InputPanel({
   const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
   const [isMyOwnLocation, setIsMyOwnLocation] = useState(false);
   const autocompleteInstance = useRef<google.maps.places.Autocomplete | null>(null);
+  const modalAutocompleteInstance = useRef<google.maps.places.Autocomplete | null>(null);
 
   // Check if organizer already has their own location
   const organizerHasOwnLocation = isHost && locations.some(loc => loc.name === 'You');
@@ -121,6 +123,65 @@ export default function InputPanel({
       }
     };
   }, [onAddLocation]);
+
+  // Initialize modal autocomplete for editing
+  useEffect(() => {
+    if (!editingLocationId || !modalAutocompleteRef.current) return;
+
+    let timeoutId: NodeJS.Timeout;
+    let isCleanedUp = false;
+
+    const initModalAutocomplete = () => {
+      if (isCleanedUp) return;
+
+      if (!window.google?.maps?.places?.Autocomplete) {
+        timeoutId = setTimeout(initModalAutocomplete, 100);
+        return;
+      }
+
+      try {
+        if (!modalAutocompleteRef.current) return;
+
+        const ac = new google.maps.places.Autocomplete(modalAutocompleteRef.current, {
+          fields: ['place_id', 'geometry', 'name', 'formatted_address', 'types'],
+          types: ['geocode', 'establishment'],
+        });
+
+        modalAutocompleteInstance.current = ac;
+
+        ac.addListener('place_changed', () => {
+          const place = ac.getPlace();
+
+          if (!place.geometry?.location) {
+            console.warn('No geometry found for selected place');
+            return;
+          }
+
+          // Update pending location with new address
+          setPendingLocation({
+            id: pendingLocation?.id || Date.now().toString(),
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            address: place.formatted_address || place.name,
+            name: pendingLocation?.name,
+          });
+        });
+      } catch (error) {
+        console.error('Error initializing modal autocomplete:', error);
+      }
+    };
+
+    initModalAutocomplete();
+
+    return () => {
+      isCleanedUp = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (modalAutocompleteInstance.current) {
+        google.maps.event.clearInstanceListeners(modalAutocompleteInstance.current);
+        modalAutocompleteInstance.current = null;
+      }
+    };
+  }, [editingLocationId, pendingLocation?.id, pendingLocation?.name]);
 
   const handleConfirmNickname = () => {
     // For organizer's own location, nickname is optional (will be "You")
@@ -269,27 +330,27 @@ export default function InputPanel({
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   {t.location}
                 </label>
-                <div className="p-2 bg-gray-50 border border-gray-300 rounded">
-                  <p className="text-xs text-gray-900 font-medium">
-                    {pendingLocation.address || t.unnamedLocation}
-                  </p>
-                </div>
-
-                {/* Change Location button when editing */}
-                {editingLocationId && (
-                  <button
-                    onClick={() => {
-                      setShowNicknamePrompt(false);
-                      setTimeout(() => {
-                        if (autocompleteRef.current) {
-                          autocompleteRef.current.focus();
-                        }
-                      }, 100);
-                    }}
-                    className="w-full mt-2 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300 transition-colors"
-                  >
-                    {t.changeLocation}
-                  </button>
+                {editingLocationId ? (
+                  // Editable address search when editing
+                  <div>
+                    <input
+                      ref={modalAutocompleteRef}
+                      type="text"
+                      placeholder={pendingLocation.address || t.typeAddressPlaceholder}
+                      defaultValue=""
+                      className="w-full px-3 py-2 text-sm text-gray-900 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      💡 {t.typeToSearchNewAddress}
+                    </p>
+                  </div>
+                ) : (
+                  // Static display when adding new location
+                  <div className="p-2 bg-gray-50 border border-gray-300 rounded">
+                    <p className="text-xs text-gray-900 font-medium">
+                      {pendingLocation.address || t.unnamedLocation}
+                    </p>
+                  </div>
                 )}
               </div>
             )}
