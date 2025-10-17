@@ -383,7 +383,7 @@ export class Where2MeetAPI {
     };
 
     if (onError) {
-      eventSource.onerror = onError;
+      eventSource.onerror = onError as (this: EventSource, ev: Event) => any;
     }
 
     return eventSource;
