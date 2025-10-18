@@ -110,3 +110,38 @@ WHERE events.created_by = %(created_by_1)s::VARCHAR AND events.deleted_at IS NUL
 2025-10-18 12:16:52,899 INFO sqlalchemy.engine.Engine [cached since 0.01427s ago] {'created_by_1': 'user_4895e0117c48457f'}
 2025-10-18 12:16:52,901 INFO sqlalchemy.engine.Engine ROLLBACK
 INFO:     127.0.0.1:49652 - "GET /api/v1/auth/me/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53724 - "OPTIONS /api/v1/auth/me HTTP/1.1" 200 OK
+2025-10-18 12:44:45,109 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-18 12:44:45,111 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-18 12:44:45,112 INFO sqlalchemy.engine.Engine [cached since 1942s ago] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-18 12:44:45,133 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:53724 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53755 - "OPTIONS /api/v1/auth/me/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53756 - "OPTIONS /api/v1/auth/me/events HTTP/1.1" 200 OK
+2025-10-18 12:44:57,571 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-18 12:44:57,571 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-18 12:44:57,571 INFO sqlalchemy.engine.Engine [cached since 1955s ago] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-18 12:44:57,573 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.created_by = %(created_by_1)s::VARCHAR AND events.deleted_at IS NULL ORDER BY events.created_at DESC
+2025-10-18 12:44:57,573 INFO sqlalchemy.engine.Engine [cached since 850.4s ago] {'created_by_1': 'user_4895e0117c48457f'}
+2025-10-18 12:44:57,576 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:53755 - "GET /api/v1/auth/me/events HTTP/1.1" 200 OK
+2025-10-18 12:44:57,578 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-10-18 12:44:57,579 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.email AS users_email, users.hashed_password AS users_hashed_password, users.name AS users_name, users.created_at AS users_created_at, users.last_login AS users_last_login, users.is_active AS users_is_active 
+FROM users 
+WHERE users.id = %(id_1)s::VARCHAR AND users.is_active = true 
+ LIMIT %(param_1)s::INTEGER
+2025-10-18 12:44:57,579 INFO sqlalchemy.engine.Engine [cached since 1955s ago] {'id_1': 'user_4895e0117c48457f', 'param_1': 1}
+2025-10-18 12:44:57,580 INFO sqlalchemy.engine.Engine SELECT events.id AS events_id, events.title AS events_title, events.category AS events_category, events.deadline AS events_deadline, events.visibility AS events_visibility, events.allow_vote AS events_allow_vote, events.final_decision AS events_final_decision, events.custom_center_lat AS events_custom_center_lat, events.custom_center_lng AS events_custom_center_lng, events.created_at AS events_created_at, events.expires_at AS events_expires_at, events.deleted_at AS events_deleted_at, events.created_by AS events_created_by 
+FROM events 
+WHERE events.created_by = %(created_by_1)s::VARCHAR AND events.deleted_at IS NULL ORDER BY events.created_at DESC
+2025-10-18 12:44:57,580 INFO sqlalchemy.engine.Engine [cached since 850.4s ago] {'created_by_1': 'user_4895e0117c48457f'}
+2025-10-18 12:44:57,581 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:53756 - "GET /api/v1/auth/me/events HTTP/1.1" 200 OK

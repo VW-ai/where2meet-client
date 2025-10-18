@@ -72,3 +72,8 @@
  GET /my-events 200 in 16ms
  GET / 200 in 85ms
  ✓ Compiled in 365ms (653 modules)
+ GET / 200 in 285ms
+ GET /icon 200 in 299ms
+ ✓ Compiled /my-events in 147ms (408 modules)
+ GET /my-events 200 in 219ms
+ GET / 200 in 36ms
