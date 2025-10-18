@@ -764,6 +764,9 @@ function EventPageContent() {
                 onUpdateLocation={handleUpdateLocation}
                 myParticipantId={participantId || undefined}
                 isHost={role === 'host'}
+                selectedCandidate={selectedCandidate}
+                routeFromParticipantId={routeFromParticipantId}
+                onRouteFromChange={setRouteFromParticipantId}
               />
             </div>
           </div>
@@ -826,53 +829,6 @@ function EventPageContent() {
                     </p>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Route Viewer - Select participant to view route from */}
-            {selectedCandidate && participants.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
-                <h3 className="text-sm font-bold text-gray-900 mb-2">
-                  View Route From
-                </h3>
-                <select
-                  value={routeFromParticipantId || ''}
-                  onChange={(e) => setRouteFromParticipantId(e.target.value || null)}
-                  className="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 font-medium text-gray-900"
-                >
-                  <option value="">Select participant...</option>
-                  {participants.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name || `Participant ${p.id.slice(0, 8)}`}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-600 mt-2">
-                  Choose a participant to see their route to "{selectedCandidate.name}"
-                </p>
-              </div>
-            )}
-
-            {/* Participants Management */}
-            {participants.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
-                <h3 className="text-sm font-bold text-gray-900 mb-2">
-                  {t.participantsCount} ({participants.length})
-                </h3>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {participants.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between text-xs bg-white border border-gray-200 rounded px-2 py-1">
-                      <span className="truncate font-semibold text-gray-900">{p.name || `Participant ${p.id.slice(0, 8)}`}</span>
-                      <button
-                        onClick={() => handleRemoveLocation(p.id)}
-                        className="ml-2 text-red-600 hover:text-red-800 font-bold text-base"
-                        title={t.removeParticipant}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </>

@@ -70,9 +70,15 @@ function MapContent({
   useEffect(() => {
     if (!map) return;
 
+    // Create a hidden div for directions panel to prevent Google Maps from creating visible UI
+    const hiddenPanel = document.createElement('div');
+    hiddenPanel.style.display = 'none';
+
     const renderer = new google.maps.DirectionsRenderer({
       map: map,
       suppressMarkers: true, // We'll use our own markers
+      suppressInfoWindows: true, // Suppress the default info windows
+      panel: hiddenPanel, // Use hidden div to capture any panel output
       polylineOptions: {
         strokeColor: '#3B82F6', // Bright blue for better visibility
         strokeWeight: 6, // Thicker line (increased from 4)
@@ -84,6 +90,9 @@ function MapContent({
 
     return () => {
       renderer.setMap(null);
+      if (hiddenPanel.parentNode) {
+        hiddenPanel.parentNode.removeChild(hiddenPanel);
+      }
     };
   }, [map]);
 

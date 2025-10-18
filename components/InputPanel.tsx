@@ -11,6 +11,9 @@ interface InputPanelProps {
   onUpdateLocation: (id: string, location: Partial<Location>) => void;
   myParticipantId?: string;
   isHost?: boolean;
+  selectedCandidate?: any; // Show route button only when venue is selected
+  routeFromParticipantId?: string | null;
+  onRouteFromChange?: (participantId: string | null) => void;
 }
 
 export default function InputPanel({
@@ -20,6 +23,9 @@ export default function InputPanel({
   onUpdateLocation,
   myParticipantId,
   isHost,
+  selectedCandidate,
+  routeFromParticipantId,
+  onRouteFromChange,
 }: InputPanelProps) {
   const { t } = useTranslation();
   const autocompleteRef = useRef<HTMLInputElement>(null);
@@ -456,6 +462,19 @@ export default function InputPanel({
                     </p>
                   </div>
                   <div className="flex gap-2 ml-3 flex-shrink-0">
+                    {selectedCandidate && onRouteFromChange && (
+                      <button
+                        onClick={() => onRouteFromChange(routeFromParticipantId === location.id ? null : location.id)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-sm ${
+                          routeFromParticipantId === location.id
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        }`}
+                        title={routeFromParticipantId === location.id ? 'Hide route' : `View route from ${location.name || 'this location'}`}
+                      >
+                        🗺️
+                      </button>
+                    )}
                     {canEdit && (
                       <button
                         onClick={() => handleEditLocation(location.id)}

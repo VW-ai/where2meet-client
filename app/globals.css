@@ -25,3 +25,19 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Hide Google Maps Directions Panel and other default UI elements */
+.gm-style .gm-style-iw-c,
+.gm-style .gm-style-iw-d,
+.adp,
+.adp-directions,
+.adp-summary,
+.adp-substep,
+.gm-style .gm-style-iw-t::after {
+  display: none !important;
+}
+
+/* Ensure directions renderer doesn't create visible elements */
+.gm-style-pbc {
+  display: none !important;
+}
