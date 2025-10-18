@@ -130,6 +130,44 @@ export interface Translations {
   // Map confirmation
   addLocationAt: string;
   clickOkToConfirm: string;
+
+  // Home page
+  tagline: string;
+  createNewEvent: string;
+  eventTitle: string;
+  eventTitlePlaceholder: string;
+  lookingFor: string;
+  allowVoting: string;
+  creatingEvent: string;
+  createEventGetLink: string;
+  alreadyHaveLink: string;
+  joinExistingEvent: string;
+  addLocationsFeature: string;
+  addLocationsDescription: string;
+  findVenuesFeature: string;
+  findVenuesDescription: string;
+  voteTogetherFeature: string;
+  voteTogetherDescription: string;
+  pleaseEnterTitle: string;
+  hello: string;
+  myEvents: string;
+  logOut: string;
+  logIn: string;
+  signUp: string;
+
+  // Category options
+  categoryRestaurant: string;
+  categoryCafe: string;
+  categoryBar: string;
+  categoryPark: string;
+  categoryBasketballCourt: string;
+  categoryGym: string;
+  categoryLibrary: string;
+  categoryMovieTheater: string;
+
+  // Join link errors
+  invalidJoinLink: string;
+  invalidJoinLinkFormat: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -258,6 +296,44 @@ export const translations: Record<Language, Translations> = {
     // Map confirmation
     addLocationAt: 'Add location at:',
     clickOkToConfirm: 'Click OK to confirm this location.',
+
+    // Home page
+    tagline: 'Find the perfect meeting place for your group',
+    createNewEvent: 'Create New Event',
+    eventTitle: 'Event Title *',
+    eventTitlePlaceholder: 'e.g., Team Lunch, Weekend Hangout',
+    lookingFor: 'Looking for',
+    allowVoting: 'Allow voting',
+    creatingEvent: 'Creating Event...',
+    createEventGetLink: 'Create Event & Get Link',
+    alreadyHaveLink: 'Already have a link?',
+    joinExistingEvent: 'Join Existing Event',
+    addLocationsFeature: 'Add Locations',
+    addLocationsDescription: 'Everyone adds their location anonymously',
+    findVenuesFeature: 'Find Venues',
+    findVenuesDescription: 'Smart algorithm finds the perfect middle ground',
+    voteTogetherFeature: 'Vote Together',
+    voteTogetherDescription: 'Let everyone vote on their favorite spot',
+    pleaseEnterTitle: 'Please enter an event title',
+    hello: 'Hello',
+    myEvents: 'My Events',
+    logOut: 'Log Out',
+    logIn: 'Log In',
+    signUp: 'Sign Up',
+
+    // Category options
+    categoryRestaurant: 'Restaurant',
+    categoryCafe: 'Café',
+    categoryBar: 'Bar',
+    categoryPark: 'Park',
+    categoryBasketballCourt: 'Basketball Court',
+    categoryGym: 'Gym',
+    categoryLibrary: 'Library',
+    categoryMovieTheater: 'Movie Theater',
+
+    // Join link errors
+    invalidJoinLink: 'Invalid join link: missing event ID',
+    invalidJoinLinkFormat: 'Invalid join link format',
   },
   zh: {
     // Header
@@ -384,6 +460,44 @@ export const translations: Record<Language, Translations> = {
     // Map confirmation
     addLocationAt: '在此添加位置：',
     clickOkToConfirm: '点击确定以确认此位置。',
+
+    // Home page
+    tagline: '为您的团队找到完美的聚会地点',
+    createNewEvent: '创建新活动',
+    eventTitle: '活动标题 *',
+    eventTitlePlaceholder: '例如：团队午餐、周末聚会',
+    lookingFor: '寻找',
+    allowVoting: '允许投票',
+    creatingEvent: '创建活动中...',
+    createEventGetLink: '创建活动并获取链接',
+    alreadyHaveLink: '已有链接？',
+    joinExistingEvent: '加入现有活动',
+    addLocationsFeature: '添加位置',
+    addLocationsDescription: '每个人匿名添加自己的位置',
+    findVenuesFeature: '查找地点',
+    findVenuesDescription: '智能算法找到完美的中间地带',
+    voteTogetherFeature: '一起投票',
+    voteTogetherDescription: '让每个人都为自己喜欢的地点投票',
+    pleaseEnterTitle: '请输入活动标题',
+    hello: '你好',
+    myEvents: '我的活动',
+    logOut: '登出',
+    logIn: '登录',
+    signUp: '注册',
+
+    // Category options
+    categoryRestaurant: '餐厅',
+    categoryCafe: '咖啡馆',
+    categoryBar: '酒吧',
+    categoryPark: '公园',
+    categoryBasketballCourt: '篮球场',
+    categoryGym: '健身房',
+    categoryLibrary: '图书馆',
+    categoryMovieTheater: '电影院',
+
+    // Join link errors
+    invalidJoinLink: '无效的加入链接：缺少活动ID',
+    invalidJoinLinkFormat: '无效的链接格式',
   },
 };
 

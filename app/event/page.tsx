@@ -15,6 +15,7 @@ import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '
 import { useTranslation } from '@/lib/i18n';
 import Instructions from '@/components/Instructions';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Logo from '@/components/Logo';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -47,7 +48,7 @@ function EventPageContent() {
   const [sortMode, setSortMode] = useState<SortMode>('rating');
   const [keyword, setKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [searchRadius, setSearchRadius] = useState(500); // Absolute radius in meters: 500m to 4000m
+  const [searchRadius, setSearchRadius] = useState(2000); // Absolute radius in meters: 500m to 4000m (default: 2km)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
 
   // UI state
@@ -59,6 +60,7 @@ function EventPageContent() {
   const [nickname, setNickname] = useState('');
   const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
+  const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
 
   // Initialize event from URL
   useEffect(() => {
@@ -120,8 +122,8 @@ function EventPageContent() {
   // Ensure searchRadius is valid on mount (fix for old cached values)
   useEffect(() => {
     if (searchRadius < 500 || searchRadius > 4000) {
-      console.warn('Invalid searchRadius detected:', searchRadius, '- resetting to 500m');
-      setSearchRadius(500);
+      console.warn('Invalid searchRadius detected:', searchRadius, '- resetting to 2km');
+      setSearchRadius(2000);
     }
   }, []); // Only run once on mount
 
@@ -605,24 +607,22 @@ function EventPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
-          {/* Animated logo/icon */}
+          {/* Animated logo */}
           <div className="mb-6 relative">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 bg-blue-500/20 rounded-full animate-ping"></div>
+              <div className="w-32 h-32 bg-blue-500/10 rounded-full animate-ping"></div>
             </div>
-            <div className="relative flex items-center justify-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-4xl">📍</span>
-              </div>
+            <div className="relative flex items-center justify-center scale-150 animate-pulse">
+              <Logo size="lg" showText={false} />
             </div>
           </div>
 
           {/* Loading text */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Where2Meet</h2>
+          <Logo size="lg" showText={true} className="mb-4 justify-center" />
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
           <p className="text-gray-600 font-medium">{t.loadingEvent}</p>
         </div>
@@ -662,6 +662,7 @@ function EventPageContent() {
           onMapClick={handleMapClick}
           onCandidateClick={setSelectedCandidate}
           myParticipantId={participantId || undefined}
+          routeFromParticipantId={routeFromParticipantId}
           travelMode={travelMode}
           onTravelModeChange={setTravelMode}
           onCentroidDrag={handleCentroidDrag}
@@ -676,10 +677,10 @@ function EventPageContent() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/')}
-              className="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+              className="hover:opacity-80 transition-opacity"
               title="Go back to main page"
             >
-              {t.home}
+              <Logo size="md" showText={false} />
             </button>
             <LanguageSwitcher />
             <div>
@@ -825,6 +826,30 @@ function EventPageContent() {
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Route Viewer - Select participant to view route from */}
+            {selectedCandidate && participants.length > 0 && (
+              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
+                <h3 className="text-sm font-bold text-gray-900 mb-2">
+                  View Route From
+                </h3>
+                <select
+                  value={routeFromParticipantId || ''}
+                  onChange={(e) => setRouteFromParticipantId(e.target.value || null)}
+                  className="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 font-medium text-gray-900"
+                >
+                  <option value="">Select participant...</option>
+                  {participants.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name || `Participant ${p.id.slice(0, 8)}`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-600 mt-2">
+                  Choose a participant to see their route to "{selectedCandidate.name}"
+                </p>
               </div>
             )}
 
@@ -1023,7 +1048,9 @@ function EventPageContent() {
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-3">{t.enterNickname}</h3>
             <p className="text-sm text-gray-700 mb-4">
-              {t.nicknameVisible}
+              {role === 'host'
+                ? 'This will be visible to all participants and displayed on the map.'
+                : t.nicknameVisible}
             </p>
             <input
               type="text"
@@ -1073,19 +1100,17 @@ function LoadingFallback() {
       <div className="text-center">
         <div className="mb-6 relative">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 bg-blue-500/20 rounded-full animate-ping"></div>
+            <div className="w-32 h-32 bg-blue-500/10 rounded-full animate-ping"></div>
           </div>
-          <div className="relative flex items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-4xl">📍</span>
-            </div>
+          <div className="relative flex items-center justify-center scale-150 animate-pulse">
+            <Logo size="lg" showText={false} />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Where2Meet</h2>
+        <Logo size="lg" showText={true} className="mb-4 justify-center" />
         <div className="flex items-center justify-center gap-2 mb-4">
           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
         </div>
         <p className="text-gray-600 font-medium">Loading...</p>
       </div>

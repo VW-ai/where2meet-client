@@ -8,26 +8,67 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1262ms
+ ✓ Ready in 1113ms
  ○ Compiling / ...
- ✓ Compiled / in 1836ms (615 modules)
- GET / 200 in 2099ms
- ✓ Compiled in 216ms (245 modules)
- ○ Compiling /event ...
- ✓ Compiled /event in 923ms (646 modules)
- GET /event?id=evt_23364956fdfb4bac 200 in 47ms
- GET / 200 in 38ms
- GET /event?id=evt_9b6c8fc2c7af4559 200 in 23ms
- GET /event?id=evt_9b6c8fc2c7af4559&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF85YjZjOGZjMmM3YWY0NTU5IiwiZXhwIjoxNzYzMzExMzEzLCJ0eXBlIjoiam9pbl9saW5rIn0.QHAVL3tPWvkx6QMIpNAqggeUHiqfywXXGewIGZyAIbA 200 in 68ms
- ✓ Compiled in 703ms (660 modules)
- ✓ Compiled in 282ms (660 modules)
- ✓ Compiled in 179ms (660 modules)
- ✓ Compiled in 209ms (660 modules)
- ✓ Compiled in 152ms (660 modules)
- ✓ Compiled in 461ms (660 modules)
- ✓ Compiled in 934ms (660 modules)
- GET /event?id=evt_155a58edc8624d8f 200 in 258ms
- GET / 200 in 30ms
- GET /event?id=evt_7dedc3c698304402 200 in 23ms
- ✓ Compiled in 858ms (660 modules)
- GET /event?id=evt_7dedc3c698304402 200 in 111ms
+ ✓ Compiled / in 996ms (617 modules)
+ GET / 200 in 1207ms
+ ✓ Compiled in 56ms (246 modules)
+ GET / 200 in 50ms
+ GET / 200 in 56ms
+ ✓ Compiled in 593ms (642 modules)
+ GET / 200 in 434ms
+ GET / 200 in 10ms
+ ✓ Compiled /icon in 480ms (471 modules)
+ GET /icon?e103414ff69c1dd8 200 in 622ms
+ ✓ Compiled in 483ms (869 modules)
+ GET / 200 in 314ms
+ GET / 200 in 14ms
+ ✓ Compiled in 489ms (871 modules)
+ GET / 200 in 264ms
+ GET / 200 in 60ms
+ ✓ Compiled in 207ms (650 modules)
+ GET / 200 in 105ms
+ ✓ Compiled in 67ms (873 modules)
+ ✓ Compiled in 408ms (649 modules)
+ ✓ Compiled in 212ms (649 modules)
+ ✓ Compiled in 453ms (649 modules)
+ ✓ Compiled in 432ms (649 modules)
+ ✓ Compiled in 38ms (247 modules)
+ ✓ Compiled in 297ms (651 modules)
+ ✓ Compiled in 384ms (637 modules)
+ ✓ Compiled in 71ms (637 modules)
+ ✓ Compiled in 132ms (637 modules)
+ ✓ Compiled in 467ms (651 modules)
+ ✓ Compiled in 45ms (248 modules)
+ ✓ Compiled in 113ms (651 modules)
+ ✓ Compiled in 42ms (248 modules)
+ ✓ Compiled in 94ms (651 modules)
+ ✓ Compiled in 103ms (651 modules)
+ ✓ Compiled in 567ms (651 modules)
+ ✓ Compiled in 38ms (248 modules)
+ ✓ Compiled in 114ms (651 modules)
+ ✓ Compiled in 285ms (637 modules)
+ ✓ Compiled in 116ms (637 modules)
+ ✓ Compiled in 98ms (637 modules)
+ ✓ Compiled in 113ms (651 modules)
+ ✓ Compiled /my-events in 474ms (644 modules)
+ GET /my-events 200 in 560ms
+ GET /my-events 200 in 12ms
+ GET /my-events 200 in 28ms
+ GET /icon 200 in 221ms
+ GET /my-events 200 in 25ms
+ GET /my-events 200 in 15ms
+ GET /my-events 200 in 10ms
+ GET /my-events 200 in 9ms
+ GET /my-events 200 in 9ms
+ GET /my-events 200 in 11ms
+ GET /my-events 200 in 10ms
+ GET /my-events 200 in 10ms
+ GET /my-events 200 in 10ms
+ GET /my-events 200 in 11ms
+ GET /my-events 200 in 11ms
+ GET /my-events 200 in 11ms
+ GET /my-events 200 in 11ms
+ GET /my-events 200 in 16ms
+ GET / 200 in 85ms
+ ✓ Compiled in 365ms (653 modules)

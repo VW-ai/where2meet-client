@@ -14,6 +14,7 @@ interface MapViewProps {
   onMapClick: (lat: number, lng: number) => void;
   onCandidateClick: (candidate: Candidate) => void;
   myParticipantId?: string;
+  routeFromParticipantId?: string | null; // For hosts to view routes from any participant
   travelMode?: google.maps.TravelMode;
   onTravelModeChange?: (mode: google.maps.TravelMode) => void;
   onCentroidDrag?: (lat: number, lng: number) => void;
@@ -30,6 +31,7 @@ function MapContent({
   onMapClick,
   onCandidateClick,
   myParticipantId,
+  routeFromParticipantId,
   travelMode,
   onRouteInfoChange,
   userLocation,
@@ -87,7 +89,10 @@ function MapContent({
 
   // Calculate and display route when candidate is selected
   useEffect(() => {
-    if (!map || !directionsRenderer || !selectedCandidate || !myParticipantId) {
+    // Use routeFromParticipantId if provided (for hosts), otherwise use myParticipantId
+    const participantIdForRoute = routeFromParticipantId || myParticipantId;
+
+    if (!map || !directionsRenderer || !selectedCandidate || !participantIdForRoute) {
       // Clear route if no candidate selected
       if (directionsRenderer) {
         directionsRenderer.setDirections({ routes: [] } as any);
@@ -96,9 +101,9 @@ function MapContent({
       return;
     }
 
-    // Find user's location
-    const myLocation = locations.find(loc => loc.id === myParticipantId);
-    if (!myLocation) {
+    // Find the participant's location for route calculation
+    const participantLocation = locations.find(loc => loc.id === participantIdForRoute);
+    if (!participantLocation) {
       onRouteInfoChange?.(null);
       return;
     }
@@ -106,7 +111,7 @@ function MapContent({
     // Calculate route
     const directionsService = new google.maps.DirectionsService();
     const request: google.maps.DirectionsRequest = {
-      origin: { lat: myLocation.lat, lng: myLocation.lng },
+      origin: { lat: participantLocation.lat, lng: participantLocation.lng },
       destination: { lat: selectedCandidate.lat, lng: selectedCandidate.lng },
       travelMode: travelMode || google.maps.TravelMode.DRIVING,
     };
@@ -128,7 +133,7 @@ function MapContent({
         onRouteInfoChange?.(null);
       }
     });
-  }, [map, directionsRenderer, selectedCandidate, myParticipantId, locations, travelMode, onRouteInfoChange]);
+  }, [map, directionsRenderer, selectedCandidate, myParticipantId, routeFromParticipantId, locations, travelMode, onRouteInfoChange]);
 
   // Draw circle overlay
   useEffect(() => {
@@ -187,8 +192,9 @@ function MapContent({
     <>
       {/* Participant location markers - Triangle shapes */}
       {locations.map((location) => {
-        // "You" marker: only for participant's own location
+        // Identify user's own marker for special styling (green color, glow effect)
         const isMyLocation = myParticipantId && location.id === myParticipantId;
+
         return (
           <AdvancedMarker
             key={location.id}
@@ -221,14 +227,14 @@ function MapContent({
                   <circle cx="16" cy="22" r="2" fill="white" />
                 )}
               </svg>
-              {/* Name label */}
+              {/* Name label - Always show actual name, but with different styling for "you" */}
               {location.name && (
                 <div className={`mt-1 px-2 py-1 rounded text-xs font-semibold shadow-md ${
                   isMyLocation
                     ? 'bg-emerald-600 text-white'
                     : 'bg-blue-600 text-white'
                 }`}>
-                  {isMyLocation ? 'You' : location.name}
+                  {location.name}
                 </div>
               )}
             </div>

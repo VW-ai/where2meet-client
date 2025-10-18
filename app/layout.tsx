@@ -45,20 +45,13 @@ export const metadata: Metadata = {
     siteName: 'Where2Meet',
     title: 'Where2Meet - Find the Perfect Meeting Place for Groups',
     description: 'Coordinate group locations and discover the perfect meeting place. Where2Meet helps friends, teams, and groups find optimal meeting spots.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Where2Meet - Group Meeting Place Finder',
-      },
-    ],
+    // Images are automatically generated from opengraph-image.tsx
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Where2Meet - Find the Perfect Meeting Place',
     description: 'Coordinate group locations and discover the perfect meeting place.',
-    images: ['/twitter-image.png'],
+    // Images are automatically generated from twitter-image.tsx
     creator: '@where2meet',
   },
   robots: {
@@ -79,6 +72,10 @@ export const metadata: Metadata = {
     // bing: 'your-bing-verification-code',
   },
   category: 'technology',
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 };
 
 export default function RootLayout({
