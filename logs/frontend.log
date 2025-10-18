@@ -77,3 +77,59 @@
  ✓ Compiled /my-events in 147ms (408 modules)
  GET /my-events 200 in 219ms
  GET / 200 in 36ms
+ ○ Compiling /event ...
+ ✓ Compiled /event in 616ms (682 modules)
+ GET /event?id=evt_42155dfaba0049fc 200 in 740ms
+ GET /event?id=evt_42155dfaba0049fc&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF80MjE1NWRmYWJhMDA0OWZjIiwiZXhwIjoxNzYzMzk3OTk3LCJ0eXBlIjoiam9pbl9saW5rIn0._iiD8aBtKIG1V-Gzil2jK2I1to2gePKSFqTAGvbvbVs 200 in 136ms
+ ✓ Compiled in 357ms (682 modules)
+ ✓ Compiled in 152ms (682 modules)
+ ✓ Compiled in 93ms (682 modules)
+ ✓ Compiled in 518ms (696 modules)
+ GET /event?id=evt_42155dfaba0049fc 200 in 109ms
+ GET /event?id=evt_42155dfaba0049fc&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF80MjE1NWRmYWJhMDA0OWZjIiwiZXhwIjoxNzYzMzk3OTk3LCJ0eXBlIjoiam9pbl9saW5rIn0._iiD8aBtKIG1V-Gzil2jK2I1to2gePKSFqTAGvbvbVs 200 in 109ms
+ GET /event?id=evt_42155dfaba0049fc 200 in 184ms
+ GET /icon 200 in 248ms
+ ✓ Compiled in 776ms (696 modules)
+ GET /event?id=evt_42155dfaba0049fc 200 in 89ms
+ GET /icon 200 in 212ms
+ GET /icon 200 in 7ms
+ GET / 200 in 34ms
+ GET / 200 in 134ms
+ GET /icon 200 in 13ms
+ ✓ Compiled in 358ms (682 modules)
+ ✓ Compiled in 121ms (682 modules)
+ ✓ Compiled in 88ms (682 modules)
+ ✓ Compiled in 342ms (696 modules)
+ GET / 200 in 106ms
+ GET /icon 200 in 240ms
+ GET /icon 200 in 15ms
+ ✓ Compiled in 141ms (696 modules)
+ GET / 200 in 60ms
+ GET /icon 200 in 100ms
+ GET /icon 200 in 7ms
+ ✓ Compiled in 52ms (271 modules)
+ GET / 200 in 19ms
+ GET /icon 200 in 188ms
+ ✓ Compiled in 319ms (696 modules)
+ GET /icon 200 in 126ms
+ GET / 200 in 240ms
+ GET /icon 200 in 9ms
+ GET /icon 200 in 6ms
+ ✓ Compiled in 115ms (696 modules)
+ GET / 200 in 53ms
+ GET /icon 200 in 110ms
+ GET /icon 200 in 8ms
+ ✓ Compiled in 175ms (696 modules)
+ GET / 200 in 60ms
+ GET /icon 200 in 103ms
+ GET /icon 200 in 5ms
+ ✓ Compiled in 207ms (696 modules)
+ GET / 200 in 61ms
+ GET /icon 200 in 191ms
+ GET /icon 200 in 22ms
+ GET / 200 in 164ms
+ GET /icon 200 in 31ms
+ ✓ Compiled in 436ms (696 modules)
+ GET / 200 in 81ms
+ GET /icon 200 in 185ms
+ GET /icon 200 in 4ms

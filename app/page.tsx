@@ -24,7 +24,7 @@ export default function Home() {
 
   const handleCreateEvent = async () => {
     if (!title.trim()) {
-      setError(t.pleaseEnterTitle);
+      setError(t.pleaseEnterEventTitle);
       return;
     }
 
@@ -76,7 +76,7 @@ export default function Home() {
       const token = url.searchParams.get('token');
 
       if (!eventId) {
-        setError(t.invalidJoinLink);
+        setError('Invalid join link: missing event ID');
         return;
       }
 
@@ -91,7 +91,7 @@ export default function Home() {
       router.push(`/event?id=${eventId}`);
     } catch (err) {
       console.error('Invalid join link:', err);
-      setError(t.invalidJoinLinkFormat);
+      setError('Invalid join link format');
     }
   };
 
@@ -106,7 +106,7 @@ export default function Home() {
             {user ? (
               <>
                 <span className="text-gray-600">
-                  {t.hello}, {user.name || user.email}
+                  {t.helloUser}, {user.name || user.email}
                 </span>
                 <Link
                   href="/my-events"
@@ -145,7 +145,9 @@ export default function Home() {
         <div className="max-w-2xl w-full">
           {/* Header */}
           <div className="text-center mb-12">
-            <Logo size="lg" showText={true} className="mb-6 justify-center text-5xl" />
+            <div className="flex justify-center mb-6">
+              <Logo size="lg" showText={true} className="text-6xl" />
+            </div>
             <p className="text-xl text-gray-600">
               {t.tagline}
             </p>
@@ -159,7 +161,7 @@ export default function Home() {
           <div className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t.eventTitle}
+                {t.eventTitle} *
               </label>
               <input
                 type="text"
@@ -179,14 +181,14 @@ export default function Home() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="restaurant">{t.categoryRestaurant}</option>
-                <option value="cafe">{t.categoryCafe}</option>
-                <option value="bar">{t.categoryBar}</option>
-                <option value="park">{t.categoryPark}</option>
-                <option value="basketball_court">{t.categoryBasketballCourt}</option>
-                <option value="gym">{t.categoryGym}</option>
-                <option value="library">{t.categoryLibrary}</option>
-                <option value="movie_theater">{t.categoryMovieTheater}</option>
+                <option value="restaurant">{t.restaurant}</option>
+                <option value="cafe">{t.cafe}</option>
+                <option value="bar">{t.bar}</option>
+                <option value="park">{t.park}</option>
+                <option value="basketball_court">{t.basketballCourt}</option>
+                <option value="gym">{t.gym}</option>
+                <option value="library">{t.library}</option>
+                <option value="movie_theater">{t.movieTheater}</option>
               </select>
             </div>
 
@@ -214,7 +216,7 @@ export default function Home() {
             disabled={isCreating || !title.trim()}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            {isCreating ? t.creatingEvent : t.createEventGetLink}
+            {isCreating ? t.creatingEvent : t.createEventButton}
           </button>
         </div>
 
@@ -235,23 +237,23 @@ export default function Home() {
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
           <div className="p-4">
             <div className="text-3xl mb-2">📍</div>
-            <h4 className="font-semibold text-gray-800 mb-1">{t.addLocationsFeature}</h4>
+            <h4 className="font-semibold text-gray-800 mb-1">{t.addLocationsTitle}</h4>
             <p className="text-sm text-gray-600">
-              {t.addLocationsDescription}
+              {t.addLocationsDesc}
             </p>
           </div>
           <div className="p-4">
             <div className="text-3xl mb-2">🎯</div>
-            <h4 className="font-semibold text-gray-800 mb-1">{t.findVenuesFeature}</h4>
+            <h4 className="font-semibold text-gray-800 mb-1">{t.findVenuesTitle}</h4>
             <p className="text-sm text-gray-600">
-              {t.findVenuesDescription}
+              {t.findVenuesDesc}
             </p>
           </div>
           <div className="p-4">
             <div className="text-3xl mb-2">🗳️</div>
-            <h4 className="font-semibold text-gray-800 mb-1">{t.voteTogetherFeature}</h4>
+            <h4 className="font-semibold text-gray-800 mb-1">{t.voteTogetherTitle}</h4>
             <p className="text-sm text-gray-600">
-              {t.voteTogetherDescription}
+              {t.voteTogetherDesc}
             </p>
           </div>
         </div>
