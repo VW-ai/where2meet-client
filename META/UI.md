@@ -683,3 +683,694 @@ These improvements will transform Where2Meet from a functional tool into a delig
 3. User testing with current UI
 4. Implementation sprints
 
+---
+
+# LEFT & RIGHT PANEL REDESIGN
+
+**Last Updated**: 2025-10-18
+**Status**: Comprehensive Redesign Plan
+
+---
+
+## Current State Analysis (October 2025)
+
+### Left Panel - Participant Locations
+
+**Current Layout**:
+```
+┌─────────────────────────────────┐
+│ 📍 Add Participant Locations    │
+│ ────────────────────────────────│
+│ [Search input with autocomplete]│
+│ 💡 Type or click map to add     │
+│                                  │
+│ 👥 Participant Locations (3)    │
+│ ┌───────────────────────────┐   │
+│ │ 👑 You                    │   │
+│ │ 📌 40.7128, -74.0060      │   │
+│ │ [🗺️] [Edit] [Remove]      │   │
+│ ├───────────────────────────┤   │
+│ │ Alice                     │   │
+│ │ 📌 40.7489, -73.9680      │   │
+│ │ [🗺️] [Edit] [Remove]      │   │
+│ ├───────────────────────────┤   │
+│ │ Bob                       │   │
+│ │ 📌 40.7614, -73.9776      │   │
+│ │ [🗺️] [Edit] [Remove]      │   │
+│ └───────────────────────────┘   │
+│                                  │
+│ ⚙️ Circle Display Radius         │
+│ [Slider: 500m ───●─── 4km]      │
+│                                  │
+│ [Reset Center Point]             │
+└─────────────────────────────────┘
+```
+
+**Strengths** ✅:
+- Clear hierarchy with sections
+- Route viewing integrated per participant (🗺️ button)
+- Visual differentiation for organizer (👑 crown)
+- Coordinates visible for precision
+- Edit/Remove actions readily available
+
+**Pain Points** 🔴:
+1. **Visual Clutter**: Each participant card shows coordinates, taking vertical space
+2. **Button Overload**: 3 buttons per participant (🗺️, Edit, Remove) - crowded on mobile
+3. **Limited Context**: No indication of which participant's route is currently active
+4. **No Summary**: Can't see at-a-glance participant count or total coverage area
+5. **Scroll Issues**: With 5+ participants, list becomes scrollable, hiding some entries
+6. **Icon Confusion**: 🗺️ icon doesn't clearly indicate "view route"
+
+### Right Panel - Venue Management
+
+**Current Tabbed Layout**:
+```
+┌─────────────────────────────────┐
+│ [🔍 Search (15)] [➕ Custom]    │
+│ [💜 Added (3)]                  │
+├─────────────────────────────────┤
+│ Search Tab Content:             │
+│ ┌──────────────────────────┐    │
+│ │ [Keyword Input]          │    │
+│ │ [Search Button]          │    │
+│ │ ☑ Only in meeting area   │    │
+│ │ Sort: [Rating ▼]         │    │
+│ ├──────────────────────────┤    │
+│ │ 🔴 Starbucks             │    │
+│ │ ⭐ 4.5 • 2.1 km          │    │
+│ │ [Vote] [💾 Save]         │    │
+│ ├──────────────────────────┤    │
+│ │ 🔴 Dunkin                │    │
+│ │ ⭐ 4.2 • 1.8 km          │    │
+│ │ [Vote] [💾 Save]         │    │
+│ └──────────────────────────┘    │
+└─────────────────────────────────┘
+```
+
+**Strengths** ✅:
+- Tab badges show count at-a-glance
+- Clear separation between search results and user-added venues
+- Sorting options available
+- "Only in meeting area" filter is visible
+
+**Pain Points** 🔴:
+1. **Search UX**: Large search button takes space; no visual loading feedback
+2. **No Quick Actions**: Users must type keywords manually
+3. **Dense Cards**: Venue cards show minimal info (no photos, hours, price)
+4. **Tab Switching Friction**: Frequent switching needed to see added vs search results
+5. **No Comparison**: Can't compare multiple venues side-by-side
+6. **Limited Context**: No indication of search area or parameters used
+
+---
+
+## Redesign Proposal
+
+### LEFT PANEL: Streamlined Participant Management
+
+**New Layout - Compact Cards**:
+```
+┌─────────────────────────────────┐
+│ 📍 Participants (3) • 2.4km     │
+│ ────────────────────────────────│
+│ [Search to add participant...]  │
+│ 💡 Click map or search above    │
+│                                  │
+│ ┌─────────────────────────────┐ │
+│ │ 👑 You • 40.71, -74.01     ─┤ │
+│ │ 🗺️ View Route              ││ │
+│ ├─────────────────────────────┤ │
+│ │ 👤 Alice • 40.75, -73.97   ─┤ │
+│ │ 🗺️ Viewing Route ●         ││ │ <- Active indicator
+│ ├─────────────────────────────┤ │
+│ │ 👤 Bob • 40.76, -73.98     ─┤ │
+│ │ 🗺️ View Route              ││ │
+│ └─────────────────────────────┘ │
+│                                  │
+│ ⚙️ Map Controls                  │
+│ ┌─────────────────────────────┐ │
+│ │ Circle: [●────] 2.0 km      │ │
+│ │ [↻ Reset Center]            │ │
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+```
+
+**Key Improvements**:
+
+1. **Compact Card Design**:
+   - Single line per participant: `👤 Name • Lat, Lng`
+   - Expandable for edit/remove actions (click arrow `─┤`)
+   - Coordinates abbreviated: `40.71288, -74.00597` → `40.71, -74.01`
+
+2. **Active Route Indicator**:
+   - Show `● Viewing Route` when route is displayed
+   - Purple dot indicator for active participant
+   - Automatically collapse when switching
+
+3. **Summary Header**:
+   - `Participants (3) • 2.4km` shows count and max distance
+   - Quick context without scrolling
+
+4. **Collapsible Controls**:
+   - Map controls in separate collapsible section
+   - Reduces visual weight when not needed
+
+5. **Mobile-Optimized Actions**:
+```tsx
+// Collapsed state - compact view
+<ParticipantCard collapsed>
+  <Avatar /> <Name /> <Location />
+  <ExpandIcon />
+</ParticipantCard>
+
+// Expanded state - show all actions
+<ParticipantCard expanded>
+  <Header />
+  <Actions>
+    <Button icon="🗺️">View Route</Button>
+    <Button icon="✏️">Edit</Button>
+    <Button icon="🗑️">Remove</Button>
+  </Actions>
+</ParticipantCard>
+```
+
+**Component Structure**:
+```tsx
+// New compact participant card
+<ParticipantCard
+  participant={participant}
+  isExpanded={expandedId === participant.id}
+  isActive={routeFromParticipantId === participant.id}
+  onToggleExpand={() => setExpandedId(id)}
+  onToggleRoute={() => toggleRoute(id)}
+  onEdit={() => editParticipant(id)}
+  onRemove={() => removeParticipant(id)}
+/>
+```
+
+---
+
+### RIGHT PANEL: Enhanced Venue Discovery
+
+**New Layout - Unified Discovery**:
+```
+┌─────────────────────────────────┐
+│ 🎯 Venue Discovery              │
+├─────────────────────────────────┤
+│ Quick Picks:                    │
+│ [☕ Cafe] [🍕 Food] [🎬 Movie]  │
+│ [🏃 Gym] [🎤 Karaoke] [+ More]  │
+│                                  │
+│ [Search keyword...]        [🔍] │
+│ ☑ Only in area • Sort: ⭐       │
+├─────────────────────────────────┤
+│ Search Results (15) 📍 in 2.1km │
+│                                  │
+│ ┌─────────────────────────────┐ │
+│ │ [Photo]    Starbucks        │ │
+│ │            ⭐ 4.5 (120)      │ │
+│ │            2.1 km • Open    │ │
+│ │  👤 5 votes                 │ │
+│ │  [🗺️ Route] [💾 Save] [✓]  │ │
+│ ├─────────────────────────────┤ │
+│ │ [Photo]    Dunkin'          │ │
+│ │            ⭐ 4.2 (80)       │ │
+│ │            1.8 km • Open    │ │
+│ │  👤 3 votes                 │ │
+│ │  [🗺️ Route] [💾 Save] [  ]  │ │
+│ └─────────────────────────────┘ │
+│                                  │
+│ [📋 View Saved (3)]             │
+└─────────────────────────────────┘
+```
+
+**Key Improvements**:
+
+1. **Quick Pick Chips**:
+   - Pre-populated categories based on event type
+   - One-tap search without typing
+   - Customizable per event category
+
+2. **Compact Search Header**:
+   - Icon-only search button (🔍)
+   - Inline filters and sort
+   - Summary: `15 results in 2.1km`
+
+3. **Enhanced Venue Cards**:
+```tsx
+<VenueCard
+  venue={venue}
+  showPhoto={true}
+  showVotes={event.allow_vote}
+  showRouteButton={true}
+  isSelected={selectedCandidate?.id === venue.id}
+/>
+
+// Card contents:
+<Card>
+  <Thumbnail src={venue.photo} />
+  <Content>
+    <Title>{venue.name}</Title>
+    <Meta>
+      <Rating value={4.5} count={120} />
+      <Distance>{venue.distance}</Distance>
+      <Status isOpen={true} />
+    </Meta>
+    <Votes count={5} />
+  </Content>
+  <Actions>
+    <Button icon="🗺️" compact />
+    <Button icon="💾" compact />
+    <Checkbox selected={isSelected} />
+  </Actions>
+</Card>
+```
+
+4. **Saved Venues Footer**:
+   - Fixed bottom button to access saved/added venues
+   - Badge shows count
+   - Opens slide-up panel
+
+5. **Loading States**:
+```tsx
+// During search
+<SearchFeedback>
+  <Spinner />
+  <Message>Searching in meeting area...</Message>
+  <ProgressBar value={60} />
+</SearchFeedback>
+
+// Skeleton cards during load
+{[1,2,3].map(i => <SkeletonVenueCard key={i} />)}
+```
+
+---
+
+## Component Architecture
+
+### New Components to Create
+
+1. **`ParticipantCard.tsx`** - Compact, collapsible participant cards
+2. **`QuickPickChips.tsx`** - Category quick search buttons
+3. **`VenueCard.tsx`** - Enhanced venue cards with photos
+4. **`SkeletonVenueCard.tsx`** - Loading placeholder
+5. **`SearchSummary.tsx`** - Results summary banner
+6. **`CompactControls.tsx`** - Collapsible map controls section
+
+### Component Props
+
+```typescript
+// ParticipantCard
+interface ParticipantCardProps {
+  participant: Participant;
+  isExpanded: boolean;
+  isActive: boolean; // Is route currently shown
+  canEdit: boolean;
+  canRemove: boolean;
+  onToggleExpand: () => void;
+  onToggleRoute: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
+}
+
+// VenueCard
+interface VenueCardProps {
+  venue: Candidate;
+  isSelected: boolean;
+  showPhoto: boolean;
+  showVotes: boolean;
+  showRouteButton: boolean;
+  participantId?: string; // For route viewing
+  onSelect: () => void;
+  onToggleRoute: () => void;
+  onSave: () => void;
+  onVote?: () => void;
+}
+
+// QuickPickChips
+interface QuickPickChipsProps {
+  eventCategory?: string; // Auto-suggest based on category
+  onQuickSearch: (term: string) => void;
+  customChips?: Array<{ icon: string; label: string; term: string }>;
+}
+```
+
+---
+
+## Visual Design Specifications
+
+### Left Panel - Participant Card States
+
+**Collapsed (Default)**:
+```
+┌─────────────────────────────────┐
+│ 👤 Alice • 40.75, -73.97    ▸  │
+└─────────────────────────────────┘
+Height: 48px
+Padding: 12px
+Background: white/70% blur
+```
+
+**Expanded**:
+```
+┌─────────────────────────────────┐
+│ 👤 Alice                      ▾ │
+│ 📌 40.7489, -73.9680            │
+│ ┌──────────────────────────────┐│
+│ │ [🗺️ View Route] [✏️ Edit]    ││
+│ │ [🗑️ Remove]                   ││
+│ └──────────────────────────────┘│
+└─────────────────────────────────┘
+Height: 120px
+```
+
+**Active Route (Purple Glow)**:
+```
+┌─────────────────────────────────┐
+│ 👤 Alice • 40.75, -73.97    ▾  │ <- Purple border
+│ ● Viewing route to Starbucks    │ <- Purple dot + text
+│ [Hide Route]                    │
+└─────────────────────────────────┘
+Border: 2px solid #9333EA
+```
+
+### Right Panel - Venue Card with Photo
+
+```
+┌─────────────────────────────────┐
+│ ┌─────┐  Starbucks              │
+│ │Photo│  ⭐ 4.5 (120 reviews)    │
+│ └─────┘  2.1 km • Open now      │
+│          👤 5 votes              │
+│          [🗺️] [💾] [✓ Selected] │
+└─────────────────────────────────┘
+Photo Size: 64x64px rounded
+Card Height: 96px
+Padding: 12px
+Gap: 8px
+```
+
+### Quick Pick Chips
+
+```
+[☕ Cafe] [🍕 Food] [🎬 Movie] [🏃 Gym]
+Size: 32px height
+Padding: 8px 12px
+Border-radius: 16px
+Gap: 8px
+```
+
+---
+
+## Implementation Plan
+
+### Phase 1: Left Panel Redesign (Week 1)
+
+**Day 1-2: Participant Card Component**
+- [ ] Create `ParticipantCard.tsx` with collapsed/expanded states
+- [ ] Add expand/collapse animation
+- [ ] Integrate route viewing with visual feedback
+- [ ] Add active state indicator (purple dot + text)
+
+**Day 3: Summary Header**
+- [ ] Add participant count and max distance calculation
+- [ ] Update header styling
+- [ ] Make header sticky on scroll
+
+**Day 4-5: Map Controls Section**
+- [ ] Move circle radius and reset into collapsible section
+- [ ] Add expand/collapse animation
+- [ ] Test on mobile devices
+
+### Phase 2: Right Panel Redesign (Week 2)
+
+**Day 1-2: Quick Pick Chips**
+- [ ] Create `QuickPickChips.tsx`
+- [ ] Add category suggestions based on event type
+- [ ] Implement one-tap search
+- [ ] Add "More" button for additional categories
+
+**Day 3-4: Enhanced Venue Cards**
+- [ ] Create `VenueCard.tsx` with photo support
+- [ ] Add Google Places photo API integration
+- [ ] Implement vote count display
+- [ ] Add compact action buttons
+
+**Day 5: Search UX**
+- [ ] Replace large search button with icon-only
+- [ ] Add search loading spinner
+- [ ] Create `SearchSummary.tsx` component
+- [ ] Add skeleton loading states
+
+### Phase 3: Polish & Testing (Week 3)
+
+**Day 1-2: Animations**
+- [ ] Card expand/collapse transitions
+- [ ] Route activation animation
+- [ ] Panel slide-in/out transitions
+- [ ] Skeleton shimmer effect
+
+**Day 3-4: Mobile Optimization**
+- [ ] Test on iPhone SE (small screen)
+- [ ] Test on iPad (tablet)
+- [ ] Adjust touch targets (minimum 44px)
+- [ ] Test swipe gestures
+
+**Day 5: User Testing**
+- [ ] Internal team testing
+- [ ] 5 external user tests
+- [ ] Collect feedback
+- [ ] Create iteration plan
+
+---
+
+## Success Metrics
+
+### Quantitative
+- **Participant card height reduction**: 80px → 48px (40% smaller)
+- **Actions per participant**: 3 buttons → 1 expand + actions (cleaner)
+- **Search button size**: 96px → 40px (58% smaller)
+- **Venue card information density**: +50% (photos + metadata)
+- **Quick search usage**: Target 70% of searches use chips
+
+### Qualitative
+- Users can identify active route participant at a glance
+- Quick pick chips reduce typing friction
+- Enhanced venue cards provide better decision-making info
+- Mobile users can comfortably tap all interactive elements
+- Overall "feels more spacious and organized"
+
+---
+
+## Mobile-Specific Considerations
+
+### Breakpoints
+
+```css
+/* Small phones (320px-375px) */
+@media (max-width: 375px) {
+  .panel {
+    width: 100%;
+    max-width: 320px;
+  }
+  .participant-card {
+    font-size: 0.875rem;
+  }
+  .venue-photo {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Phones (376px-768px) */
+@media (max-width: 768px) {
+  .panel {
+    max-width: 360px;
+  }
+}
+
+/* Tablets (769px-1024px) */
+@media (max-width: 1024px) {
+  .panel {
+    max-width: 400px;
+  }
+}
+```
+
+### Touch Targets
+
+```typescript
+// Minimum touch target sizes
+const TOUCH_TARGETS = {
+  minimum: '44px', // Apple HIG
+  comfortable: '48px', // Material Design
+  large: '56px', // For primary actions
+};
+
+// Apply to all buttons
+<button className="min-h-[44px] min-w-[44px]">
+```
+
+---
+
+## Accessibility Improvements
+
+### ARIA Labels
+
+```tsx
+// Participant card
+<div
+  role="article"
+  aria-label={`Participant ${name} at ${lat}, ${lng}`}
+  aria-expanded={isExpanded}
+>
+  <button
+    aria-label={`View route from ${name} to ${selectedVenue}`}
+    aria-pressed={isActive}
+  >
+    🗺️
+  </button>
+</div>
+
+// Quick pick chips
+<button
+  role="button"
+  aria-label={`Search for ${category} venues`}
+>
+  {icon} {label}
+</button>
+```
+
+### Keyboard Navigation
+
+```typescript
+// Participant card keyboard support
+const handleKeyDown = (e: KeyboardEvent) => {
+  switch (e.key) {
+    case 'Enter':
+    case ' ':
+      toggleExpand();
+      break;
+    case 'r':
+      if (e.metaKey || e.ctrlKey) toggleRoute();
+      break;
+    case 'e':
+      if (canEdit) editParticipant();
+      break;
+    case 'Delete':
+    case 'Backspace':
+      if (canRemove) removeParticipant();
+      break;
+  }
+};
+```
+
+---
+
+## File Structure
+
+```
+components/
+├── panels/
+│   ├── LeftPanel/
+│   │   ├── ParticipantCard.tsx        ← New compact card
+│   │   ├── ParticipantList.tsx        ← List container
+│   │   ├── MapControls.tsx            ← Collapsible controls
+│   │   └── ParticipantSummary.tsx     ← Header with count
+│   │
+│   └── RightPanel/
+│       ├── VenueCard.tsx              ← Enhanced with photos
+│       ├── QuickPickChips.tsx         ← Category shortcuts
+│       ├── SearchHeader.tsx           ← Compact search UI
+│       ├── SearchSummary.tsx          ← Results banner
+│       └── SkeletonVenueCard.tsx      ← Loading placeholder
+│
+├── ui/
+│   ├── Collapsible.tsx                ← Generic collapsible
+│   ├── Chip.tsx                       ← Reusable chip button
+│   └── ProgressBar.tsx                ← Search progress
+│
+└── InputPanel.tsx                      ← Updated with new cards
+```
+
+---
+
+## Design Tokens
+
+```typescript
+// colors.ts
+export const colors = {
+  participant: {
+    default: '#3B82F6',
+    active: '#9333EA',
+    own: '#10B981',
+  },
+  venue: {
+    search: '#F97316',
+    added: '#EC4899',
+    selected: '#DC2626',
+  },
+  ui: {
+    cardBg: 'rgba(255, 255, 255, 0.7)',
+    cardBorder: 'rgba(0, 0, 0, 0.1)',
+    hoverBg: 'rgba(59, 130, 246, 0.05)',
+  },
+};
+
+// spacing.ts
+export const spacing = {
+  card: {
+    padding: '12px',
+    gap: '8px',
+    marginBottom: '8px',
+  },
+  panel: {
+    padding: '16px',
+    gap: '12px',
+  },
+};
+
+// typography.ts
+export const typography = {
+  card: {
+    title: 'text-sm font-semibold',
+    subtitle: 'text-xs text-gray-600',
+    meta: 'text-xs text-gray-500',
+  },
+};
+```
+
+---
+
+## Migration Strategy
+
+### Backwards Compatibility
+
+1. **Feature Flag**: Enable new UI for testing users first
+```typescript
+const useNewPanelUI = useFeatureFlag('new-panel-ui');
+
+return useNewPanelUI ? <NewLeftPanel /> : <OldInputPanel />;
+```
+
+2. **Gradual Rollout**:
+   - Week 1: Internal testing (5% of users)
+   - Week 2: Beta users (25% of users)
+   - Week 3: All users (100%)
+
+3. **Rollback Plan**: Keep old components for 2 weeks after full rollout
+
+### Data Migration
+
+No data migration needed - UI-only changes. All existing API endpoints remain unchanged.
+
+---
+
+## Next Steps
+
+1. **Design Review**: Present mockups to team
+2. **Prototype**: Create interactive Figma prototype
+3. **User Testing**: Test with 5-10 users before implementation
+4. **Implementation**: Follow 3-week phase plan
+5. **Launch**: Gradual rollout with monitoring
+6. **Iterate**: Collect feedback and refine
+

@@ -39,3 +39,5 @@
  GET /event?id=evt_81986ce2e8014812 200 in 24ms
  GET / 200 in 40ms
  GET /event?id=evt_f2b618ec6d4f4d60 200 in 30ms
+ ✓ Compiled in 686ms (271 modules)
+ ✓ Compiled in 120ms (271 modules)
