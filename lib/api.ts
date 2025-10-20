@@ -90,6 +90,20 @@ export interface SearchCandidatesRequest {
   only_in_circle?: boolean;
 }
 
+export interface SearchAreaInfo {
+  center_lat: number;
+  center_lng: number;
+  radius_km: number;
+  was_snapped: boolean;
+  original_center_lat?: number;
+  original_center_lng?: number;
+}
+
+export interface CandidateSearchResponse {
+  candidates: Candidate[];
+  search_area: SearchAreaInfo;
+}
+
 export interface SSEMessage {
   event: string;
   data: any;
@@ -276,8 +290,8 @@ export class Where2MeetAPI {
   async searchCandidates(
     eventId: string,
     data: SearchCandidatesRequest
-  ): Promise<Candidate[]> {
-    return this.request<Candidate[]>(
+  ): Promise<CandidateSearchResponse> {
+    return this.request<CandidateSearchResponse>(
       `/api/v1/events/${eventId}/candidates/search`,
       {
         method: 'POST',

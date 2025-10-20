@@ -146,7 +146,23 @@ function MapContent({
 
   // Draw circle overlay
   useEffect(() => {
-    if (!map || !circle) return;
+    console.log('🟣 MapView circle effect triggered - map:', !!map, 'circle:', circle);
+
+    if (!map) {
+      console.log('🟣 MapView: No map yet, skipping circle render');
+      return;
+    }
+
+    if (!circle) {
+      console.log('🟣 MapView: No circle data, skipping circle render');
+      return;
+    }
+
+    console.log('🟣 MapView: Creating circle overlay with:', {
+      center: circle.center,
+      radius: circle.radius,
+      radiusKm: (circle.radius / 1000).toFixed(2)
+    });
 
     const circleOverlay = new google.maps.Circle({
       map: map,
@@ -159,7 +175,10 @@ function MapContent({
       fillOpacity: 0.15,
     });
 
+    console.log('🟣 MapView: Circle overlay created successfully');
+
     return () => {
+      console.log('🟣 MapView: Cleaning up circle overlay');
       circleOverlay.setMap(null);
     };
   }, [map, circle]);

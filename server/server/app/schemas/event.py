@@ -157,3 +157,19 @@ class EventAnalysis(BaseModel):
     participant_count: int
     candidate_count: int
     circle: Optional[CircleInfo]
+
+
+class SearchAreaInfo(BaseModel):
+    """Schema for search area metadata (post-snap center and radius)."""
+    center_lat: float
+    center_lng: float
+    radius_km: float
+    was_snapped: bool = False  # Whether the center was adjusted from water to land
+    original_center_lat: Optional[float] = None
+    original_center_lng: Optional[float] = None
+
+
+class CandidateSearchResponse(BaseModel):
+    """Schema for candidate search response with search area metadata."""
+    candidates: List[CandidateResponse]
+    search_area: SearchAreaInfo

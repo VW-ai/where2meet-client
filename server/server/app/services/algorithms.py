@@ -86,7 +86,7 @@ def compute_mec(locations: List[Tuple[float, float]]) -> Optional[Tuple[float, f
         return None
 
     if len(locations) == 1:
-        return (locations[0][0], locations[0][1], 0.5)  # 500m minimum for search purposes
+        return (locations[0][0], locations[0][1], 1.0)  # 1km minimum for visibility and search purposes
 
     # Welzl's algorithm implementation
     def welzl_helper(points: List[Tuple[float, float]], boundary: List[Tuple[float, float]]) -> Tuple[float, float, float]:
@@ -113,7 +113,7 @@ def compute_mec(locations: List[Tuple[float, float]]) -> Optional[Tuple[float, f
         if len(boundary) == 0:
             return (0.0, 0.0, 0.0)
         elif len(boundary) == 1:
-            return (boundary[0][0], boundary[0][1], 0.5)  # 500m minimum for search
+            return (boundary[0][0], boundary[0][1], 1.0)  # 1km minimum for visibility
         elif len(boundary) == 2:
             # Circle with two points as diameter
             lat1, lng1 = boundary[0]
@@ -121,7 +121,7 @@ def compute_mec(locations: List[Tuple[float, float]]) -> Optional[Tuple[float, f
             center_lat = (lat1 + lat2) / 2
             center_lng = (lng1 + lng2) / 2
             radius = haversine_distance(lat1, lng1, lat2, lng2) / 2
-            return (center_lat, center_lng, max(radius, 0.5))  # 500m minimum for search
+            return (center_lat, center_lng, max(radius, 1.0))  # 1km minimum for visibility
         else:
             # Circle with three points
             return make_circle_from_three_points(boundary[0], boundary[1], boundary[2])
@@ -141,7 +141,7 @@ def compute_mec(locations: List[Tuple[float, float]]) -> Optional[Tuple[float, f
         r3 = haversine_distance(center_lat, center_lng, p3[0], p3[1])
 
         radius = max(r1, r2, r3)
-        return (center_lat, center_lng, max(radius, 0.5))  # 500m minimum for search
+        return (center_lat, center_lng, max(radius, 1.0))  # 1km minimum for visibility
 
     def is_inside_circle(point: Tuple[float, float], circle: Tuple[float, float, float]) -> bool:
         """Check if point is inside circle."""

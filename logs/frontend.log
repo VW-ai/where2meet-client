@@ -8,36 +8,45 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1059ms
+ ✓ Ready in 1184ms
  ○ Compiling / ...
- ✓ Compiled / in 991ms (650 modules)
- GET / 200 in 1218ms
- ✓ Compiled in 55ms (247 modules)
- ✓ Compiled /event in 399ms (679 modules)
- GET /event?id=evt_81986ce2e8014812 200 in 579ms
- ✓ Compiled /icon in 281ms (493 modules)
- GET /icon 200 in 453ms
- ✓ Compiled in 353ms (639 modules)
- GET /event?id=evt_81986ce2e8014812 200 in 156ms
- GET /icon 200 in 261ms
- GET /icon 200 in 13ms
- ✓ Compiled in 594ms (639 modules)
- GET /event?id=evt_81986ce2e8014812 200 in 54ms
- GET /icon 200 in 172ms
+ ✓ Compiled / in 960ms (650 modules)
+ GET / 200 in 1191ms
+ ✓ Compiled in 95ms (247 modules)
+ ○ Compiling /event ...
+ ✓ Compiled /event in 755ms (679 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 959ms
+ ✓ Compiled /icon in 212ms (493 modules)
+ GET /icon 200 in 497ms
+ GET / 200 in 176ms
+ ✓ Compiled /my-events in 330ms (687 modules)
+ GET /my-events 200 in 373ms
+ GET /event?id=evt_c2865d86bc644829 200 in 38ms
+ ✓ Compiled in 791ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 113ms
+ ✓ Compiled in 745ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 232ms
+ GET /event?id=evt_c2865d86bc644829 200 in 214ms
+ GET /icon 200 in 432ms
+ GET /event?id=evt_c2865d86bc644829 200 in 87ms
+ GET /icon 200 in 35ms
+ ✓ Compiled in 791ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 127ms
+ GET /icon 200 in 615ms
+ GET /icon 200 in 37ms
+ ✓ Compiled in 812ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 194ms
+ GET /icon 200 in 297ms
+ GET /icon 200 in 11ms
+ ✓ Compiled in 526ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 108ms
+ GET /icon 200 in 385ms
  GET /icon 200 in 6ms
- GET /event?id=evt_81986ce2e8014812 200 in 145ms
- GET /icon 200 in 45ms
- ✓ Compiled in 294ms (639 modules)
- ✓ Compiled in 92ms (639 modules)
- ✓ Compiled in 96ms (639 modules)
- ✓ Compiled in 276ms (639 modules)
- ✓ Compiled in 160ms (639 modules)
- ✓ Compiled / in 380ms (425 modules)
- GET / 200 in 586ms
- ✓ Compiled /my-events in 301ms (687 modules)
- GET /my-events 200 in 371ms
- GET /event?id=evt_81986ce2e8014812 200 in 24ms
- GET / 200 in 40ms
- GET /event?id=evt_f2b618ec6d4f4d60 200 in 30ms
- ✓ Compiled in 686ms (271 modules)
- ✓ Compiled in 120ms (271 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 208ms
+ GET /icon 200 in 36ms
+ ✓ Compiled in 451ms (641 modules)
+ GET /event?id=evt_c2865d86bc644829 200 in 118ms
+ GET /icon 200 in 228ms
+ GET /icon 200 in 5ms
+ GET /event?id=evt_c2865d86bc644829 200 in 187ms
+ GET /icon 200 in 42ms

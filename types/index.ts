@@ -28,4 +28,18 @@ export interface Circle {
   radius: number; // in meters
 }
 
+export interface SearchAreaInfo {
+  center_lat: number;
+  center_lng: number;
+  radius_km: number;
+  was_snapped: boolean;
+  original_center_lat?: number;
+  original_center_lng?: number;
+}
+
+export interface CandidateSearchResponse {
+  candidates: Candidate[];
+  search_area: SearchAreaInfo;
+}
+
 export type SortMode = 'rating' | 'distance' | 'vote';

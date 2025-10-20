@@ -43,12 +43,14 @@ function EventPageContent() {
   const [centroid, setCentroid] = useState<{ lat: number; lng: number } | null>(null);
   const [customCentroid, setCustomCentroid] = useState<{ lat: number; lng: number } | null>(null);
   const [circle, setCircle] = useState<Circle | null>(null);
+  const [authoritativeCircle, setAuthoritativeCircle] = useState<Circle | null>(null); // Backend-provided circle after search
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('rating');
   const [keyword, setKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [searchRadius, setSearchRadius] = useState(2000); // Absolute radius in meters: 500m to 4000m (default: 2km)
+  const [searchRadius, setSearchRadius] = useState(2000); // DEPRECATED: Visual radius - kept for backward compat before search
+  const [radiusMultiplier, setRadiusMultiplier] = useState(1.0); // Multiplier for MEC radius: 1.0 to 2.0 (default: 1.0x)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
 
   // UI state
@@ -262,6 +264,7 @@ function EventPageContent() {
   // Recompute centroid and circle
   useEffect(() => {
     if (locations.length === 0) {
+      console.log('🔵 Circle effect: No locations, clearing circle');
       setCentroid(null);
       setCircle(null);
       return;
@@ -270,19 +273,42 @@ function EventPageContent() {
     // Use custom centroid if available, otherwise compute automatically
     const effectiveCentroid = customCentroid || computeCentroid(locations);
     setCentroid(effectiveCentroid);
+    console.log('🔵 Circle effect: Centroid set to', effectiveCentroid);
 
-    if (locations.length >= 1) {
-      const mec = computeMinimumEnclosingCircle(locations);
-      if (mec) {
-        // Use custom centroid for circle center if available, otherwise use MEC center
-        const circleCenter = customCentroid || mec.center;
-        setCircle({
-          center: circleCenter,
-          radius: searchRadius,
-        });
-      }
+    // Compute MEC to get the baseline radius
+    const mec = computeMinimumEnclosingCircle(locations);
+    if (!mec) {
+      console.log('🔵 Circle effect: MEC computation failed, clearing circle');
+      setCircle(null);
+      return;
     }
-  }, [locations, searchRadius, customCentroid]);
+
+    console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
+
+    // Use custom centroid for circle center if available, otherwise use MEC center
+    const circleCenter = customCentroid || mec.center;
+
+    // Use authoritative circle from backend if available (after search)
+    // Otherwise show preview with radiusMultiplier applied
+    if (authoritativeCircle) {
+      console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
+      setCircle(authoritativeCircle);
+    } else {
+      // Apply radiusMultiplier to MEC radius for preview
+      // This shows users what the search area will be BEFORE they click search
+      // Use a minimum BASE radius of 1km (1000m) for visibility when MEC is too small
+      const MIN_BASE_RADIUS = 1000; // 1km minimum base
+      const effectiveMecRadius = Math.max(mec.radius, MIN_BASE_RADIUS);
+      const previewRadius = effectiveMecRadius * radiusMultiplier;
+
+      const newCircle = {
+        center: circleCenter,
+        radius: previewRadius,
+      };
+      console.log('🔵 Circle effect: Setting preview circle', newCircle, `(MEC: ${(mec.radius/1000).toFixed(2)}km, Base: ${(effectiveMecRadius/1000).toFixed(2)}km, Multiplier: ${radiusMultiplier.toFixed(1)}x, Preview: ${(previewRadius/1000).toFixed(2)}km)`);
+      setCircle(newCircle);
+    }
+  }, [locations, customCentroid, authoritativeCircle, radiusMultiplier]);
 
   // Add location (for participants)
   const handleAddLocation = useCallback(async (location: Location) => {
@@ -388,11 +414,8 @@ function EventPageContent() {
     setSelectedCandidate(null);
 
     try {
-      // Search within the MEC only (not the slider radius)
-      // The backend will compute the MEC and search within it
-      // Use multiplier of 1.0 to search exactly within the MEC
-      const radiusMultiplier = 1.0;
-
+      // Search using the MEC with user-controlled multiplier
+      // The backend will compute the MEC and multiply by radiusMultiplier (1.0-2.0)
       // Include custom centroid if user has dragged the center point
       const searchParams: any = {
         keyword: keyword,
@@ -403,16 +426,31 @@ function EventPageContent() {
       if (customCentroid) {
         searchParams.custom_center_lat = customCentroid.lat;
         searchParams.custom_center_lng = customCentroid.lng;
-        console.log('🎯 Searching with custom center:', customCentroid, 'multiplier:', radiusMultiplier, 'only_in_circle:', onlyInCircle);
+        console.log('🎯 Searching with custom center:', customCentroid, 'multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
       } else {
-        console.log('📍 Searching with computed MEC center, multiplier:', radiusMultiplier, 'only_in_circle:', onlyInCircle);
+        console.log('📍 Searching with computed MEC center, multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
       }
 
-      const results = await api.searchCandidates(eventId, searchParams);
+      const response = await api.searchCandidates(eventId, searchParams);
 
-      setCandidates(convertAPICandidates(results));
+      // Extract candidates and search_area from response
+      setCandidates(convertAPICandidates(response.candidates));
 
-      if (results.length === 0) {
+      // Update authoritative circle with backend-provided search area
+      setAuthoritativeCircle({
+        center: {
+          lat: response.search_area.center_lat,
+          lng: response.search_area.center_lng,
+        },
+        radius: response.search_area.radius_km * 1000, // Convert km to meters
+      });
+
+      // Show toast if center was snapped to land
+      if (response.search_area.was_snapped) {
+        toast.info('Search center adjusted to nearby land for better results', { duration: 4000 });
+      }
+
+      if (response.candidates.length === 0) {
         toast.warning(`${t.noResultsFound} "${keyword}". ${t.tryDifferentSearch}`);
       }
     } catch (err) {
@@ -560,6 +598,7 @@ function EventPageContent() {
 
     setIsDraggingCentroid(true);
     setCustomCentroid({ lat, lng });
+    setAuthoritativeCircle(null); // Clear authoritative circle to show preview
 
     // Save to backend
     try {
@@ -775,43 +814,45 @@ function EventPageContent() {
         {/* Host Controls */}
         {role === 'host' && (
           <>
-            {/* Circle Display Radius Control */}
+            {/* Search Radius Multiplier Control */}
             {locations.length > 0 && (
               <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
                 <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-sm font-bold text-gray-900">{t.circleDisplayRadius}</h3>
+                  <h3 className="text-sm font-bold text-gray-900">Search Area Size</h3>
                   <div className="relative group">
                     <button className="w-4 h-4 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center hover:bg-gray-400 transition-colors">
                       ?
                     </button>
                     <div className="absolute left-0 top-6 w-64 bg-gray-900 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      {t.circleTooltip}
+                      Adjust search radius multiplier. 1.0x searches exactly within the MEC circle. 2.0x doubles the search area for more results.
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">500m</span>
+                  <span className="text-xs font-medium text-gray-700">1.0x</span>
                   <span className="text-xs font-bold text-blue-700">
-                    {searchRadius >= 1000
-                      ? `${(searchRadius / 1000).toFixed(1)} km`
-                      : `${searchRadius} m`}
+                    {radiusMultiplier.toFixed(1)}x MEC
                   </span>
-                  <span className="text-xs font-medium text-gray-700">4 km</span>
+                  <span className="text-xs font-medium text-gray-700">2.0x</span>
                 </div>
                 <input
                   type="range"
-                  min={500}
-                  max={4000}
-                  step={100}
-                  value={searchRadius}
+                  min={1.0}
+                  max={2.0}
+                  step={0.1}
+                  value={radiusMultiplier}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    setSearchRadius(Math.min(4000, Math.max(500, value)));
+                    const value = parseFloat(e.target.value);
+                    const newMultiplier = Math.min(2.0, Math.max(1.0, value));
+                    console.log('🎚️ Slider changed: radiusMultiplier', radiusMultiplier, '→', newMultiplier);
+                    setRadiusMultiplier(newMultiplier);
+                    setAuthoritativeCircle(null); // Clear authoritative circle to show preview
+                    console.log('🎚️ Cleared authoritativeCircle to show preview with new multiplier');
                   }}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <p className="text-xs text-gray-600 mt-1">
-                  {t.visualizationOnly}
+                  Controls how far beyond the optimal meeting point to search for venues
                 </p>
 
                 {/* Reset Center Point Button - Only show when customCentroid exists */}

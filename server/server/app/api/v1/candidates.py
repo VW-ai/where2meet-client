@@ -8,7 +8,7 @@ import json
 
 from app.db.base import get_db
 from app.models.event import Event, Participant, Candidate, Vote
-from app.schemas.event import CandidateResponse, CandidateSearch, CandidateAdd
+from app.schemas.event import CandidateResponse, CandidateSearch, CandidateAdd, CandidateSearchResponse, SearchAreaInfo
 from app.services.sse import sse_manager
 from app.services.google_maps import google_maps_service
 from app.services.algorithms import compute_centroid, compute_mec, haversine_distance
@@ -16,7 +16,7 @@ from app.services.algorithms import compute_centroid, compute_mec, haversine_dis
 router = APIRouter()
 
 
-@router.post("/events/{event_id}/candidates/search", response_model=List[CandidateResponse])
+@router.post("/events/{event_id}/candidates/search", response_model=CandidateSearchResponse)
 async def search_candidates(
     event_id: str,
     search_data: CandidateSearch,
@@ -82,6 +82,10 @@ async def search_candidates(
         center_lat, center_lng, radius_km = mec_result
         print(f"📍 Using computed MEC center: ({center_lat:.6f}, {center_lng:.6f}) with radius: {radius_km:.2f}km")
 
+    # Store original center before snapping
+    original_center_lat = center_lat
+    original_center_lng = center_lng
+
     # Snap center point to land (avoid water)
     # This ensures the search center is always on land
     land_center = await google_maps_service.snap_to_land(
@@ -95,8 +99,11 @@ async def search_candidates(
     search_center_lng = land_center["lng"]
     search_radius = radius_km * search_data.radius_multiplier
 
+    # Check if center was adjusted (snapped)
+    was_snapped = abs(search_center_lat - center_lat) > 0.0001 or abs(search_center_lng - center_lng) > 0.0001
+
     # Log if center was adjusted
-    if abs(search_center_lat - center_lat) > 0.0001 or abs(search_center_lng - center_lng) > 0.0001:
+    if was_snapped:
         print(f"🌊 Center adjusted from water ({center_lat:.6f}, {center_lng:.6f}) to land ({search_center_lat:.6f}, {search_center_lng:.6f})")
 
     # Clear previous search results (system-added candidates only)
@@ -212,7 +219,20 @@ async def search_candidates(
             vote_count=vote_count_map.get(c.id, 0)
         ))
 
-    return responses
+    # Build search area metadata
+    search_area = SearchAreaInfo(
+        center_lat=search_center_lat,
+        center_lng=search_center_lng,
+        radius_km=search_radius,
+        was_snapped=was_snapped,
+        original_center_lat=original_center_lat if was_snapped else None,
+        original_center_lng=original_center_lng if was_snapped else None
+    )
+
+    return CandidateSearchResponse(
+        candidates=responses,
+        search_area=search_area
+    )
 
 
 @router.get("/events/{event_id}/candidates", response_model=List[CandidateResponse])
