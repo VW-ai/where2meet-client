@@ -50,3 +50,7 @@
  GET /icon 200 in 5ms
  GET /event?id=evt_c2865d86bc644829 200 in 187ms
  GET /icon 200 in 42ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1115ms (425 modules)
+ GET / 200 in 1533ms
+ GET /event?id=evt_8a010eb3807447bc 200 in 65ms
