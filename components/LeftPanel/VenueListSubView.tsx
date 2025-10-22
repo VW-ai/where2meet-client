@@ -8,6 +8,7 @@ interface VenueListSubViewProps {
   selectedCandidate: Candidate | null;
   onCandidateClick: (candidate: Candidate) => void;
   onVote?: (candidateId: string) => void;
+  onDownvote?: (candidateId: string) => void;
   participantId?: string;
   onRemoveCandidate?: (candidateId: string) => void;
   isHost: boolean;
@@ -18,17 +19,20 @@ export default function VenueListSubView({
   selectedCandidate,
   onCandidateClick,
   onVote,
+  onDownvote,
   participantId,
   onRemoveCandidate,
   isHost,
 }: VenueListSubViewProps) {
 
-  // Sort by vote count (highest first)
-  const sortedCandidates = [...candidates].sort((a, b) => {
-    const voteA = a.voteCount || 0;
-    const voteB = b.voteCount || 0;
-    return voteB - voteA;
-  });
+  // Filter out venues with 0 votes, then sort by vote count (highest first)
+  const sortedCandidates = [...candidates]
+    .filter((candidate) => (candidate.voteCount || 0) > 0)
+    .sort((a, b) => {
+      const voteA = a.voteCount || 0;
+      const voteB = b.voteCount || 0;
+      return voteB - voteA;
+    });
 
   const topChoice = sortedCandidates[0];
 
@@ -36,6 +40,13 @@ export default function VenueListSubView({
     e.stopPropagation();
     if (onVote) {
       onVote(candidateId);
+    }
+  };
+
+  const handleDownvoteClick = async (candidateId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDownvote) {
+      onDownvote(candidateId);
     }
   };
 
@@ -50,43 +61,30 @@ export default function VenueListSubView({
   }
 
   return (
-    <div className="p-4 space-y-3">
-      {/* Top Choice Banner */}
+    <div className="px-4 py-3 space-y-2">
+      {/* Top Choice Banner - Compact */}
       {topChoice && topChoice.voteCount && topChoice.voteCount > 0 && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-600 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Trophy className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">
-                Top Choice
-              </p>
-              <h4 className="font-bold text-neutral-900 text-base">{topChoice.name}</h4>
-              {topChoice.vicinity && (
-                <p className="text-xs text-neutral-600 mt-1">{topChoice.vicinity}</p>
-              )}
-              <div className="flex items-center gap-2 mt-2">
-                {topChoice.rating && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    <span className="text-xs font-medium text-neutral-700">
-                      {topChoice.rating.toFixed(1)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4 fill-emerald-600 text-emerald-600" />
-                  <span className="text-sm font-bold text-emerald-700">
-                    {topChoice.voteCount} {topChoice.voteCount === 1 ? 'vote' : 'votes'}
-                  </span>
+        <div className="bg-black text-white border-2 border-black p-2">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-white flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h4 className="font-bold text-white text-xs truncate">{topChoice.name}</h4>
+                <div className="flex items-center gap-0.5 text-white flex-shrink-0">
+                  <Heart className="w-3 h-3 fill-white" />
+                  <span className="text-xs font-bold">{topChoice.voteCount}</span>
                 </div>
               </div>
+              {topChoice.vicinity && (
+                <p className="text-xs text-gray-300 truncate">{topChoice.vicinity}</p>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Venue List */}
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      {/* Venue List - Ultra-compact 2-line cards */}
+      <div className="space-y-0.5 max-h-96 overflow-y-auto">
         {sortedCandidates.map((candidate, index) => {
           const isTopChoice = index === 0 && candidate.voteCount && candidate.voteCount > 0;
           const isSelected = selectedCandidate?.id === candidate.id;
@@ -96,81 +94,111 @@ export default function VenueListSubView({
             <div
               key={candidate.id}
               onClick={() => onCandidateClick(candidate)}
-              className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+              className={`p-1.5 border-2 cursor-pointer transition-all ${
                 isSelected
-                  ? 'bg-emerald-50 border-emerald-600 shadow-md'
-                  : isTopChoice
-                  ? 'bg-emerald-50/50 border-emerald-300 hover:border-emerald-400'
-                  : 'bg-white border-neutral-200 hover:border-emerald-300 hover:shadow-sm'
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white border-black hover:bg-gray-100'
               }`}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-start gap-2">
-                    {isTopChoice && (
-                      <Trophy className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    )}
-                    <div>
-                      <h5 className="font-semibold text-neutral-900 text-sm">{candidate.name}</h5>
-                      {candidate.vicinity && (
-                        <p className="text-xs text-neutral-600 mt-0.5">{candidate.vicinity}</p>
-                      )}
-                    </div>
-                  </div>
+              {/* Line 1: Name + Trophy (if top) + Rating + Distance */}
+              <div className="flex items-center justify-between gap-1 mb-0.5">
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  {isTopChoice && <Trophy className={`w-3 h-3 flex-shrink-0 ${
+                    isSelected ? 'text-white' : 'text-black'
+                  }`} />}
+                  <h5 className={`font-semibold text-xs truncate ${
+                    isSelected ? 'text-white' : 'text-neutral-900'
+                  }`}>
+                    {candidate.name}
+                  </h5>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
+                  {candidate.rating && (
+                    <div className="flex items-center gap-0.5">
+                      <Star className={`w-3 h-3 ${
+                        isSelected ? 'fill-white text-white' : 'fill-yellow-400 text-yellow-400'
+                      }`} />
+                      <span className={`font-medium ${
+                        isSelected ? 'text-white' : 'text-neutral-700'
+                      }`}>{candidate.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {candidate.distanceFromCenter !== undefined && (
+                    <div className="flex items-center gap-0.5">
+                      <MapPin className={`w-3 h-3 ${
+                        isSelected ? 'text-white' : 'text-neutral-500'
+                      }`} />
+                      <span className={isSelected ? 'text-white' : 'text-neutral-600'}>
+                        {(candidate.distanceFromCenter / 1000).toFixed(1)}km
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Line 2: Address + Vote/Remove */}
+              <div className="flex items-center justify-between gap-1">
+                <p className={`text-xs truncate flex-1 ${
+                  isSelected ? 'text-gray-300' : 'text-neutral-500'
+                }`}>
+                  {candidate.vicinity || 'No address'}
+                </p>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Upvote button */}
                   {participantId && onVote && (
                     <button
                       onClick={(e) => handleVoteClick(candidate.id, e)}
-                      className="p-2 hover:bg-emerald-100 rounded-full transition-colors"
-                      title="Vote for this venue"
+                      className={`p-0.5 border border-black transition-colors ${
+                        isSelected
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : 'bg-white hover:bg-gray-100'
+                      }`}
+                      title="Upvote"
                     >
-                      <Heart
-                        className={`w-5 h-5 ${
-                          voteCount > 0 ? 'fill-emerald-600 text-emerald-600' : 'text-neutral-400'
-                        }`}
-                      />
+                      <Heart className="w-3.5 h-3.5 fill-black text-black" />
                     </button>
                   )}
+
+                  {/* Vote count */}
+                  <span className={`text-xs font-bold min-w-[1.5rem] text-center ${
+                    isSelected ? 'text-white' : 'text-black'
+                  }`}>
+                    {voteCount}
+                  </span>
+
+                  {/* Downvote button */}
+                  {participantId && onDownvote && (
+                    <button
+                      onClick={(e) => handleDownvoteClick(candidate.id, e)}
+                      className={`p-0.5 border border-black transition-colors ${
+                        isSelected
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : 'bg-white hover:bg-gray-100'
+                      }`}
+                      title="Downvote"
+                    >
+                      <Heart className="w-3.5 h-3.5 fill-black text-black rotate-180" />
+                    </button>
+                  )}
+
+                  {/* Remove button (host only) */}
                   {isHost && onRemoveCandidate && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onRemoveCandidate(candidate.id);
                       }}
-                      className="p-2 hover:bg-red-100 text-neutral-400 hover:text-red-600 rounded-full transition-colors"
-                      title="Remove from list"
+                      className={`p-0.5 border border-black transition-colors ${
+                        isSelected
+                          ? 'bg-white text-black hover:bg-gray-200'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                      title="Remove"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs">
-                {candidate.rating && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium text-neutral-700">{candidate.rating.toFixed(1)}</span>
-                    {candidate.userRatingsTotal && (
-                      <span className="text-neutral-500">({candidate.userRatingsTotal})</span>
-                    )}
-                  </div>
-                )}
-                {candidate.distanceFromCenter !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-neutral-500" />
-                    <span className="text-neutral-600">
-                      {(candidate.distanceFromCenter / 1000).toFixed(2)} km
-                    </span>
-                  </div>
-                )}
-                {voteCount > 0 && (
-                  <div className="flex items-center gap-1 text-emerald-600 font-semibold">
-                    <Heart className="w-3 h-3 fill-emerald-600" />
-                    <span>{voteCount}</span>
-                  </div>
-                )}
               </div>
             </div>
           );

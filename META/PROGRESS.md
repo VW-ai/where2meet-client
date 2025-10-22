@@ -828,6 +828,217 @@ META/v0.1+/UNIFIED_REFACTOR_PLAN.md      # NEW: Design plan
 
 ---
 
+## 2025-10-22: Techno/Brutalist Design System - Complete Left Panel Redesign ✅
+
+### Overview
+Complete visual overhaul of the left panel from emerald/green design to high-contrast black/white techno/brutalist aesthetic. This represents a major shift from subtle gradients to bold, unambiguous design choices with sharp edges and binary states.
+
+### ✅ Design Philosophy Shift
+**From**: Soft emerald tints, rounded corners, subtle shadows, gradients
+**To**: Black/white only, sharp `border-2 border-black`, hard drop shadows, no ambiguous colors
+
+### ✅ Main Panel Container (LeftPanel.tsx)
+**Visual Changes**:
+- Changed from `rounded-lg shadow-lg` to `border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`
+- Hard drop shadow (no blur) for brutalist aesthetic
+- Solid black dividers (`h-0.5 bg-black`) between sections
+- No background tints or gradients
+
+### ✅ Section 1: Input (Join Event) - InputSection.tsx
+**Techno Styling Applied**:
+- All inputs: `border-2 border-black` (no rounded corners, no focus rings)
+- Black icons instead of neutral gray
+- Square buttons (removed `rounded-full`)
+- Primary buttons: `bg-black text-white border-2 border-black`
+- Toggle buttons invert on active state (blur on/off, geolocation)
+- All text uppercase: "JOIN", "UPDATE"
+- Tooltips: `bg-black text-white border-2 border-black`
+- Name input shuffle button: square with black border
+
+**Example**:
+```tsx
+// Blur toggle - binary black/white
+<button className={`p-2 border-2 border-black transition-all ${
+  blurLocation
+    ? 'bg-black text-white hover:bg-gray-900'
+    : 'bg-white text-black hover:bg-gray-100'
+}`}>
+```
+
+### ✅ Section 2: Venues - VenuesSection.tsx & Sub-views
+**Tab Navigation** (VenuesSection.tsx):
+- Active tab: `bg-black text-white`
+- Inactive tab: `bg-white text-black hover:bg-gray-100`
+- All caps labels: "SEARCH", "SAVED"
+- Black borders between tabs (`border-r border-black`)
+- Badge counts with black borders
+
+**Search Controls** (SearchSubView.tsx):
+- Search type toggle (Type/Name): No gap between buttons, `border-2 border-black`
+- Category chips: Black/white with `border-2 border-black`
+- Sort buttons: Active = `bg-black text-white`, Inactive = `bg-white text-black`
+- Search input: `border-2 border-black` with black icons
+- Removed search area explanation box (replaced with Info icon tooltip)
+- Checkbox filter: Just checkbox + Info icon (no "In Circle" label)
+
+**Venue Result Cards** (SearchSubView.tsx & VenueListSubView.tsx):
+- Changed from `rounded` emerald cards to `border-2 border-black`
+- Selected state: `bg-black text-white` instead of emerald ring
+- All text/icons invert to white when selected
+- **Removed separate + Add button** - Heart now does both save AND vote
+- Vote button tooltip: "Save and Vote"
+- Stars remain yellow when not selected, turn white when selected
+
+**Saved Venues List** (VenueListSubView.tsx):
+- Top choice banner: `bg-black text-white` instead of emerald gradient
+- **Voting UI redesigned**:
+  - Removed redundant left heart icon (vote count display)
+  - Layout: `[Upvote ♥] [Vote Count] [Downvote ♡] [Remove 🗑️]`
+  - Upvote: Filled heart
+  - Vote count: Centered bold number
+  - Downvote: Upside-down heart (`rotate-180`)
+  - All buttons: `border border-black`
+- **Auto-filter**: Venues with 0 votes automatically hidden from saved list
+- Remove button: Black borders, inverted colors on selected cards
+
+**Removed Icons**: `Plus` (add button), `TrendingUp` (unused)
+
+### ✅ Section 3: Participants - ParticipationSection.tsx
+**Major UX Improvement**: Color-coded entries with angled regions
+- **Removed triangle marker** from left side
+- **Added color tag**: Rightmost 25% displays participant's map marker color
+- **Angled left edge**: Creates chevron/arrow effect using CSS `clipPath`
+  - `clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)'`
+  - Integrates seamlessly with card, not a separate box
+- **Visual link**: Color tag matches map marker, making participant identification instant
+
+**Techno Styling**:
+- Header: `text-black uppercase` instead of emerald
+- Participant cards: `border-2 border-black`
+- Selected (you): `bg-black text-white`
+- Inactive: `bg-white border-black hover:bg-gray-100`
+- Remove button: `border border-black` (host only)
+- Color palette unchanged: emerald, teal, amber, purple, pink, blue (used only in color tags)
+
+**Layout Structure**:
+```tsx
+<div className="relative flex items-center border-2 border-black overflow-hidden">
+  <div className="flex items-center gap-1.5 p-1.5 flex-1 relative z-10">
+    {/* Content: Name, coords, blur icon, remove button */}
+  </div>
+  <div className="absolute right-0 top-0 bottom-0 w-[25%]"
+    style={{
+      backgroundColor: color,
+      clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)'
+    }}
+  />
+</div>
+```
+
+### ✅ Consistent Design Tokens
+**Border System**:
+- Main elements: `border-2 border-black`
+- Secondary elements: `border border-black`
+- No rounded corners on primary elements
+- Hard drop shadow: `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`
+
+**Color States**:
+- Active/Selected: `bg-black text-white`
+- Inactive: `bg-white text-black`
+- Hover: `hover:bg-gray-100` (white bg) or `hover:bg-gray-900` (black bg)
+
+**Typography**:
+- Button labels: UPPERCASE
+- Headers: `font-bold text-black`
+- Selected text: `text-white`
+- Secondary text: `text-gray-300` (on black) or `text-neutral-500` (on white)
+
+**Icons**:
+- Default: `text-black`
+- Selected: `text-white`
+- Stars: `fill-yellow-400 text-yellow-400` (unselected), `fill-white text-white` (selected)
+
+### ✅ New Props & Handlers
+**Added `onDownvote` prop** through component chain:
+- `LeftPanel.tsx:35` - Interface definition
+- `VenuesSection.tsx:24` - Pass-through
+- `VenueListSubView.tsx:11` - Implementation
+- `handleDownvoteClick()` handler added
+
+**Note**: Backend downvote logic needs implementation in parent component
+
+### 📊 Visual Comparison
+
+| Aspect | Before (Emerald) | After (Techno) |
+|--------|------------------|----------------|
+| **Colors** | Emerald/teal gradients | Pure black/white |
+| **Borders** | 1px rounded | 2px sharp edges |
+| **Shadows** | Soft blur | Hard drop 4px offset |
+| **Buttons** | Rounded, colored | Square, inverted |
+| **Cards** | Rounded, ring on select | Sharp, bg invert on select |
+| **Typography** | Mixed case | UPPERCASE actions |
+| **Voting** | Single heart toggle | Upvote/Count/Downvote trio |
+| **Search** | + Add button | Heart saves & votes |
+| **Participants** | Triangle marker | Angled color region |
+
+### ✅ User Experience Improvements
+
+**1. Saved Venues (VenueListSubView)**:
+- ✅ Removed clutter (redundant left heart icon)
+- ✅ Clear voting controls (upvote/downvote/count)
+- ✅ Auto-filter: Inactive venues disappear automatically
+- ✅ Downvote capability added (UX ready, backend TODO)
+
+**2. Search Results (SearchSubView)**:
+- ✅ Simplified action: One button (heart) both saves AND votes
+- ✅ No confusion between "add" and "vote"
+- ✅ Reduced clicks: From 2 actions to 1
+
+**3. Participants (ParticipationSection)**:
+- ✅ Instant visual identification via color tag
+- ✅ Clear link between list and map markers
+- ✅ Angled region more modern than triangle icon
+- ✅ 25% width provides good color visibility
+
+**4. Overall (All Sections)**:
+- ✅ High contrast improves readability
+- ✅ Sharp edges create clear section boundaries
+- ✅ Binary states (black/white) eliminate ambiguity
+- ✅ Professional brutalist aesthetic
+
+### ✅ Build Status
+- ✅ All builds successful (no TypeScript errors)
+- ✅ Removed unused imports: `Plus`, `TrendingUp`
+- ✅ Bundle size: 29 kB for `/event` route (+100 bytes for clipPath)
+- ✅ Clean compilation logs
+
+### 📝 Files Modified
+```
+components/LeftPanel/
+  LeftPanel.tsx              # Hard shadow, black dividers
+  InputSection.tsx           # Black borders, square buttons, uppercase
+  VenuesSection.tsx          # Black/white tabs, added onDownvote prop
+  SearchSubView.tsx          # Removed + Add button, combined save/vote
+  VenueListSubView.tsx       # Upvote/downvote/count layout, auto-filter
+  ParticipationSection.tsx   # Angled color tag with clipPath
+```
+
+### 🎨 Design Inspiration
+Referenced brutalist/techno design pattern from user-provided image:
+- Events feed with stark black/white contrast
+- No gradients or soft shadows
+- Clean edges and geometric shapes
+- High information density with clarity
+
+### Next Steps
+1. Implement backend downvote handler in event page
+2. Test auto-filter behavior with real votes
+3. Consider applying techno style to map markers/overlays
+4. Evaluate top panel header for similar redesign
+5. Check mobile responsiveness of new sharp borders
+
+---
+
 ## 2025-10-09: Project Initialization
 - Created repository structure
 - Wrote META documentation (PRODUCT.md, DESIGN.md, TODO.md)

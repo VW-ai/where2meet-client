@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(source:*)",
+      "Bash(alembic revision:*)",
+      "Bash(alembic upgrade:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

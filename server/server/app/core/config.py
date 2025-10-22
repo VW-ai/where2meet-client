@@ -26,13 +26,18 @@ class Settings(BaseSettings):
     # Application
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:4000", "http://localhost:3000"]
+    ALLOWED_ORIGINS: str = "http://localhost:4000,http://localhost:3000"
 
-    @field_validator('ALLOWED_ORIGINS', mode='before')
+    @field_validator('ALLOWED_ORIGINS')
     @classmethod
-    def parse_allowed_origins(cls, v):
+    def parse_allowed_origins(cls, v) -> List[str]:
         """Parse ALLOWED_ORIGINS from JSON string or comma-separated string."""
+        if isinstance(v, list):
+            return v
         if isinstance(v, str):
+            # Handle empty strings
+            if not v.strip():
+                return ["http://localhost:4000", "http://localhost:3000"]
             # Try JSON first
             try:
                 return json.loads(v)

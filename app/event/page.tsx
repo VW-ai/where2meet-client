@@ -586,13 +586,24 @@ function EventPageContent() {
 
     try {
       await api.saveCandidate(eventId, candidateId);
+
+      // Automatically vote for the venue if user is a participant and voting is enabled
+      if (participantId && event?.allow_vote) {
+        try {
+          await api.castVote(eventId, participantId, candidateId);
+        } catch (voteErr) {
+          console.error('Failed to auto-vote:', voteErr);
+          // Don't show error to user - saving is the main action
+        }
+      }
+
       await loadEventData(eventId);
-      toast.success('Venue saved to added list');
+      toast.success(participantId && event?.allow_vote ? 'Venue added and voted!' : 'Venue saved to added list');
     } catch (err) {
       console.error('Failed to save venue:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to save venue');
     }
-  }, [eventId]);
+  }, [eventId, participantId, event]);
 
   // Remove from added list (but keep in database as search result)
   const handleUnsaveCandidate = useCallback(async (candidateId: string) => {

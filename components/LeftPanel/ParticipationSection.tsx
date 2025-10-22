@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, MapPin, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Users, EyeOff, Trash2 } from 'lucide-react';
 import { Participant } from '@/lib/api';
 
 interface ParticipationSectionProps {
@@ -13,12 +13,12 @@ interface ParticipationSectionProps {
 
 // Predefined color palette for participant markers
 const PARTICIPANT_COLORS = [
-  { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-600', marker: '#10b981' },
-  { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-600', marker: '#0d9488' },
-  { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-600', marker: '#f59e0b' },
-  { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-600', marker: '#9333ea' },
-  { bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-600', marker: '#ec4899' },
-  { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-600', marker: '#3b82f6' },
+  '#10b981', // emerald
+  '#0d9488', // teal
+  '#f59e0b', // amber
+  '#9333ea', // purple
+  '#ec4899', // pink
+  '#3b82f6', // blue
 ];
 
 export default function ParticipationSection({
@@ -38,73 +38,65 @@ export default function ParticipationSection({
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-lg shadow-lg p-4 max-h-72 overflow-hidden flex flex-col">
-      <div className="flex items-center gap-2 mb-3">
-        <Users className="w-5 h-5 text-emerald-600" />
-        <h3 className="text-lg font-bold text-neutral-900">
+    <div className="px-4 py-3 space-y-2">
+      {/* Header - Compact */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <Users className="w-4 h-4 text-black" />
+        <h3 className="text-xs font-bold text-black uppercase">
           Participants ({participants.length})
         </h3>
       </div>
 
-      <div className="space-y-2 overflow-y-auto flex-1">
+      {/* Ultra-compact 1-line participant list */}
+      <div className="space-y-0.5 max-h-48 overflow-y-auto">
         {participants.map((participant, index) => {
           const isMe = participant.id === myParticipantId;
           const color = getParticipantColor(index);
           const displayName = participant.name || `Participant ${participant.id.slice(0, 8)}`;
-          const truncatedName = displayName.length > 15 ? displayName.slice(0, 15) + '...' : displayName;
+          const truncatedName = displayName.length > 12 ? displayName.slice(0, 12) + '...' : displayName;
 
           // Use fuzzy coordinates if available, otherwise exact
           const displayLat = participant.fuzzy_lat ?? participant.lat;
           const displayLng = participant.fuzzy_lng ?? participant.lng;
-          const locationText = `${displayLat.toFixed(4)}, ${displayLng.toFixed(4)}`;
 
           return (
             <div
               key={participant.id}
               onClick={() => onParticipantClick(participant.id)}
-              className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+              className={`relative flex items-center border-2 border-black cursor-pointer transition-all overflow-hidden ${
                 isMe
-                  ? `${color.bg} ${color.border} shadow-sm`
-                  : `bg-white hover:${color.bg} border-neutral-200 hover:${color.border}`
+                  ? 'bg-black text-white'
+                  : 'bg-white hover:bg-gray-100'
               }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-2 flex-1">
-                  {/* Color Triangle Indicator */}
-                  <div
-                    className={`w-4 h-4 flex-shrink-0 mt-0.5`}
-                    style={{
-                      width: 0,
-                      height: 0,
-                      borderLeft: '8px solid transparent',
-                      borderRight: '8px solid transparent',
-                      borderBottom: `12px solid ${color.marker}`,
-                    }}
-                  />
+              {/* Left content - 75% */}
+              <div className="flex items-center gap-1.5 p-1.5 flex-1 min-w-0 relative z-10">
+                {/* Name (with "You" arrow if self) */}
+                <span className={`text-xs font-bold flex-shrink-0 ${
+                  isMe ? 'text-white' : 'text-black'
+                }`}>
+                  {isMe && '→ '}
+                  {truncatedName}
+                </span>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h5 className={`font-semibold text-sm ${color.text}`}>
-                        {isMe && 'You: '}
-                        {truncatedName}
-                      </h5>
-                      {isBlurred(participant) && (
-                        <span title="Location blurred">
-                          <EyeOff className="w-3 h-3 text-neutral-400" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3 text-neutral-500 flex-shrink-0" />
-                      <p className="text-xs text-neutral-600 truncate" title={locationText}>
-                        {locationText}
-                        {isBlurred(participant) && (
-                          <span className="ml-1 text-neutral-400">(blurred)</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                {/* Bullet separator */}
+                <span className={`text-xs ${isMe ? 'text-gray-400' : 'text-neutral-400'}`}>•</span>
+
+                {/* Coordinates */}
+                <span className={`text-xs truncate flex-1 ${
+                  isMe ? 'text-gray-300' : 'text-neutral-600'
+                }`} title={`${displayLat}, ${displayLng}`}>
+                  {displayLat.toFixed(2)}, {displayLng.toFixed(2)}
+                </span>
+
+                {/* Blur indicator */}
+                {isBlurred(participant) && (
+                  <span title="Location blurred">
+                    <EyeOff className={`w-3 h-3 flex-shrink-0 ${
+                      isMe ? 'text-gray-400' : 'text-neutral-400'
+                    }`} />
+                  </span>
+                )}
 
                 {/* Remove Button (Host only, can't remove self) */}
                 {isHost && !isMe && onRemoveParticipant && (
@@ -113,13 +105,27 @@ export default function ParticipationSection({
                       e.stopPropagation();
                       onRemoveParticipant(participant.id);
                     }}
-                    className="p-1.5 hover:bg-red-100 text-neutral-400 hover:text-red-600 rounded transition-colors"
+                    className={`p-0.5 border border-black transition-colors flex-shrink-0 ${
+                      isMe
+                        ? 'bg-white text-black hover:bg-gray-200'
+                        : 'bg-white text-black hover:bg-gray-100'
+                    }`}
                     title="Remove participant"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 )}
               </div>
+
+              {/* Color tag - Rightmost 25% with angled left edge */}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-[25%] flex-shrink-0"
+                style={{
+                  backgroundColor: color,
+                  clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
+                }}
+                title={`Map marker color: ${color}`}
+              />
             </div>
           );
         })}

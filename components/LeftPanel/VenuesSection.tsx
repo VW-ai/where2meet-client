@@ -21,6 +21,7 @@ interface VenuesSectionProps {
   selectedCandidate: Candidate | null;
   onCandidateClick: (candidate: Candidate) => void;
   onVote?: (candidateId: string) => void;
+  onDownvote?: (candidateId: string) => void;
   participantId?: string;
   onSaveCandidate?: (candidateId: string) => void;
   onRemoveCandidate?: (candidateId: string) => void;
@@ -43,6 +44,7 @@ export default function VenuesSection({
   selectedCandidate,
   onCandidateClick,
   onVote,
+  onDownvote,
   participantId,
   onSaveCandidate,
   onRemoveCandidate,
@@ -56,37 +58,37 @@ export default function VenuesSection({
   const savedVenues = candidates.filter(c => c.addedBy === 'organizer');
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-lg shadow-lg overflow-hidden flex flex-col" style={{ maxHeight: '60vh' }}>
-      {/* Tab Headers */}
-      <div className="flex border-b border-neutral-200">
+    <div className="flex flex-col" style={{ maxHeight: '60vh' }}>
+      {/* Tab Headers - High contrast black/white */}
+      <div className="flex border-b-2 border-black">
         <button
           onClick={() => setActiveTab('search')}
-          className={`flex-1 px-4 py-3 font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+          className={`flex-1 px-3 py-2 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-r border-black ${
             activeTab === 'search'
-              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600'
-              : 'bg-white text-neutral-600 hover:bg-neutral-50'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
           }`}
         >
-          <Search className="w-4 h-4" />
-          Search
+          <Search className="w-3.5 h-3.5" />
+          SEARCH
           {searchResults.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
+            <span className="px-1.5 py-0.5 bg-white text-black text-xs font-bold border border-black">
               {searchResults.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('list')}
-          className={`flex-1 px-4 py-3 font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+          className={`flex-1 px-3 py-2 font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'list'
-              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600'
-              : 'bg-white text-neutral-600 hover:bg-neutral-50'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-gray-100'
           }`}
         >
-          <Heart className="w-4 h-4" />
-          Venue List
+          <Heart className="w-3.5 h-3.5" />
+          SAVED
           {savedVenues.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
+            <span className="px-1.5 py-0.5 bg-white text-black text-xs font-bold border border-black">
               {savedVenues.length}
             </span>
           )}
@@ -122,6 +124,7 @@ export default function VenuesSection({
             selectedCandidate={selectedCandidate}
             onCandidateClick={onCandidateClick}
             onVote={onVote}
+            onDownvote={onDownvote}
             participantId={participantId}
             onRemoveCandidate={onRemoveCandidate}
             isHost={isHost}

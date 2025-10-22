@@ -32,6 +32,7 @@ interface LeftPanelProps {
   selectedCandidate: Candidate | null;
   onCandidateClick: (candidate: Candidate) => void;
   onVote?: (candidateId: string) => void;
+  onDownvote?: (candidateId: string) => void;
   participantId?: string;
   onSaveCandidate?: (candidateId: string) => void;
   onRemoveCandidate?: (candidateId: string) => void;
@@ -69,6 +70,7 @@ export default function LeftPanel({
   selectedCandidate,
   onCandidateClick,
   onVote,
+  onDownvote,
   participantId,
   onSaveCandidate,
   onRemoveCandidate,
@@ -82,43 +84,50 @@ export default function LeftPanel({
 }: LeftPanelProps) {
 
   return (
-    <div className="w-96 max-w-[calc(50vw-2rem)] flex flex-col gap-3">
+    <div className="w-96 max-w-[calc(50vw-2rem)] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col">
       {/* Section 1: Input View */}
       {(!isJoined || isHost) && (
-        <InputSection
-          isJoined={isJoined}
-          onJoinEvent={onJoinEvent}
-          onEditLocation={onEditLocation}
-          onRemoveOwnLocation={onRemoveOwnLocation}
-          currentUserName={currentUserName}
-          currentUserLocation={currentUserLocation}
-          isHost={isHost}
-        />
+        <>
+          <InputSection
+            isJoined={isJoined}
+            onJoinEvent={onJoinEvent}
+            onEditLocation={onEditLocation}
+            onRemoveOwnLocation={onRemoveOwnLocation}
+            currentUserName={currentUserName}
+            currentUserLocation={currentUserLocation}
+            isHost={isHost}
+          />
+          {isJoined && <div className="h-0.5 bg-black" />}
+        </>
       )}
 
       {/* Section 2: Venues View */}
       {isJoined && (
-        <VenuesSection
-          keyword={keyword}
-          onKeywordChange={onKeywordChange}
-          onSearch={onSearch}
-          isSearching={isSearching}
-          searchType={searchType}
-          onSearchTypeChange={onSearchTypeChange}
-          sortMode={sortMode}
-          onSortChange={onSortChange}
-          onlyInCircle={onlyInCircle}
-          onOnlyInCircleChange={onOnlyInCircleChange}
-          candidates={candidates}
-          selectedCandidate={selectedCandidate}
-          onCandidateClick={onCandidateClick}
-          onVote={onVote}
-          participantId={participantId}
-          onSaveCandidate={onSaveCandidate}
-          onRemoveCandidate={onRemoveCandidate}
-          isHost={isHost}
-          hasAutoSearched={hasAutoSearched}
-        />
+        <>
+          <VenuesSection
+            keyword={keyword}
+            onKeywordChange={onKeywordChange}
+            onSearch={onSearch}
+            isSearching={isSearching}
+            searchType={searchType}
+            onSearchTypeChange={onSearchTypeChange}
+            sortMode={sortMode}
+            onSortChange={onSortChange}
+            onlyInCircle={onlyInCircle}
+            onOnlyInCircleChange={onOnlyInCircleChange}
+            candidates={candidates}
+            selectedCandidate={selectedCandidate}
+            onCandidateClick={onCandidateClick}
+            onVote={onVote}
+            onDownvote={onDownvote}
+            participantId={participantId}
+            onSaveCandidate={onSaveCandidate}
+            onRemoveCandidate={onRemoveCandidate}
+            isHost={isHost}
+            hasAutoSearched={hasAutoSearched}
+          />
+          {participants.length > 0 && <div className="h-0.5 bg-black" />}
+        </>
       )}
 
       {/* Section 3: Participation View */}
