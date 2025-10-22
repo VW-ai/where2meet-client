@@ -4,18 +4,19 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Toaster, toast } from 'sonner';
-import InputPanel from '@/components/InputPanel';
-import CandidatesPanel from '@/components/CandidatesPanel';
-import VenueSearchBox from '@/components/VenueSearchBox';
-import Tabs, { TabItem } from '@/components/Tabs';
+import LeftPanel from '@/components/LeftPanel';
+import Tabs from '@/components/Tabs';
 import EmptyState from '@/components/EmptyState';
+import VenueSearchBox from '@/components/VenueSearchBox';
+import CandidatesPanel from '@/components/CandidatesPanel';
+import Instructions from '@/components/Instructions';
 import { Location, Candidate, Circle, SortMode } from '@/types';
 import { computeCentroid, computeMinimumEnclosingCircle } from '@/lib/algorithms';
 import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import Instructions from '@/components/Instructions';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
+import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -52,15 +53,14 @@ function EventPageContent() {
   const [searchRadius, setSearchRadius] = useState(2000); // DEPRECATED: Visual radius - kept for backward compat before search
   const [radiusMultiplier, setRadiusMultiplier] = useState(1.0); // Multiplier for MEC radius: 1.0 to 2.0 (default: 1.0x)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
+  const [hasAutoSearched, setHasAutoSearched] = useState(false); // Track if auto-search has run
+  const [searchType, setSearchType] = useState<'type' | 'name'>('type'); // Search by type or name
 
   // UI state
   const [isInitializing, setIsInitializing] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [travelMode, setTravelMode] = useState<any>('DRIVING'); // Start with string, will be converted when Google loads
-  const [showNicknamePrompt, setShowNicknamePrompt] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
 
@@ -315,15 +315,22 @@ function EventPageContent() {
     if (!eventId) return;
 
     try {
+      // Generate unique anonymous name
+      const existingNames = extractExistingNames(participants);
+      const anonymousName = generateUniqueName(existingNames);
+
       const participant = await api.addParticipant(eventId, {
         lat: location.lat,
         lng: location.lng,
-        name: location.name || location.address,
+        name: anonymousName,
       });
 
       // Store participant ID
       sessionStorage.setItem('participantId', participant.id);
       setParticipantId(participant.id);
+
+      // Show success toast with generated name
+      toast.success(`Added as ${anonymousName}`);
 
       // Reload event data to get updated list
       await loadEventData(eventId);
@@ -331,7 +338,7 @@ function EventPageContent() {
       console.error('Failed to add location:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to add location');
     }
-  }, [eventId]);
+  }, [eventId, participants]);
 
   const handleRemoveLocation = useCallback(async (id: string) => {
     if (!eventId || role !== 'host') return;
@@ -374,7 +381,7 @@ function EventPageContent() {
     }
   }, [eventId]);
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
     // Ignore map clicks right after dragging centroid
     if (isDraggingCentroid) {
       setIsDraggingCentroid(false);
@@ -384,23 +391,41 @@ function EventPageContent() {
     // If user already has a participant ID and is not a host, they can't add another location
     if (participantId && role !== 'host') return;
 
-    const newLocation: Location = {
-      id: Date.now().toString(),
-      lat,
-      lng,
-      address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-    };
+    if (!eventId) return;
 
-    // Show confirmation dialog first, then prompt for nickname
+    // Show confirmation dialog
     const confirmed = confirm(
-      `Add location at:\n${lat.toFixed(6)}, ${lng.toFixed(6)}?\n\nClick OK to confirm this location.`
+      `Add your location at:\n${lat.toFixed(6)}, ${lng.toFixed(6)}?\n\nClick OK to confirm.`
     );
 
-    if (confirmed) {
-      setPendingLocation(newLocation);
-      setShowNicknamePrompt(true);
+    if (!confirmed) return;
+
+    try {
+      // Generate unique anonymous name
+      const existingNames = extractExistingNames(participants);
+      const anonymousName = generateUniqueName(existingNames);
+
+      // Add participant with anonymous name
+      const participant = await api.addParticipant(eventId, {
+        lat,
+        lng,
+        name: anonymousName,
+      });
+
+      // Store participant ID
+      sessionStorage.setItem('participantId', participant.id);
+      setParticipantId(participant.id);
+
+      // Show success toast with generated name
+      toast.success(`Added as ${anonymousName}`);
+
+      // Reload event data to get updated list
+      await loadEventData(eventId);
+    } catch (err) {
+      console.error('Failed to add location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to add location');
     }
-  }, [participantId, role, isDraggingCentroid]);
+  }, [participantId, role, isDraggingCentroid, eventId, participants]);
 
   // Search candidates via API
   const searchPlaces = useCallback(async () => {
@@ -460,6 +485,21 @@ function EventPageContent() {
       setIsSearching(false);
     }
   }, [eventId, keyword, customCentroid, onlyInCircle, t]);
+
+  // Auto-search when 2+ participants and keyword exists
+  useEffect(() => {
+    if (
+      !hasAutoSearched &&
+      locations.length >= 2 &&
+      keyword.trim() &&
+      !isSearching &&
+      !isInitializing
+    ) {
+      console.log('🚀 Auto-search triggered: 2+ participants, keyword exists');
+      searchPlaces();
+      setHasAutoSearched(true);
+    }
+  }, [locations.length, keyword, hasAutoSearched, isSearching, isInitializing, searchPlaces]);
 
   // Sort candidates
   const sortedCandidates = useCallback(() => {
@@ -568,29 +608,6 @@ function EventPageContent() {
     }
   }, [eventId]);
 
-  // Handle nickname confirmation
-  const handleConfirmNickname = useCallback(() => {
-    if (!nickname.trim()) {
-      toast.info(t.pleaseEnterNickname);
-      return;
-    }
-
-    if (pendingLocation) {
-      handleAddLocation({
-        ...pendingLocation,
-        name: nickname.trim(),
-      });
-      setShowNicknamePrompt(false);
-      setPendingLocation(null);
-      setNickname('');
-    }
-  }, [nickname, pendingLocation, handleAddLocation, t]);
-
-  const handleCancelNickname = useCallback(() => {
-    setShowNicknamePrompt(false);
-    setPendingLocation(null);
-    setNickname('');
-  }, []);
 
   // Handle centroid drag (host only)
   const handleCentroidDrag = useCallback(async (lat: number, lng: number) => {
@@ -640,6 +657,71 @@ function EventPageContent() {
     navigator.clipboard.writeText(link);
     toast.success(t.joinLinkCopied);
   };
+
+  // Handler functions for new LeftPanel component
+  const handleJoinEvent = useCallback(async (data: { name: string; lat: number; lng: number; blur: boolean }) => {
+    if (!eventId) return;
+
+    try {
+      const participant = await api.addParticipant(eventId, {
+        lat: data.lat,
+        lng: data.lng,
+        name: data.name,
+      });
+
+      // Store participant ID
+      sessionStorage.setItem('participantId', participant.id);
+      setParticipantId(participant.id);
+
+      toast.success(`Joined as ${data.name}`);
+
+      // Reload event data
+      await loadEventData(eventId);
+    } catch (err) {
+      console.error('Failed to join event:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to join event');
+      throw err;
+    }
+  }, [eventId]);
+
+  const handleEditOwnLocation = useCallback(async (data: { name?: string; lat?: number; lng?: number }) => {
+    if (!eventId || !participantId) return;
+
+    try {
+      await api.updateParticipant(eventId, participantId, data);
+      await loadEventData(eventId);
+      toast.success('Location updated');
+    } catch (err) {
+      console.error('Failed to update location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to update location');
+      throw err;
+    }
+  }, [eventId, participantId]);
+
+  const handleRemoveOwnLocation = useCallback(async () => {
+    if (!eventId || !participantId) return;
+
+    try {
+      await api.removeParticipant(eventId, participantId);
+      sessionStorage.removeItem('participantId');
+      setParticipantId(null);
+      await loadEventData(eventId);
+      toast.success('Location removed');
+    } catch (err) {
+      console.error('Failed to remove location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to remove location');
+    }
+  }, [eventId, participantId]);
+
+  const handleParticipantClick = useCallback((participantId: string) => {
+    // Find the participant
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+
+    // Pan map to their location (will be implemented in MapView)
+    console.log('Focus on participant:', participantId, participant);
+    // TODO: Add map pan functionality
+  }, [participants]);
 
   // Show enhanced loading screen during initialization
   if (isInitializing || !event) {
@@ -790,90 +872,47 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Floating Left Panel - Input & Controls */}
-      <div className="absolute left-4 top-24 w-72 max-w-[calc(50vw-2rem)] flex flex-col gap-2 z-10 transition-all duration-300">
-        {/* Input Panel - Show for non-participants OR for host (host can always add location) */}
-        {(!participantId || role === 'host') && (
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden">
-            <div className="p-3">
-              <InputPanel
-                locations={locations}
-                onAddLocation={handleAddLocation}
-                onRemoveLocation={handleRemoveLocation}
-                onUpdateLocation={handleUpdateLocation}
-                myParticipantId={participantId || undefined}
-                isHost={role === 'host'}
-                selectedCandidate={selectedCandidate}
-                routeFromParticipantId={routeFromParticipantId}
-                onRouteFromChange={setRouteFromParticipantId}
-              />
-            </div>
-          </div>
-        )}
+      {/* New Unified Left Panel */}
+      <div className="absolute left-4 top-24 z-10">
+        <LeftPanel
+          // Input Section
+          isJoined={!!participantId}
+          onJoinEvent={handleJoinEvent}
+          onEditLocation={handleEditOwnLocation}
+          onRemoveOwnLocation={handleRemoveOwnLocation}
+          currentUserName={participants.find(p => p.id === participantId)?.name}
+          currentUserLocation={participants.find(p => p.id === participantId) ?
+            `${participants.find(p => p.id === participantId)?.lat.toFixed(4)}, ${participants.find(p => p.id === participantId)?.lng.toFixed(4)}` :
+            undefined
+          }
+          isHost={role === 'host'}
 
-        {/* Host Controls */}
-        {role === 'host' && (
-          <>
-            {/* Search Radius Multiplier Control */}
-            {locations.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
-                <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-sm font-bold text-gray-900">Search Area Size</h3>
-                  <div className="relative group">
-                    <button className="w-4 h-4 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center hover:bg-gray-400 transition-colors">
-                      ?
-                    </button>
-                    <div className="absolute left-0 top-6 w-64 bg-gray-900 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      Adjust search radius multiplier. 1.0x searches exactly within the MEC circle. 2.0x doubles the search area for more results.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">1.0x</span>
-                  <span className="text-xs font-bold text-blue-700">
-                    {radiusMultiplier.toFixed(1)}x MEC
-                  </span>
-                  <span className="text-xs font-medium text-gray-700">2.0x</span>
-                </div>
-                <input
-                  type="range"
-                  min={1.0}
-                  max={2.0}
-                  step={0.1}
-                  value={radiusMultiplier}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    const newMultiplier = Math.min(2.0, Math.max(1.0, value));
-                    console.log('🎚️ Slider changed: radiusMultiplier', radiusMultiplier, '→', newMultiplier);
-                    setRadiusMultiplier(newMultiplier);
-                    setAuthoritativeCircle(null); // Clear authoritative circle to show preview
-                    console.log('🎚️ Cleared authoritativeCircle to show preview with new multiplier');
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  Controls how far beyond the optimal meeting point to search for venues
-                </p>
+          // Venues Section
+          keyword={keyword}
+          onKeywordChange={setKeyword}
+          onSearch={searchPlaces}
+          isSearching={isSearching}
+          searchType={searchType}
+          onSearchTypeChange={setSearchType}
+          sortMode={sortMode}
+          onSortChange={setSortMode}
+          onlyInCircle={onlyInCircle}
+          onOnlyInCircleChange={setOnlyInCircle}
+          candidates={candidates}
+          selectedCandidate={selectedCandidate}
+          onCandidateClick={setSelectedCandidate}
+          onVote={handleVote}
+          participantId={participantId || undefined}
+          onSaveCandidate={handleSaveCandidate}
+          onRemoveCandidate={handleRemoveCandidate}
+          hasAutoSearched={hasAutoSearched}
 
-                {/* Reset Center Point Button - Only show when customCentroid exists */}
-                {customCentroid && (
-                  <div className="mt-3 pt-3 border-t border-gray-300">
-                    <button
-                      onClick={handleResetCentroid}
-                      className="w-full px-3 py-2 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-200 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <span>↺</span>
-                      <span>Reset Center Point</span>
-                    </button>
-                    <p className="text-xs text-gray-600 mt-1 text-center">
-                      Restore auto-calculated center
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+          // Participation Section
+          participants={participants}
+          myParticipantId={participantId || undefined}
+          onParticipantClick={handleParticipantClick}
+          onRemoveParticipant={role === 'host' ? handleRemoveLocation : undefined}
+        />
       </div>
 
       {/* Floating Right Panel - Tabbed Interface */}
@@ -1033,44 +1072,6 @@ function EventPageContent() {
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
               >
                 {t.close}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Nickname Prompt Modal (for map clicks) */}
-      {showNicknamePrompt && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50" onClick={handleCancelNickname}>
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">{t.enterNickname}</h3>
-            <p className="text-sm text-gray-700 mb-4">
-              {role === 'host'
-                ? 'This will be visible to all participants and displayed on the map.'
-                : t.nicknameVisible}
-            </p>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleConfirmNickname()}
-              placeholder={t.nicknamePlaceholder}
-              autoFocus
-              className="w-full px-4 py-3 text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 mb-4"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleConfirmNickname}
-                disabled={!nickname.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {t.confirm}
-              </button>
-              <button
-                onClick={handleCancelNickname}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                {t.cancel}
               </button>
             </div>
           </div>

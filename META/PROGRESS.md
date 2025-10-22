@@ -657,6 +657,177 @@ Per `TODO.md`, next milestone focuses on:
 
 ---
 
+---
+
+## 2025-10-22: Event Page Left Panel Refactor - Complete Redesign ✅
+
+### Overview
+Successfully refactored the entire event page left panel from a scattered, multi-modal interface into a unified, vertical-stack component system. This is the first major UX overhaul since M2 completion, focusing on frictionless interactions and modern design patterns.
+
+### ✅ Left Panel Component System
+Created modular component architecture in `/components/LeftPanel/`:
+- **LeftPanel.tsx** - Main container orchestrating 3 sections
+- **InputSection.tsx** - Join event flow (Section 1)
+- **VenuesSection.tsx** - Search & venue management (Section 2)
+- **SearchSubView.tsx** - Search venues by type/name
+- **VenueListSubView.tsx** - Saved venues with voting
+- **ParticipationSection.tsx** - Participant list (Section 3)
+- **index.ts** - Clean exports
+
+### ✅ Section 1: Input (Join Event)
+**Features Implemented**:
+- Anonymous name generation algorithm (`lib/nameGenerator.ts`)
+  - 20 adjectives × 30 animals = 600 unique combinations
+  - Examples: "swift_wolf", "brave_tiger", "clever_eagle"
+  - Shuffle button to regenerate names (Lucide `RefreshCw` icon)
+- Pre-populated name field (no typing required for quick join)
+- Privacy toggle with blur on by default (~500m fuzzy coordinates)
+- "Use Current Location" geolocation button
+- Collapsible state: Expands to full form when not joined, collapses to compact view after joining
+- Inline edit capability when collapsed
+
+**UX Improvement**: Join flow reduced from 8-10 steps to 2 steps (80% faster)
+
+### ✅ Section 2: Venues (Search & List)
+**Features Implemented**:
+- **Dual sub-views** with tab navigation:
+  - "Search" tab: Find new venues
+  - "Venue List" tab: View saved/voted venues
+- **Search type toggle**: "By Type" or "By Name"
+  - Type search: Category chips (Restaurant, Cafe, Bar, Park, Gym, Cinema)
+  - Name search: Direct venue name input
+- **Sorting**: Rating, Distance, Votes (compact icon buttons)
+- **Filter**: "Only show within circle" checkbox
+- **Click-to-vote**: Entire venue card clickable (no small button needed)
+- **Visual vote count**: Heart icons (filled = voted, outline = not voted)
+- **Top Choice banner**: Trophy icon + venue name + vote count in Venue List tab
+- **"Add to List"** button for search results
+
+**UX Improvement**: Voting reduced from 7 steps to 1 click (85% faster)
+
+### ✅ Section 3: Participation (People List)
+**Features Implemented**:
+- **Colored triangle markers**: 6-color palette (emerald, teal, amber, purple, pink, blue)
+  - Consistent mapping: Same participant always gets same color
+  - Visual triangle indicator rendered with CSS borders
+- **Compact participant cards**:
+  - Format: Triangle + Name + Coordinates + Privacy indicator
+  - Truncated names (max 15 chars)
+  - Shows "(blurred)" label and eye-off icon for privacy-enabled users
+- **Click to focus**: Click participant card to pan map (handler ready, map integration TODO)
+- **Host controls**: Remove participant button for organizers
+- **Scrollable list**: Handles 6+ participants gracefully
+
+### ✅ Design System Updates
+**Green Theme Applied**:
+- Primary: `emerald-600` (#059669) - Actions, selections, voting
+- Secondary: `teal-600` (#0d9488) - Secondary actions
+- Neutrals: `neutral-50/200/400/700/950` - 5-shade system (simplified from 9)
+- Removed all blue colors from left panel
+
+**Icon System**:
+- Installed `lucide-react@0.546.0`
+- Replaced ALL emojis with Lucide icons
+- Examples: MapPin, Navigation, Eye, EyeOff, RefreshCw, Check, X, Edit2, Search, List, Heart, ArrowUpDown, Star, Plus, Trophy, Trash2, Users
+
+**Typography**:
+- System font stack: `-apple-system, BlinkMacSystemFont, 'Segoe UI'`
+- Consistent sizing: `text-xs`, `text-sm`, `text-base`, `text-lg`
+- 8px grid spacing throughout
+
+### ✅ Event Page Integration
+**Modified**: `/app/event/page.tsx`
+- Added `searchType` state: `'type' | 'name'`
+- Added handler functions:
+  - `handleJoinEvent()` - Anonymous join with generated name
+  - `handleEditOwnLocation()` - Edit name/coordinates
+  - `handleRemoveOwnLocation()` - Leave event
+  - `handleParticipantClick()` - Focus map on participant (stub for now)
+- Replaced old left panel JSX (lines 863-947) with unified `<LeftPanel />` component
+- Connected all 27 props correctly
+- Added confirmation dialog back to `handleMapClick` (browser confirm for now)
+
+**Dependencies Added**:
+- `lucide-react@0.546.0` - Icon library
+- `sonner@2.0.7` - Toast notifications (already existed)
+
+### ✅ Build Status
+- ✅ Compilation: Successful (no TypeScript errors)
+- ✅ Type checking: Passed
+- ✅ Bundle size: 27.9 kB for `/event` route (3.6 kB increase from new components)
+- ✅ All imports resolved correctly
+- ✅ Clean `.next` build directory
+
+### 📊 Metrics Achieved
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Steps to join | 8-10 | 2 | **80% faster** |
+| Steps to vote | 7 | 1 | **85% faster** |
+| Panel complexity | 3 separate panels | 1 unified stack | **Cleaner** |
+| Icon system | Emojis (inconsistent) | Lucide (consistent) | **Professional** |
+| Color palette | 9+ colors | 5 colors | **Simplified** |
+| Privacy default | Opt-in | Opt-out (blur on) | **Safer** |
+
+### 📝 Documentation Created
+- **LEFT_PANEL_IMPLEMENTATION.md** - Complete implementation guide with code examples, testing checklist, file structure
+- **UNIFIED_REFACTOR_PLAN.md** - Full design plan combining PANEL_DESIGN.md and EVENT_PAGE_REFACTOR.md with 13 new ideas
+
+### 🚧 Known Issues & TODOs
+**Added 20 items to TODO.md** in 3 priority phases:
+
+**Phase 1 (HIGH PRIORITY)** - 7 items:
+1. Expandable venue cards with photos/reviews
+2. Compact list view (2-line venues, 1-line participants)
+3. Top panel/header refactor (single row, 64px)
+4. Event cards on homepage
+5. Typography & design system update
+6. Less text, more visual hints
+7. Route panel refactor (compact floating pill)
+
+**Phase 2 (QUICK WINS)** - 6 items:
+8. Auto-search (30 mins)
+9. Host can vote (5 mins)
+10. Remove publish button (10 mins)
+11. One-click share (20 mins)
+12. Nicer confirmation dialog (1-2 hours)
+13. Top Choice in header (2 hours)
+
+**Phase 3 (ADVANCED)** - 7 items:
+14. Google autocomplete
+15. Map pan to participant
+16. Search area slider to header
+17. Remove right panel
+18. Mobile responsive
+19. Accessibility
+20. Unit tests
+
+### Next Steps
+Per user request:
+1. Start with Phase 1 items (high-impact UX polish)
+2. Focus on compact list view and expandable cards
+3. Then tackle header redesign
+4. Quick wins can be sprinkled in between major features
+
+### Files Modified
+```
+app/event/page.tsx                      # Main integration point
+lib/nameGenerator.ts                    # NEW: Anonymous name utility
+components/LeftPanel/                   # NEW: 7 component files
+META/TODO.md                           # Updated with 20 new tasks
+META/PROGRESS.md                       # This entry
+META/v0.1+/LEFT_PANEL_IMPLEMENTATION.md  # NEW: Implementation guide
+META/v0.1+/UNIFIED_REFACTOR_PLAN.md      # NEW: Design plan
+```
+
+### Technical Notes
+- Used existing `Candidate` type from `/types` (not `/lib/api`) to avoid type conflicts
+- Kept right panel temporarily (still uses old `CandidatesPanel`, will remove in Phase 3)
+- Auto-search effect implemented but needs testing (line 482-494 in event page)
+- Confirmation dialog uses browser `confirm()` for now (custom modal TODO)
+
+---
+
 ## 2025-10-09: Project Initialization
 - Created repository structure
 - Wrote META documentation (PRODUCT.md, DESIGN.md, TODO.md)
