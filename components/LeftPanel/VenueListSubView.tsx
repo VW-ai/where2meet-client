@@ -10,6 +10,7 @@ interface VenueListSubViewProps {
   onVote?: (candidateId: string) => void;
   onDownvote?: (candidateId: string) => void;
   participantId?: string;
+  myVotedCandidateIds: Set<string>;
   onRemoveCandidate?: (candidateId: string) => void;
   isHost: boolean;
 }
@@ -21,17 +22,25 @@ export default function VenueListSubView({
   onVote,
   onDownvote,
   participantId,
+  myVotedCandidateIds,
   onRemoveCandidate,
   isHost,
 }: VenueListSubViewProps) {
 
-  // Filter out venues with 0 votes, then sort by vote count (highest first)
+  // Filter out venues with 0 votes, then sort by vote count (highest first), then by name
   const sortedCandidates = [...candidates]
-    .filter((candidate) => (candidate.voteCount || 0) > 0)
+    .filter(c => c.voteCount && c.voteCount > 0)
     .sort((a, b) => {
       const voteA = a.voteCount || 0;
       const voteB = b.voteCount || 0;
-      return voteB - voteA;
+
+      // First sort by votes (descending)
+      if (voteB !== voteA) {
+        return voteB - voteA;
+      }
+
+      // If votes are equal, sort by name
+      return a.name.localeCompare(b.name);
     });
 
   const topChoice = sortedCandidates[0];
@@ -89,6 +98,7 @@ export default function VenueListSubView({
           const isTopChoice = index === 0 && candidate.voteCount && candidate.voteCount > 0;
           const isSelected = selectedCandidate?.id === candidate.id;
           const voteCount = candidate.voteCount || 0;
+          const hasUserVoted = myVotedCandidateIds.has(candidate.id);
 
           return (
             <div
@@ -153,9 +163,11 @@ export default function VenueListSubView({
                           ? 'bg-white text-black hover:bg-gray-200'
                           : 'bg-white hover:bg-gray-100'
                       }`}
-                      title="Upvote"
+                      title={hasUserVoted ? 'Remove vote' : 'Vote'}
                     >
-                      <Heart className="w-3.5 h-3.5 fill-black text-black" />
+                      <Heart className={`w-3.5 h-3.5 ${
+                        hasUserVoted ? 'fill-black text-black' : 'text-neutral-400'
+                      }`} />
                     </button>
                   )}
 

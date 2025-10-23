@@ -364,14 +364,13 @@ export class Where2MeetAPI {
     );
   }
 
-  async getVotes(eventId: string, participantId?: string): Promise<Vote[]> {
-    const query = participantId ? `?participant_id=${participantId}` : '';
-    return this.request<Vote[]>(`/api/v1/events/${eventId}/votes${query}`);
+  async getVotes(eventId: string, participantId: string): Promise<Vote[]> {
+    return this.request<Vote[]>(`/api/v1/events/${eventId}/votes?participant_id=${participantId}`);
   }
 
-  async removeVote(eventId: string, voteId: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>(
-      `/api/v1/events/${eventId}/votes/${voteId}`,
+  async removeVote(eventId: string, voteId: string, participantId: string): Promise<{ message: string }> {
+    return this.request<{ message: string}>(
+      `/api/v1/events/${eventId}/votes/${voteId}?participant_id=${participantId}`,
       { method: 'DELETE' }
     );
   }

@@ -1039,6 +1039,144 @@ Referenced brutalist/techno design pattern from user-provided image:
 
 ---
 
+## 2025-10-22: Vote System Refinement & Bug Fixes ✅
+
+### Overview
+Fixed critical voting bugs and implemented proper vote toggle functionality with API integration. Removed search type toggle and improved toast notifications styling.
+
+### ✅ Vote Toggle Implementation
+**Problem**: `castVote` API doesn't support toggle - throws "Already voted" error
+**Solution**: Implemented proper vote/unvote flow using separate API endpoints
+
+**Changes Made**:
+1. **Added vote ID tracking** in event page state:
+   - `myVotes: Map<string, string>` - Maps candidateId → voteId
+   - Updated `loadEventData` to populate both `myVotedCandidateIds` Set and `myVotes` Map
+
+2. **Updated `handleVote` to use correct APIs**:
+   - **Voting**: Calls `api.castVote(eventId, participantId, candidateId)`
+   - **Unvoting**: Calls `api.removeVote(eventId, voteId, participantId)`
+   - Optimistic UI updates for both sets and maps
+   - Proper error rollback on failure
+
+3. **Fixed API method signatures** in `lib/api.ts`:
+   - `getVotes`: Made `participantId` **required** (was optional, causing errors)
+   - `removeVote`: Added `participantId` query parameter (backend requires it)
+
+4. **Updated `handleSaveCandidate`**:
+   - Added check: Only auto-vote if `!myVotedCandidateIds.has(candidateId)`
+   - Prevents "Already voted" errors when saving already-voted venues
+   - Updated toast message based on vote status
+
+5. **Updated SearchSubView vote logic**:
+   - If user has voted: Call `onVote` to toggle off
+   - If user hasn't voted: Call `onSaveCandidate` to save and vote
+   - Clean toggle behavior matching user's mental model
+
+### ✅ Search Type Toggle Removal
+**Removed** the "Search by Type" vs "Search by Name" toggle:
+- Deleted toggle UI from SearchSubView (lines 128-152)
+- Removed `searchType` and `onSearchTypeChange` props from:
+  - `SearchSubViewProps` interface
+  - `VenuesSectionProps` interface
+  - `LeftPanelProps` interface
+  - Event page state and prop passing
+- Removed Google Places Autocomplete code (name search functionality)
+- Now only supports type-based search with category chips
+- Simplified UX: One search method, less confusion
+
+**Files Modified**:
+- `components/LeftPanel/SearchSubView.tsx` - Removed toggle, autocomplete
+- `components/LeftPanel/VenuesSection.tsx` - Removed searchType props
+- `components/LeftPanel/LeftPanel.tsx` - Removed searchType props
+- `app/event/page.tsx` - Removed searchType state
+
+### ✅ Saved List Auto-Filter
+**Implemented** automatic filtering of 0-vote venues:
+- `VenueListSubView` now filters candidates with `voteCount > 0` by default
+- Venues automatically disappear from saved list when vote count drops to 0
+- No manual "Clear" button needed - happens automatically
+- Keeps saved list focused on venues people actually want
+
+**Code Change** (VenueListSubView.tsx:31-32):
+```typescript
+const sortedCandidates = [...candidates]
+  .filter(c => c.voteCount && c.voteCount > 0)
+  .sort(...)
+```
+
+### ✅ Toast Notification Styling
+**Updated** Sonner toast to match techno/brutalist aesthetic:
+- Background: Black
+- Text: White
+- Border: 2px solid black
+- Font: Monospace, bold
+- Position: Top-center
+
+**Before**: Default Sonner styling (colorful, rounded)
+**After**: Matches black/white theme perfectly
+
+### 📊 Vote Flow Comparison
+
+| Action | Old Behavior | New Behavior |
+|--------|--------------|--------------|
+| **Click heart (unvoted venue)** | Save + Vote (sometimes error) | Save + Vote (clean) |
+| **Click heart (voted venue)** | Error: "Already voted" | Toggle vote off |
+| **Saved list display** | Shows all saved venues | Auto-hides 0-vote venues |
+| **API calls** | castVote for both | castVote OR removeVote |
+
+### 🐛 Bugs Fixed
+
+**1. "Already voted for this candidate" errors**:
+- **Cause**: Calling `castVote` when already voted
+- **Fix**: Check `myVotedCandidateIds` before voting, call `removeVote` to unvote
+
+**2. "query.participant_id: Field required" errors**:
+- **Cause**: `getVotes` and `removeVote` missing required participant_id parameter
+- **Fix**: Made parameter required and always pass it
+
+**3. Venues not showing in saved list**:
+- **Cause**: Old filter removed ALL venues with 0 votes (even newly saved)
+- **Fix**: Now we want this behavior - only show voted venues
+
+**4. Vote toggle not working**:
+- **Cause**: Backend doesn't support toggle via same endpoint
+- **Fix**: Use `removeVote` endpoint with vote ID for unvoting
+
+### ✅ Code Quality Improvements
+- Added proper TypeScript types for vote Map
+- Improved error handling with specific checks
+- Better state management with optimistic updates
+- Cleaner API method signatures
+- Removed dead code (autocomplete, search type toggle)
+
+### 📝 Files Modified
+```
+app/event/page.tsx                    # Vote state, handlers, toast styling
+lib/api.ts                           # Fixed API signatures
+components/LeftPanel/SearchSubView.tsx   # Removed toggle, fixed vote logic
+components/LeftPanel/VenueListSubView.tsx # Auto-filter 0 votes
+components/LeftPanel/VenuesSection.tsx   # Removed searchType props
+components/LeftPanel/LeftPanel.tsx       # Removed searchType props
+```
+
+### ✅ Testing Checklist
+- [x] Vote on unvoted venue (saves and votes)
+- [x] Click voted venue heart (removes vote)
+- [x] Saved list auto-hides 0-vote venues
+- [x] Toast notifications match black/white theme
+- [x] No "Already voted" errors
+- [x] No "Field required" errors
+- [x] Search type toggle removed (type search only)
+
+### Next Steps
+1. Test multi-user voting scenarios
+2. Consider adding downvote backend implementation
+3. Test vote counts update via SSE
+4. Mobile responsive testing for new vote UI
+
+---
+
 ## 2025-10-09: Project Initialization
 - Created repository structure
 - Wrote META documentation (PRODUCT.md, DESIGN.md, TODO.md)

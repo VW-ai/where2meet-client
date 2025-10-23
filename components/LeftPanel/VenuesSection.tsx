@@ -11,8 +11,6 @@ interface VenuesSectionProps {
   onKeywordChange: (keyword: string) => void;
   onSearch: () => void;
   isSearching: boolean;
-  searchType: 'type' | 'name';
-  onSearchTypeChange: (type: 'type' | 'name') => void;
   sortMode: SortMode;
   onSortChange: (mode: SortMode) => void;
   onlyInCircle: boolean;
@@ -23,6 +21,7 @@ interface VenuesSectionProps {
   onVote?: (candidateId: string) => void;
   onDownvote?: (candidateId: string) => void;
   participantId?: string;
+  myVotedCandidateIds: Set<string>;
   onSaveCandidate?: (candidateId: string) => void;
   onRemoveCandidate?: (candidateId: string) => void;
   isHost: boolean;
@@ -34,8 +33,6 @@ export default function VenuesSection({
   onKeywordChange,
   onSearch,
   isSearching,
-  searchType,
-  onSearchTypeChange,
   sortMode,
   onSortChange,
   onlyInCircle,
@@ -46,6 +43,7 @@ export default function VenuesSection({
   onVote,
   onDownvote,
   participantId,
+  myVotedCandidateIds,
   onSaveCandidate,
   onRemoveCandidate,
   isHost,
@@ -96,15 +94,13 @@ export default function VenuesSection({
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {activeTab === 'search' ? (
           <SearchSubView
             keyword={keyword}
             onKeywordChange={onKeywordChange}
             onSearch={onSearch}
             isSearching={isSearching}
-            searchType={searchType}
-            onSearchTypeChange={onSearchTypeChange}
             sortMode={sortMode}
             onSortChange={onSortChange}
             onlyInCircle={onlyInCircle}
@@ -114,6 +110,7 @@ export default function VenuesSection({
             onCandidateClick={onCandidateClick}
             onVote={onVote}
             participantId={participantId}
+            myVotedCandidateIds={myVotedCandidateIds}
             onSaveCandidate={onSaveCandidate}
             isHost={isHost}
             hasAutoSearched={hasAutoSearched}
@@ -126,6 +123,7 @@ export default function VenuesSection({
             onVote={onVote}
             onDownvote={onDownvote}
             participantId={participantId}
+            myVotedCandidateIds={myVotedCandidateIds}
             onRemoveCandidate={onRemoveCandidate}
             isHost={isHost}
           />

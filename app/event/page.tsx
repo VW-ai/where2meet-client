@@ -54,7 +54,8 @@ function EventPageContent() {
   const [radiusMultiplier, setRadiusMultiplier] = useState(1.0); // Multiplier for MEC radius: 1.0 to 2.0 (default: 1.0x)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
   const [hasAutoSearched, setHasAutoSearched] = useState(false); // Track if auto-search has run
-  const [searchType, setSearchType] = useState<'type' | 'name'>('type'); // Search by type or name
+  const [myVotedCandidateIds, setMyVotedCandidateIds] = useState<Set<string>>(new Set()); // Track which candidates current user voted for
+  const [myVotes, setMyVotes] = useState<Map<string, string>>(new Map()); // Map: candidateId -> voteId
 
   // UI state
   const [isInitializing, setIsInitializing] = useState(true);
@@ -130,7 +131,7 @@ function EventPageContent() {
   }, []); // Only run once on mount
 
   // Load event data
-  const loadEventData = async (id: string) => {
+  const loadEventData = async (id: string, currentParticipantId?: string | null) => {
     try {
       const eventData = await api.getEvent(id);
       setEvent(eventData);
@@ -163,6 +164,26 @@ function EventPageContent() {
       // Load candidates if any
       const candidateData = await api.getCandidates(id);
       setCandidates(convertAPICandidates(candidateData));
+
+      // Load current user's votes if they're a participant
+      // Use passed parameter or fall back to state
+      const pId = currentParticipantId ?? participantId;
+      if (pId && pId.trim()) {
+        try {
+          const votes = await api.getVotes(id, pId);
+          const votedIds = new Set(votes.map(v => v.candidate_id));
+          const votesMap = new Map(votes.map(v => [v.candidate_id, v.id]));
+          setMyVotedCandidateIds(votedIds);
+          setMyVotes(votesMap);
+        } catch (err) {
+          console.error('Failed to load votes:', err);
+          // Don't fail the whole load if votes fail
+        }
+      } else {
+        // Clear votes if no participant
+        setMyVotedCandidateIds(new Set());
+        setMyVotes(new Map());
+      }
     } catch (err) {
       console.error('Failed to load event:', err);
       setError(err instanceof Error ? err.message : 'Failed to load event');
@@ -530,14 +551,62 @@ function EventPageContent() {
   const handleVote = useCallback(async (candidateId: string) => {
     if (!eventId || !participantId || !event?.allow_vote) return;
 
+    const isCurrentlyVoted = myVotedCandidateIds.has(candidateId);
+    const voteId = myVotes.get(candidateId);
+
+    // Optimistically update UI
+    setMyVotedCandidateIds(prev => {
+      const newSet = new Set(prev);
+      if (isCurrentlyVoted) {
+        newSet.delete(candidateId);
+      } else {
+        newSet.add(candidateId);
+      }
+      return newSet;
+    });
+
+    if (isCurrentlyVoted) {
+      // Also optimistically update the votes map
+      setMyVotes(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(candidateId);
+        return newMap;
+      });
+    }
+
     try {
-      await api.castVote(eventId, participantId, candidateId);
-      await loadEventData(eventId);
+      if (isCurrentlyVoted && voteId) {
+        // Remove existing vote
+        await api.removeVote(eventId, voteId, participantId);
+      } else {
+        // Cast new vote
+        await api.castVote(eventId, participantId, candidateId);
+      }
+      // Reload to get updated vote counts from server
+      await loadEventData(eventId, participantId);
     } catch (err) {
       console.error('Failed to vote:', err);
+      // Revert optimistic update on error
+      setMyVotedCandidateIds(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyVoted) {
+          newSet.add(candidateId);
+        } else {
+          newSet.delete(candidateId);
+        }
+        return newSet;
+      });
+      if (isCurrentlyVoted && voteId) {
+        // Revert the votes map as well
+        setMyVotes(prev => {
+          const newMap = new Map(prev);
+          newMap.set(candidateId, voteId);
+          return newMap;
+        });
+      }
       toast.error(err instanceof Error ? err.message : 'Failed to vote');
     }
-  }, [eventId, participantId, event]);
+  }, [eventId, participantId, event, myVotedCandidateIds, myVotes]);
 
   // Publish final decision (host only)
   const handlePublish = useCallback(async () => {
@@ -587,23 +656,23 @@ function EventPageContent() {
     try {
       await api.saveCandidate(eventId, candidateId);
 
-      // Automatically vote for the venue if user is a participant and voting is enabled
-      if (participantId && event?.allow_vote) {
+      // Automatically vote for the venue if user is a participant, voting is enabled, and they haven't voted yet
+      if (participantId && event?.allow_vote && !myVotedCandidateIds.has(candidateId)) {
         try {
           await api.castVote(eventId, participantId, candidateId);
-        } catch (voteErr) {
+        } catch (voteErr: any) {
           console.error('Failed to auto-vote:', voteErr);
           // Don't show error to user - saving is the main action
         }
       }
 
       await loadEventData(eventId);
-      toast.success(participantId && event?.allow_vote ? 'Venue added and voted!' : 'Venue saved to added list');
+      toast.success(participantId && event?.allow_vote && !myVotedCandidateIds.has(candidateId) ? 'Venue added and voted!' : 'Venue saved to list');
     } catch (err) {
       console.error('Failed to save venue:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to save venue');
     }
-  }, [eventId, participantId, event]);
+  }, [eventId, participantId, event, myVotedCandidateIds]);
 
   // Remove from added list (but keep in database as search result)
   const handleUnsaveCandidate = useCallback(async (candidateId: string) => {
@@ -884,8 +953,13 @@ function EventPageContent() {
       )}
 
       {/* New Unified Left Panel */}
-      <div className="absolute left-4 top-24 z-10">
+      <div className="absolute left-0 top-0 z-10">
         <LeftPanel
+          // TopView
+          eventTitle={event?.title}
+          eventId={eventId || undefined}
+          token={joinToken || undefined}
+
           // Input Section
           isJoined={!!participantId}
           onJoinEvent={handleJoinEvent}
@@ -903,8 +977,6 @@ function EventPageContent() {
           onKeywordChange={setKeyword}
           onSearch={searchPlaces}
           isSearching={isSearching}
-          searchType={searchType}
-          onSearchTypeChange={setSearchType}
           sortMode={sortMode}
           onSortChange={setSortMode}
           onlyInCircle={onlyInCircle}
@@ -914,6 +986,7 @@ function EventPageContent() {
           onCandidateClick={setSelectedCandidate}
           onVote={handleVote}
           participantId={participantId || undefined}
+          myVotedCandidateIds={myVotedCandidateIds}
           onSaveCandidate={handleSaveCandidate}
           onRemoveCandidate={handleRemoveCandidate}
           hasAutoSearched={hasAutoSearched}
@@ -1089,8 +1162,21 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Toast Notifications */}
-      <Toaster position="top-center" richColors closeButton />
+      {/* Toast Notifications - Techno black/white style */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'black',
+            color: 'white',
+            border: '2px solid black',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            fontSize: '14px',
+          },
+          className: 'toast-techno',
+        }}
+      />
 
       {/* Instructions & Help */}
       <Instructions
