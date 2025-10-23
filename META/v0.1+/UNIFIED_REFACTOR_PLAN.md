@@ -448,7 +448,6 @@
 4. **Search Type Toggle** - category vs. name search (new feature)
 5. **Category chips** - quick-select common types (pizza, cafe, bar)
 6. **Click-to-vote cards** - entire card clickable, toggle behavior
-7. **Visual hearts** - ❤️❤️❤️ for vote counts (more engaging)
 8. **Expanded venue cards** - photos, reviews, links (rich detail)
 9. **Vote display in participant cards** - see who voted for what
 10. **Click-to-focus** - click participant to see their location
