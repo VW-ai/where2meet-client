@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Toaster, toast } from 'sonner';
@@ -18,6 +18,16 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
 });
+
+// Participant color palette (matches ParticipationSection)
+const PARTICIPANT_COLORS = [
+  '#10b981', // emerald
+  '#0d9488', // teal
+  '#f59e0b', // amber
+  '#9333ea', // purple
+  '#ec4899', // pink
+  '#3b82f6', // blue
+];
 
 function EventPageContent() {
   const router = useRouter();
@@ -59,6 +69,15 @@ function EventPageContent() {
   const [travelMode, setTravelMode] = useState<any>('DRIVING'); // Start with string, will be converted when Google loads
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
+
+  // Create participant colors map
+  const participantColors = useMemo(() => {
+    const colorMap = new Map<string, string>();
+    participants.forEach((participant, index) => {
+      colorMap.set(participant.id, PARTICIPANT_COLORS[index % PARTICIPANT_COLORS.length]);
+    });
+    return colorMap;
+  }, [participants]);
 
   // Initialize event from URL
   useEffect(() => {
@@ -864,6 +883,7 @@ function EventPageContent() {
           onCentroidDrag={handleCentroidDrag}
           isHost={role === 'host'}
           language={language}
+          participantColors={participantColors}
         />
       </div>
 
@@ -922,7 +942,6 @@ function EventPageContent() {
           onRemoveParticipant={role === 'host' ? handleRemoveLocation : undefined}
         />
       </div>
-
 
       {/* Share Modal */}
       {showShareModal && (

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { Location, Circle, Candidate } from '@/types';
+import { Car, PersonStanding, Train, Bike, Clock, Route } from 'lucide-react';
 
 interface MapViewProps {
   apiKey: string;
@@ -20,6 +21,7 @@ interface MapViewProps {
   onCentroidDrag?: (lat: number, lng: number) => void;
   isHost?: boolean;
   language?: string;
+  participantColors?: Map<string, string>; // Map of participant ID to color
 }
 
 function MapContent({
@@ -39,6 +41,7 @@ function MapContent({
   isHost,
   onMapReady,
   onLocationClick,
+  participantColors,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
@@ -80,7 +83,7 @@ function MapContent({
       suppressInfoWindows: true, // Suppress the default info windows
       panel: hiddenPanel, // Use hidden div to capture any panel output
       polylineOptions: {
-        strokeColor: '#3B82F6', // Bright blue for better visibility
+        strokeColor: '#000000', // Black for techno style
         strokeWeight: 6, // Thicker line (increased from 4)
         strokeOpacity: 1.0, // Fully opaque (increased from 0.8)
       },
@@ -168,11 +171,11 @@ function MapContent({
       map: map,
       center: circle.center,
       radius: circle.radius,
-      strokeColor: '#4F46E5',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#4F46E5',
-      fillOpacity: 0.15,
+      strokeColor: '#000000', // Black border for techno style
+      strokeOpacity: 1.0, // Solid black border
+      strokeWeight: 3, // Thicker border
+      fillColor: '#1a1a1a', // Very dark grey-black
+      fillOpacity: 0.08, // Very transparent
     });
 
     console.log('🟣 MapView: Circle overlay created successfully');
@@ -218,10 +221,12 @@ function MapContent({
 
   return (
     <>
-      {/* Participant location markers - Triangle shapes */}
+      {/* Participant location markers - Triangle shapes with assigned colors */}
       {locations.map((location) => {
-        // Identify user's own marker for special styling (green color, glow effect)
+        // Identify user's own marker for special styling
         const isMyLocation = myParticipantId && location.id === myParticipantId;
+        // Get assigned color from map, fallback to default
+        const assignedColor = participantColors?.get(location.id) || '#3b82f6';
 
         return (
           <AdvancedMarker
@@ -239,29 +244,29 @@ function MapContent({
                 width="32"
                 height="32"
                 viewBox="0 0 32 32"
-                className={`drop-shadow-lg ${
-                  isMyLocation ? 'filter drop-shadow-[0_0_4px_rgba(16,185,129,0.6)]' : ''
-                }`}
+                className="drop-shadow-lg"
               >
                 {/* Triangle pointing up */}
                 <path
                   d="M 16 4 L 28 28 L 4 28 Z"
-                  fill={isMyLocation ? '#10b981' : '#3b82f6'}
-                  stroke="white"
-                  strokeWidth="2"
+                  fill={assignedColor}
+                  stroke={isMyLocation ? assignedColor : 'white'}
+                  strokeWidth={isMyLocation ? '3' : '2'}
                 />
                 {/* Inner highlight for "you" marker */}
                 {isMyLocation && (
                   <circle cx="16" cy="22" r="2" fill="white" />
                 )}
               </svg>
-              {/* Name label - Always show actual name, but with different styling for "you" */}
+              {/* Name label - Use assigned color */}
               {location.name && (
-                <div className={`mt-1 px-2 py-1 rounded text-xs font-semibold shadow-md ${
-                  isMyLocation
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-blue-600 text-white'
-                }`}>
+                <div
+                  className={`mt-1 px-2 py-1 text-xs font-semibold shadow-md border-2 ${
+                    isMyLocation ? 'border-white text-white' : 'border-black text-white'
+                  }`}
+                  style={{ backgroundColor: assignedColor }}
+                >
+                  {isMyLocation && '→ '}
                   {location.name}
                 </div>
               )}
@@ -270,7 +275,7 @@ function MapContent({
         );
       })}
 
-      {/* Centroid marker (purple) - Draggable for hosts */}
+      {/* Centroid marker (black) - Draggable for hosts */}
       {centroid && (
         <AdvancedMarker
           position={centroid}
@@ -282,13 +287,13 @@ function MapContent({
             }
           }}
         >
-          <div className={`w-8 h-8 bg-purple-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${isHost ? 'cursor-move hover:scale-110 transition-transform' : ''}`}>
+          <div className={`w-8 h-8 bg-black rounded-full border-2 border-white shadow-lg flex items-center justify-center ${isHost ? 'cursor-move hover:scale-110 transition-transform' : ''}`}>
             <div className="w-2 h-2 bg-white rounded-full" />
           </div>
         </AdvancedMarker>
       )}
 
-      {/* Candidate markers - Differentiate user-added (pink squares) from search results (orange circles) */}
+      {/* Candidate markers - Differentiate user-added (squares) from search results (circles) - Techno style */}
       {candidates.map((candidate) => {
         const isUserAdded = candidate.addedBy === 'organizer';
         const isSelected = selectedCandidate?.id === candidate.id;
@@ -301,18 +306,18 @@ function MapContent({
             onClick={() => onCandidateClick(candidate)}
           >
             <div
-              className={`border-2 border-white shadow-lg cursor-pointer transition-all duration-200 hover:scale-150 ${
+              className={`border-2 border-black shadow-lg cursor-pointer transition-all duration-200 hover:scale-150 ${
                 isUserAdded
                   ? 'rounded-sm' // Square for user-added
                   : 'rounded-full' // Circle for search results
               } ${
                 isSelected
                   ? isUserAdded
-                    ? 'w-7 h-7 bg-pink-600 ring-2 ring-pink-300 scale-90'
-                    : 'w-7 h-7 bg-red-600 ring-2 ring-red-300 scale-150'
+                    ? 'w-7 h-7 bg-gray-800 ring-4 ring-black scale-90'
+                    : 'w-7 h-7 bg-gray-800 ring-4 ring-black scale-150'
                   : isUserAdded
-                  ? 'w-4 h-4 bg-pink-500'
-                  : 'w-4 h-4 bg-orange-500'
+                  ? 'w-4 h-4 bg-gray-600'
+                  : 'w-4 h-4 bg-gray-500'
               }`}
             />
           </AdvancedMarker>
@@ -467,75 +472,72 @@ export default function MapView(props: MapViewProps) {
           )}
         </button>
 
-        {/* Route Info Display with Transportation Mode Selector */}
+        {/* Route Info Display - Compact with Horizontal Bottom Buttons (Top Right) */}
         {routeInfo && props.selectedCandidate && props.myParticipantId && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 z-10 min-w-[320px]">
-            <div className="text-sm font-semibold text-gray-800 mb-3">
-              Route to {props.selectedCandidate.name}
+          <div className="absolute top-4 right-4 bg-white border-2 border-black shadow-lg z-10 w-[160px]">
+            {/* Header */}
+            <div className="px-2 py-1 bg-black text-white border-b-2 border-black">
+              <div className="text-xs font-bold uppercase truncate">{props.selectedCandidate.name}</div>
             </div>
 
-            {/* Transportation Mode Selector */}
-            <div className="mb-3">
-              <div className="text-xs font-medium text-gray-600 mb-2">Travel Mode</div>
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => handleTravelModeClick('DRIVING')}
-                  className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                    isModeActive('DRIVING')
-                      ? 'bg-blue-600 text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title="Driving"
-                >
-                  🚗 Drive
-                </button>
-                <button
-                  onClick={() => handleTravelModeClick('WALKING')}
-                  className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                    isModeActive('WALKING')
-                      ? 'bg-blue-600 text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title="Walking"
-                >
-                  🚶 Walk
-                </button>
-                <button
-                  onClick={() => handleTravelModeClick('TRANSIT')}
-                  className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                    isModeActive('TRANSIT')
-                      ? 'bg-blue-600 text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title="Public Transit"
-                >
-                  🚌 Transit
-                </button>
-                <button
-                  onClick={() => handleTravelModeClick('BICYCLING')}
-                  className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                    isModeActive('BICYCLING')
-                      ? 'bg-blue-600 text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title="Bicycling"
-                >
-                  🚴 Bike
-                </button>
+            {/* Route Stats - Compact */}
+            <div className="px-2 py-1.5 space-y-1 text-black">
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3 flex-shrink-0" />
+                <span className="text-xs font-bold">{routeInfo.duration}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Route className="w-3 h-3 flex-shrink-0" />
+                <span className="text-xs font-bold">{routeInfo.distance}</span>
               </div>
             </div>
 
-            {/* Route Stats */}
-            <div className="flex justify-around text-center pt-3 border-t border-gray-200">
-              <div>
-                <div className="text-2xl font-bold text-green-600">{routeInfo.duration}</div>
-                <div className="text-xs text-gray-600">Duration</div>
-              </div>
-              <div className="border-l border-gray-300" />
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{routeInfo.distance}</div>
-                <div className="text-xs text-gray-600">Distance</div>
-              </div>
+            {/* Bottom: Horizontal Transportation Mode Icons */}
+            <div className="flex border-t-2 border-black">
+              <button
+                onClick={() => handleTravelModeClick('DRIVING')}
+                className={`flex-1 p-1 border-r border-black transition-all ${
+                  isModeActive('DRIVING')
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+                title="Driving"
+              >
+                <Car className="w-3 h-3 mx-auto" />
+              </button>
+              <button
+                onClick={() => handleTravelModeClick('WALKING')}
+                className={`flex-1 p-1 border-r border-black transition-all ${
+                  isModeActive('WALKING')
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+                title="Walking"
+              >
+                <PersonStanding className="w-3 h-3 mx-auto" />
+              </button>
+              <button
+                onClick={() => handleTravelModeClick('TRANSIT')}
+                className={`flex-1 p-1 border-r border-black transition-all ${
+                  isModeActive('TRANSIT')
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+                title="Public Transit"
+              >
+                <Train className="w-3 h-3 mx-auto" />
+              </button>
+              <button
+                onClick={() => handleTravelModeClick('BICYCLING')}
+                className={`flex-1 p-1 transition-all ${
+                  isModeActive('BICYCLING')
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+                title="Bicycling"
+              >
+                <Bike className="w-3 h-3 mx-auto" />
+              </button>
             </div>
           </div>
         )}
