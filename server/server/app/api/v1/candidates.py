@@ -159,6 +159,7 @@ async def search_candidates(
             distance_from_center=distance,
             in_circle=in_circle,
             opening_hours=json.dumps(place.get("opening_hours")) if place.get("opening_hours") else None,
+            photo_reference=place.get("photo_reference"),
             added_by="system"
         )
 
@@ -215,6 +216,7 @@ async def search_candidates(
             distance_from_center=c.distance_from_center,
             in_circle=c.in_circle,
             opening_hours=c.opening_hours,
+            photo_reference=c.photo_reference,
             added_by=c.added_by,
             vote_count=vote_count_map.get(c.id, 0)
         ))
@@ -299,6 +301,7 @@ async def get_candidates(
             distance_from_center=c.distance_from_center,
             in_circle=c.in_circle,
             opening_hours=c.opening_hours,
+            photo_reference=c.photo_reference,
             added_by=c.added_by,
             vote_count=vote_count_map.get(c.id, 0)
         ))
@@ -376,6 +379,7 @@ async def add_candidate_manually(
         distance_from_center=candidate.distance_from_center,
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
+        photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
         vote_count=0
     )
@@ -431,6 +435,7 @@ async def save_candidate_to_added(
         distance_from_center=candidate.distance_from_center,
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
+        photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
         vote_count=vote_count
     )
@@ -486,6 +491,7 @@ async def unsave_candidate_from_added(
         distance_from_center=candidate.distance_from_center,
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
+        photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
         vote_count=vote_count
     )

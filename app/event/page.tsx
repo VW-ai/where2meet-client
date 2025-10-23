@@ -16,6 +16,7 @@ import { useTranslation } from '@/lib/i18n';
 import Instructions from '@/components/Instructions';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
+import EventStatusBadge from '@/components/EventStatusBadge';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -155,7 +156,7 @@ function EventPageContent() {
         id: p.id,
         lat: p.fuzzy_lat || p.lat,
         lng: p.fuzzy_lng || p.lng,
-        address: p.name || `Participant ${p.id.slice(0, 8)}`,
+        address: p.name || 'Unnamed',
         name: p.name,
       }));
       setLocations(locs);
@@ -644,12 +645,12 @@ function EventPageContent() {
   // Show enhanced loading screen during initialization
   if (isInitializing || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           {/* Animated logo */}
           <div className="mb-6 relative">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-blue-500/10 rounded-full animate-ping"></div>
+              <div className="w-32 h-32 bg-[#08c605]/10 rounded-full animate-ping"></div>
             </div>
             <div className="relative flex items-center justify-center scale-150 animate-pulse">
               <Logo size="lg" showText={false} />
@@ -659,11 +660,11 @@ function EventPageContent() {
           {/* Loading text */}
           <Logo size="lg" showText={true} className="mb-4 justify-center" />
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
-          <p className="text-gray-600 font-medium">{t.loadingEvent}</p>
+          <p className="text-gray-500 font-medium">{t.loadingEvent}</p>
         </div>
       </div>
     );
@@ -672,13 +673,13 @@ function EventPageContent() {
   // Check for missing API key AFTER initialization
   if (!apiKey) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">{t.apiKeyMissing}</h1>
-          <p className="text-gray-700 mb-4">
-            {t.apiKeyMissingMessage} <code className="bg-gray-100 px-2 py-1 rounded">.env.local</code> file:
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-black/10 max-w-md">
+          <h1 className="text-2xl font-bold text-black mb-4">{t.apiKeyMissing}</h1>
+          <p className="text-gray-500 mb-4">
+            {t.apiKeyMissingMessage} <code className="bg-gray-100 px-2 py-1 rounded text-[#08c605] font-mono">.env.local</code> file:
           </p>
-          <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+          <pre className="bg-black p-4 rounded text-sm overflow-x-auto text-[#08c605] font-mono border border-[#08c605]/30">
             NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
           </pre>
         </div>
@@ -687,7 +688,7 @@ function EventPageContent() {
   }
 
   return (
-    <main className="h-screen w-screen overflow-hidden relative">
+    <main className="h-screen w-screen overflow-hidden relative bg-white">
       {/* Full-Screen Map */}
       <div className="absolute inset-0">
         <MapView
@@ -710,74 +711,50 @@ function EventPageContent() {
         />
       </div>
 
-      {/* Floating Header */}
-      <header className="absolute top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-lg z-10">
-        <div className="px-6 py-4 flex items-center justify-between">
+      {/* Minimalist Header */}
+      <header className="absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-black/10 z-10">
+        <div className="px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/')}
-              className="hover:opacity-80 transition-opacity"
-              title="Go back to main page"
+              className="text-black hover:text-[#08c605] transition-colors"
+              title="Go back"
             >
-              <Logo size="md" showText={false} />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
             </button>
-            <LanguageSwitcher />
+            <div className="h-8 w-px bg-black/10" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
-              <p className="text-sm font-medium text-gray-700">
-                {role === 'host' ? t.host : t.participant} • {participants.length} {t.participants}
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-black">{event.title}</h1>
+                <EventStatusBadge
+                  hasLocations={locations.length > 0}
+                  hasCandidates={candidates.length > 0}
+                  isFinal={!!event.final_decision}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                {participants.length} {participants.length === 1 ? 'participant' : 'participants'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {circle && (
-              <div className="hidden md:flex items-center gap-6 text-sm">
-                <div>
-                  <p className="text-gray-700 font-medium">{t.radius}</p>
-                  <p className="font-bold text-gray-900">{(circle.radius / 1000).toFixed(2)} km</p>
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">{t.venues}</p>
-                  <p className="font-bold text-gray-900">{candidates.length}</p>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center gap-3">
             {role === 'host' && (
-              <div className="flex items-center gap-4 relative">
-                {/* Animated Arrow & Instruction - Left of Share Button */}
-                {participants.length <= 1 && (
-                  <div className="flex items-center gap-2 animate-pulse">
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold whitespace-nowrap">
-                      Invite people with a link!
-                    </div>
-                    <svg className="w-8 h-8 text-blue-600 transform -translate-x-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 relative group"
-                  title="Share this link to invite people to join your event"
-                >
-                  <span className="flex items-center gap-2">
-                    🔗 {t.shareLink}
-                  </span>
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
-                    Share link to invite participants
-                  </div>
-                </button>
-                {selectedCandidate && !event.final_decision && (
-                  <button
-                    onClick={handlePublish}
-                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                  >
-                    {t.publishDecision}
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="px-4 py-2 bg-[#08c605] text-white font-medium text-sm rounded hover:bg-[#06a004] transition-colors"
+              >
+                Share
+              </button>
+            )}
+            {selectedCandidate && !event.final_decision && role === 'host' && (
+              <button
+                onClick={handlePublish}
+                className="px-4 py-2 bg-black text-white font-medium text-sm rounded hover:bg-gray-800 transition-colors"
+              >
+                Publish
+              </button>
             )}
           </div>
         </div>
@@ -785,17 +762,16 @@ function EventPageContent() {
 
       {/* Final Decision Banner */}
       {event.final_decision && (
-        <div className="absolute top-20 left-0 right-0 bg-green-500 text-white text-center py-3 px-4 shadow-lg z-10">
-          <p className="font-bold text-lg">{t.finalDecision}: {event.final_decision}</p>
+        <div className="absolute top-[57px] left-0 right-0 bg-[#08c605] text-white text-center py-2 px-4 z-10">
+          <p className="font-medium text-sm">Final: {event.final_decision}</p>
         </div>
       )}
 
-      {/* Floating Left Panel - Input & Controls */}
-      <div className="absolute left-4 top-24 w-72 max-w-[calc(50vw-2rem)] flex flex-col gap-2 z-10 transition-all duration-300">
-        {/* Input Panel - Show for non-participants OR for host (host can always add location) */}
+      {/* Minimalist Left Panel */}
+      <div className="absolute left-4 top-20 w-80 max-w-[calc(50vw-2rem)] flex flex-col gap-3 z-10">
         {(!participantId || role === 'host') && (
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden">
-            <div className="p-3">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-black/10 overflow-hidden">
+            <div className="p-4">
               <InputPanel
                 locations={locations}
                 onAddLocation={handleAddLocation}
@@ -811,80 +787,50 @@ function EventPageContent() {
           </div>
         )}
 
-        {/* Host Controls */}
-        {role === 'host' && (
-          <>
-            {/* Search Radius Multiplier Control */}
-            {locations.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
-                <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-sm font-bold text-gray-900">Search Area Size</h3>
-                  <div className="relative group">
-                    <button className="w-4 h-4 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center hover:bg-gray-400 transition-colors">
-                      ?
-                    </button>
-                    <div className="absolute left-0 top-6 w-64 bg-gray-900 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      Adjust search radius multiplier. 1.0x searches exactly within the MEC circle. 2.0x doubles the search area for more results.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">1.0x</span>
-                  <span className="text-xs font-bold text-blue-700">
-                    {radiusMultiplier.toFixed(1)}x MEC
-                  </span>
-                  <span className="text-xs font-medium text-gray-700">2.0x</span>
-                </div>
-                <input
-                  type="range"
-                  min={1.0}
-                  max={2.0}
-                  step={0.1}
-                  value={radiusMultiplier}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    const newMultiplier = Math.min(2.0, Math.max(1.0, value));
-                    console.log('🎚️ Slider changed: radiusMultiplier', radiusMultiplier, '→', newMultiplier);
-                    setRadiusMultiplier(newMultiplier);
-                    setAuthoritativeCircle(null); // Clear authoritative circle to show preview
-                    console.log('🎚️ Cleared authoritativeCircle to show preview with new multiplier');
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  Controls how far beyond the optimal meeting point to search for venues
-                </p>
-
-                {/* Reset Center Point Button - Only show when customCentroid exists */}
-                {customCentroid && (
-                  <div className="mt-3 pt-3 border-t border-gray-300">
-                    <button
-                      onClick={handleResetCentroid}
-                      className="w-full px-3 py-2 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-200 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <span>↺</span>
-                      <span>Reset Center Point</span>
-                    </button>
-                    <p className="text-xs text-gray-600 mt-1 text-center">
-                      Restore auto-calculated center
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+        {/* Search Controls for Host */}
+        {role === 'host' && locations.length > 0 && (
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-black/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-[#08c605]">{radiusMultiplier.toFixed(1)}x</span>
+              {customCentroid && (
+                <button
+                  onClick={handleResetCentroid}
+                  className="text-xs text-gray-400 hover:text-[#08c605]"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <input
+              type="range"
+              min={1.0}
+              max={2.0}
+              step={0.1}
+              value={radiusMultiplier}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                const newMultiplier = Math.min(2.0, Math.max(1.0, value));
+                console.log('🎚️ Slider changed: radiusMultiplier', radiusMultiplier, '→', newMultiplier);
+                setRadiusMultiplier(newMultiplier);
+                setAuthoritativeCircle(null);
+                console.log('🎚️ Cleared authoritativeCircle to show preview with new multiplier');
+              }}
+              className="w-full h-1 bg-black/10 rounded-full appearance-none cursor-pointer"
+              style={{ accentColor: '#08c605' }}
+            />
+          </div>
         )}
       </div>
 
-      {/* Floating Right Panel - Tabbed Interface */}
-      {locations.length > 0 && (
+      {/* Floating Right Panel - Tabbed Interface - Only show if there are candidates */}
+      {locations.length > 0 && sortedCandidates().length > 0 && (
         <div className="absolute right-4 top-24 w-80 max-w-[calc(50vw-2rem)] bottom-4 z-10">
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden h-full">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm overflow-hidden h-full border border-black/10">
             <Tabs
               tabs={[
                 {
                   id: 'search',
-                  label: t.search,
+                  label: 'Search',
                   icon: '🔍',
                   badge: sortedCandidates().filter(c => c.addedBy !== 'organizer').length,
                   content: (
@@ -912,34 +858,30 @@ function EventPageContent() {
                 },
                 {
                   id: 'custom-add',
-                  label: t.customAdd,
+                  label: 'Add',
                   icon: '➕',
                   content: (
-                    <div className="p-3 h-full flex flex-col">
-                      <h3 className="text-sm font-bold text-gray-900 mb-2">{t.addSpecificVenue}</h3>
+                    <div className="p-4 h-full flex flex-col">
                       <VenueSearchBox
                         apiKey={apiKey}
                         onPlaceSelected={handleAddVenueManually}
                         disabled={!!event?.final_decision}
                       />
-                      <p className="text-xs text-gray-700 mt-2 font-medium">
-                        {t.searchAndAddVenue}
-                      </p>
                     </div>
                   ),
                 },
                 {
                   id: 'added',
-                  label: t.added,
-                  icon: '💜',
+                  label: 'Saved',
+                  icon: '⭐',
                   badge: sortedCandidates().filter(c => c.addedBy === 'organizer').length,
                   content: (
                     <div className="p-3 h-full overflow-y-auto">
                       {sortedCandidates().filter(c => c.addedBy === 'organizer').length === 0 ? (
                         <EmptyState
-                          icon="💜"
-                          title={t.noUserAddedVenues}
-                          message={t.noUserAddedMessage}
+                          icon="⭐"
+                          title="No saved venues"
+                          message="Save venues from search results"
                         />
                       ) : (
                         <div className="space-y-2">
@@ -950,39 +892,35 @@ function EventPageContent() {
                               <div
                                 key={candidate.id}
                                 onClick={() => setSelectedCandidate(candidate)}
-                                className={`p-2 rounded-md cursor-pointer transition-all ${
+                                className={`p-3 rounded-lg cursor-pointer transition-all ${
                                   selectedCandidate?.id === candidate.id
-                                    ? 'bg-purple-200 border-2 border-purple-600'
-                                    : 'bg-white hover:bg-purple-100 border-2 border-purple-200'
+                                    ? 'bg-[#08c605]/10 border-2 border-[#08c605]'
+                                    : 'bg-white hover:bg-gray-50 border border-black/10'
                                 }`}
                               >
-                                <h4 className="font-semibold text-gray-900 text-sm">{candidate.name}</h4>
-                                {candidate.vicinity && (
-                                  <p className="text-xs text-gray-700 mt-1">{candidate.vicinity}</p>
-                                )}
-                                <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
+                                <h4 className="font-semibold text-black text-sm">{candidate.name}</h4>
+                                <div className="flex items-center gap-3 mt-1.5 text-xs flex-wrap">
                                   {candidate.rating && (
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-yellow-500">★</span>
-                                      <span className="font-medium">{candidate.rating.toFixed(1)}</span>
+                                    <span className="flex items-center gap-0.5 text-[#08c605] font-medium">
+                                      ★ {candidate.rating.toFixed(1)}
                                     </span>
                                   )}
-                                  {event?.allow_vote && candidate.voteCount !== undefined && (
-                                    <span className="flex items-center gap-1 font-medium text-purple-600">
+                                  {event?.allow_vote && candidate.voteCount !== undefined && candidate.voteCount > 0 && (
+                                    <span className="text-[#08c605] font-medium">
                                       🗳️ {candidate.voteCount}
                                     </span>
                                   )}
                                 </div>
-                                <div className="mt-2 flex gap-1 flex-wrap">
+                                <div className="mt-2 flex gap-1.5 flex-wrap">
                                   {event?.allow_vote && participantId && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleVote(candidate.id);
                                       }}
-                                      className="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
+                                      className="px-2.5 py-1 bg-[#08c605] text-white text-xs font-medium rounded hover:bg-[#06a004] transition-colors"
                                     >
-                                      {t.vote}
+                                      Vote
                                     </button>
                                   )}
                                   {role === 'host' && (
@@ -991,9 +929,9 @@ function EventPageContent() {
                                         e.stopPropagation();
                                         handleUnsaveCandidate(candidate.id);
                                       }}
-                                      className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                                      className="px-2.5 py-1 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
                                     >
-                                      {t.remove}
+                                      ✕
                                     </button>
                                   )}
                                 </div>
@@ -1012,25 +950,31 @@ function EventPageContent() {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">{t.shareEventLink}</h3>
-            <p className="text-sm text-gray-700 mb-4">
-              {t.shareDescription}
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border-2 border-[#08c605]" onClick={(e) => e.stopPropagation()}>
+            {/* Welcoming Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-[#08c605]/10 rounded-full flex items-center justify-center">
+                <span className="text-4xl">🤝</span>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-black mb-2 text-center">{t.shareEventLink}</h3>
+            <p className="text-sm text-gray-500 mb-4 text-center">
+              Invite participants to join
             </p>
-            <div className="bg-gray-100 p-3 rounded-lg mb-4 break-all text-sm text-gray-900">
+            <div className="bg-black p-3 rounded-lg mb-4 break-all text-sm text-[#08c605] font-mono border border-[#08c605]/30">
               {window.location.origin}/event?id={eventId}&token={joinToken}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={copyJoinLink}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-[#08c605] text-black font-bold rounded-lg hover:bg-[#06a004] transition-colors"
               >
                 {t.copyLink}
               </button>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-900 transition-colors border border-[#08c605]/30"
               >
                 {t.close}
               </button>
@@ -1041,13 +985,19 @@ function EventPageContent() {
 
       {/* Nickname Prompt Modal (for map clicks) */}
       {showNicknamePrompt && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50" onClick={handleCancelNickname}>
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">{t.enterNickname}</h3>
-            <p className="text-sm text-gray-700 mb-4">
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50" onClick={handleCancelNickname}>
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl border-2 border-[#08c605]" onClick={(e) => e.stopPropagation()}>
+            {/* Welcoming Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-[#08c605]/10 rounded-full flex items-center justify-center">
+                <span className="text-4xl">👋</span>
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-black mb-2 text-center">{t.enterNickname}</h3>
+            <p className="text-sm text-gray-500 mb-4 text-center">
               {role === 'host'
-                ? 'This will be visible to all participants and displayed on the map.'
-                : t.nicknameVisible}
+                ? 'Visible to all participants'
+                : 'Your location will appear on the map'}
             </p>
             <input
               type="text"
@@ -1056,19 +1006,19 @@ function EventPageContent() {
               onKeyDown={(e) => e.key === 'Enter' && handleConfirmNickname()}
               placeholder={t.nicknamePlaceholder}
               autoFocus
-              className="w-full px-4 py-3 text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 mb-4"
+              className="w-full px-4 py-3 text-black border-2 border-[#08c605]/30 rounded-lg focus:ring-2 focus:ring-[#08c605] focus:border-[#08c605] mb-4 bg-white"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleConfirmNickname}
                 disabled={!nickname.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-[#08c605] text-black font-bold rounded-lg hover:bg-[#06a004] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 {t.confirm}
               </button>
               <button
                 onClick={handleCancelNickname}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-900 transition-colors border border-[#08c605]/30"
               >
                 {t.cancel}
               </button>
@@ -1093,11 +1043,11 @@ function EventPageContent() {
 // Loading component for Suspense fallback
 function LoadingFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         <div className="mb-6 relative">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-blue-500/10 rounded-full animate-ping"></div>
+            <div className="w-32 h-32 bg-[#08c605]/10 rounded-full animate-ping"></div>
           </div>
           <div className="relative flex items-center justify-center scale-150 animate-pulse">
             <Logo size="lg" showText={false} />
@@ -1105,11 +1055,11 @@ function LoadingFallback() {
         </div>
         <Logo size="lg" showText={true} className="mb-4 justify-center" />
         <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
         </div>
-        <p className="text-gray-600 font-medium">Loading...</p>
+        <p className="text-gray-500 font-medium">Loading...</p>
       </div>
     </div>
   );

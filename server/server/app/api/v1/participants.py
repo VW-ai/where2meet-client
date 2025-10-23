@@ -14,6 +14,34 @@ from app.services.algorithms import apply_fuzzing
 router = APIRouter()
 
 
+def generate_anonymous_name(event_id: str, db: Session) -> str:
+    """
+    Generate a sequential anonymous name (Anonymous 1, Anonymous 2, etc.)
+    for participants who don't provide a name.
+    """
+    # Get all existing participants for this event
+    participants = db.query(Participant).filter(
+        Participant.event_id == event_id
+    ).all()
+
+    # Find all existing anonymous names and extract the numbers
+    anonymous_numbers = []
+    for p in participants:
+        if p.name and p.name.startswith("Anonymous "):
+            try:
+                num = int(p.name.split(" ")[1])
+                anonymous_numbers.append(num)
+            except (IndexError, ValueError):
+                continue
+
+    # Find the lowest available number starting from 1
+    next_number = 1
+    while next_number in anonymous_numbers:
+        next_number += 1
+
+    return f"Anonymous {next_number}"
+
+
 @router.post("/events/{event_id}/participants", response_model=ParticipantResponse, status_code=status.HTTP_201_CREATED)
 async def add_participant(
     event_id: str,
@@ -53,6 +81,11 @@ async def add_participant(
     else:
         fuzzy_lat, fuzzy_lng = participant_data.lat, participant_data.lng
 
+    # Assign name: use provided name or generate anonymous name
+    participant_name = participant_data.name
+    if not participant_name or not participant_name.strip():
+        participant_name = generate_anonymous_name(event_id, db)
+
     # Create participant
     participant = Participant(
         id=participant_id,
@@ -61,7 +94,7 @@ async def add_participant(
         lng=participant_data.lng,
         fuzzy_lat=fuzzy_lat,
         fuzzy_lng=fuzzy_lng,
-        name=participant_data.name
+        name=participant_name
     )
 
     db.add(participant)

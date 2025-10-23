@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Candidate, SortMode } from '@/types';
 import EmptyState from './EmptyState';
+import VenuePhoto from './VenuePhoto';
 import { useTranslation } from '@/lib/i18n/LanguageProvider';
 
 interface CandidatesPanelProps {
@@ -64,99 +65,95 @@ export default function CandidatesPanel({
 
   return (
     <div className="h-full flex flex-col space-y-3">
-      <h2 className="text-base font-bold text-gray-900">{t.searchVenues}</h2>
+      {/* Search Input - Only show if no results */}
+      {candidates.length === 0 && (
+        <>
+          <div className="flex-shrink-0">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => onKeywordChange(e.target.value)}
+                placeholder="Search venues..."
+                className="flex-1 px-3 py-2 text-black bg-white border border-black/10 rounded focus:ring-2 focus:ring-[#08c605] focus:border-[#08c605] outline-none"
+                onKeyDown={(e) => e.key === 'Enter' && onSearch()}
+              />
+              <button
+                onClick={onSearch}
+                disabled={isSearching || !keyword.trim()}
+                className={`px-5 py-2 text-white font-medium rounded transition-all ${
+                  isSearching
+                    ? 'bg-[#08c605] animate-pulse cursor-wait'
+                    : 'bg-[#08c605] hover:bg-[#06a004] disabled:bg-gray-300 disabled:cursor-not-allowed'
+                }`}
+              >
+                {isSearching ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                ) : (
+                  'Search'
+                )}
+              </button>
+            </div>
+          </div>
 
-      {/* Search Input */}
-      <div className="flex-shrink-0">
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
-          {t.venueType}
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={keyword}
-            onChange={(e) => onKeywordChange(e.target.value)}
-            placeholder="e.g., restaurant, cafe, basketball court"
-            className="flex-1 px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-            onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-          />
-          <button
-            onClick={onSearch}
-            disabled={isSearching || !keyword.trim()}
-            className={`px-6 py-2 text-white font-medium rounded-md transition-all ${
-              isSearching
-                ? 'bg-blue-600 animate-pulse cursor-wait'
-                : 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
-            }`}
-          >
-            {isSearching ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span className="font-bold">Searching...</span>
-              </span>
-            ) : (
-              'Search'
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* MEC Circle Filter Toggle */}
-      {onOnlyInCircleChange && (
-        <div className="flex-shrink-0">
-          <label className="flex items-center gap-3 cursor-pointer bg-gray-50 border border-gray-300 rounded-md px-3 py-2">
-            <input
-              type="checkbox"
-              checked={onlyInCircle ?? true}
-              onChange={(e) => onOnlyInCircleChange(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span className="text-sm font-medium text-gray-900">
-              {t.searchInCircle}: {onlyInCircle ? t.on : t.off}
-            </span>
-          </label>
-        </div>
+          {/* MEC Circle Filter Toggle */}
+          {onOnlyInCircleChange && (
+            <div className="flex-shrink-0">
+              <label className="flex items-center gap-2 cursor-pointer bg-white border border-black/10 rounded px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={onlyInCircle ?? true}
+                  onChange={(e) => onOnlyInCircleChange(e.target.checked)}
+                  className="w-4 h-4 border-gray-300 rounded focus:ring-[#08c605]"
+                  style={{ accentColor: '#08c605' }}
+                />
+                <span className="text-sm text-black">
+                  {onlyInCircle ? 'In circle' : 'All results'}
+                </span>
+              </label>
+            </div>
+          )}
+        </>
       )}
 
       {/* Sort Controls */}
       {candidates.length > 0 && (
         <div className="flex-shrink-0">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            {t.sortBy}
-          </label>
           <div className="flex gap-2">
             <button
               onClick={() => onSortChange('rating')}
-              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
+              className={`flex-1 px-3 py-2 text-xs font-medium rounded transition-colors ${
                 sortMode === 'rating'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  ? 'bg-[#08c605] text-white'
+                  : 'bg-white text-black border border-black/10 hover:bg-gray-50'
               }`}
             >
-              {t.rating}
+              ★ Rating
             </button>
             <button
               onClick={() => onSortChange('distance')}
-              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
+              className={`flex-1 px-3 py-2 text-xs font-medium rounded transition-colors ${
                 sortMode === 'distance'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  ? 'bg-[#08c605] text-white'
+                  : 'bg-white text-black border border-black/10 hover:bg-gray-50'
               }`}
             >
-              {t.distance}
+              📍 Distance
             </button>
             <button
               onClick={() => onSortChange('vote')}
-              className={`flex-1 px-4 py-2 font-medium rounded-md transition-colors ${
+              className={`flex-1 px-3 py-2 text-xs font-medium rounded transition-colors ${
                 sortMode === 'vote'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  ? 'bg-[#08c605] text-white'
+                  : 'bg-white text-black border border-black/10 hover:bg-gray-50'
               }`}
             >
-              {t.votes}
+              🗳️ Votes
             </button>
           </div>
         </div>
@@ -164,9 +161,11 @@ export default function CandidatesPanel({
 
       {/* Candidates List */}
       <div className="flex-1 flex flex-col min-h-0">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">
-          {t.candidateVenues} ({candidates.length})
-        </h3>
+        {candidates.length > 0 && (
+          <div className="text-xs text-gray-400 mb-2">
+            {candidates.length} {candidates.length === 1 ? 'venue' : 'venues'}
+          </div>
+        )}
         <div className="space-y-2 flex-1 overflow-y-auto">
           {candidates.length === 0 ? (
             <EmptyState
@@ -181,61 +180,51 @@ export default function CandidatesPanel({
                 key={candidate.id}
                 ref={selectedCandidate?.id === candidate.id ? selectedRef : null}
                 onClick={() => onCandidateClick(candidate)}
-                className={`p-3 rounded-md cursor-pointer transition-all ${
+                className={`p-2 rounded cursor-pointer transition-all ${
                   selectedCandidate?.id === candidate.id
-                    ? 'bg-red-100 border-2 border-red-600'
-                    : 'bg-white hover:bg-gray-100 border-2 border-gray-200'
+                    ? 'bg-[#08c605]/10 border-2 border-[#08c605]'
+                    : 'bg-white hover:bg-gray-50 border border-black/10'
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{candidate.name}</h4>
-                    {candidate.vicinity && (
-                      <p className="text-sm text-gray-700 mt-1">{candidate.vicinity}</p>
-                    )}
-                    <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
+                <div className="flex gap-2">
+                  {/* Venue Photo */}
+                  <VenuePhoto
+                    photoReference={candidate.photoReference}
+                    venueName={candidate.name}
+                    className="w-14 h-14 rounded flex-shrink-0"
+                  />
+
+                  {/* Venue Info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-black text-xs truncate">{candidate.name}</h4>
+                    <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
                       {candidate.rating && (
-                        <span className="flex items-center gap-1">
-                          <span className="text-yellow-500">★</span>
-                          <span className="font-medium">{candidate.rating.toFixed(1)}</span>
-                          {candidate.userRatingsTotal && (
-                            <span className="text-gray-500">
-                              ({candidate.userRatingsTotal})
-                            </span>
-                          )}
+                        <span className="flex items-center gap-0.5 text-[#08c605] font-medium">
+                          ★ {candidate.rating.toFixed(1)}
                         </span>
                       )}
                       {candidate.distanceFromCenter && (
-                        <span className="text-gray-600">
-                          {(candidate.distanceFromCenter / 1000).toFixed(2)} km
+                        <span className="text-gray-400">
+                          {(candidate.distanceFromCenter / 1000).toFixed(1)}km
                         </span>
                       )}
-                      {candidate.openNow !== undefined && (
-                        <span
-                          className={
-                            candidate.openNow ? 'text-green-600' : 'text-red-600'
-                          }
-                        >
-                          {candidate.openNow ? 'Open Now' : 'Closed'}
-                        </span>
-                      )}
-                      {onVote && candidate.voteCount !== undefined && (
-                        <span className="flex items-center gap-1 font-medium text-purple-600">
-                          🗳️ {candidate.voteCount} {candidate.voteCount === 1 ? 'vote' : 'votes'}
+                      {onVote && candidate.voteCount !== undefined && candidate.voteCount > 0 && (
+                        <span className="text-[#08c605] font-medium">
+                          🗳️ {candidate.voteCount}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex gap-2 flex-wrap">
+                <div className="mt-2 flex gap-1.5 flex-wrap">
                   <a
                     href={getGoogleMapsUrl(candidate)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                    className="px-2.5 py-1 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {t.viewOnMaps}
+                    Maps
                   </a>
                   {onSaveCandidate && (
                     <button
@@ -243,9 +232,9 @@ export default function CandidatesPanel({
                         e.stopPropagation();
                         onSaveCandidate(candidate.id);
                       }}
-                      className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
+                      className="px-2.5 py-1 bg-[#08c605] text-white text-xs font-medium rounded hover:bg-[#06a004] transition-colors"
                     >
-                      💾 {t.save}
+                      Save
                     </button>
                   )}
                   {onVote && participantId && (
@@ -254,7 +243,7 @@ export default function CandidatesPanel({
                         e.stopPropagation();
                         onVote(candidate.id);
                       }}
-                      className="px-3 py-1 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors"
+                      className="px-2.5 py-1 bg-[#08c605] text-white text-xs font-medium rounded hover:bg-[#06a004] transition-colors"
                     >
                       Vote
                     </button>
@@ -267,9 +256,9 @@ export default function CandidatesPanel({
                           onRemoveCandidate(candidate.id);
                         }
                       }}
-                      className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                      className="px-2.5 py-1 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
                     >
-                      Remove
+                      ✕
                     </button>
                   )}
                 </div>

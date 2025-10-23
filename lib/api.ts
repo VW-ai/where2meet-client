@@ -3,7 +3,7 @@
  * Handles all communication with the FastAPI backend server
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // Debug: Log the API URL being used
 if (typeof window !== 'undefined') {
@@ -50,6 +50,7 @@ export interface Candidate {
   user_ratings_total?: number;
   distance_from_center?: number;
   in_circle: boolean;
+  photo_reference?: string;
   vote_count?: number;
   added_by?: string;
 }
@@ -452,6 +453,134 @@ export class Where2MeetAPI {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    });
+  }
+
+  // ===== Event Feed Endpoints =====
+
+  async fetchEventsFeed(params: {
+    date?: string;
+    near_me?: boolean;
+    category?: string;
+    page?: number;
+    page_size?: number;
+    lat?: number;
+    lng?: number;
+  } = {}): Promise<import('@/types').EventsListResponse> {
+    const query = new URLSearchParams();
+    if (params.date) query.append('date', params.date);
+    if (params.near_me) query.append('near_me', 'true');
+    if (params.category) query.append('category', params.category);
+    if (params.page) query.append('page', params.page.toString());
+    if (params.page_size) query.append('page_size', params.page_size.toString());
+    if (params.lat) query.append('lat', params.lat.toString());
+    if (params.lng) query.append('lng', params.lng.toString());
+
+    const queryString = query.toString();
+    return this.request<import('@/types').EventsListResponse>(
+      `/api/v1/feed/events${queryString ? `?${queryString}` : ''}`
+    );
+  }
+
+  async createEventFeed(
+    data: import('@/types').CreateEventFeedRequest,
+    token?: string
+  ): Promise<{ event: import('@/types').Event; join_token: string }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request('/api/v1/feed/events', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getEventFeedDetail(eventId: string, token?: string): Promise<import('@/types').EventDetailResponse> {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request<import('@/types').EventDetailResponse>(
+      `/api/v1/feed/events/${eventId}`,
+      { headers }
+    );
+  }
+
+  async joinEventFeed(eventId: string, data: { name: string; email?: string; avatar?: string }, token?: string): Promise<{
+    id: string;
+    event_id: string;
+    user_id?: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+    joined_at: string;
+  }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request(`/api/v1/feed/events/${eventId}/join`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+  }
+
+  async leaveEventFeed(eventId: string, token?: string): Promise<void> {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request(`/api/v1/feed/events/${eventId}/leave`, {
+      method: 'DELETE',
+      headers,
+    });
+  }
+
+  async updateEventFeed(
+    eventId: string,
+    data: Partial<import('@/types').CreateEventFeedRequest>,
+    token?: string
+  ): Promise<{ event: import('@/types').Event }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request(`/api/v1/feed/events/${eventId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteEventFeed(eventId: string, token?: string): Promise<void> {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request(`/api/v1/feed/events/${eventId}`, {
+      method: 'DELETE',
+      headers,
     });
   }
 }

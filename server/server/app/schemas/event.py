@@ -83,6 +83,7 @@ class CandidateResponse(BaseModel):
     distance_from_center: Optional[float]
     in_circle: bool
     opening_hours: Optional[str]
+    photo_reference: Optional[str] = None
     added_by: str
     vote_count: int = 0
 

@@ -74,6 +74,10 @@ class GoogleMapsService:
                     if rating > 0 and rating < min_rating:
                         continue
 
+                    # Extract photo reference (first photo if available)
+                    photos = result.get("photos", [])
+                    photo_reference = photos[0].get("photo_reference") if photos else None
+
                     seen_place_ids.add(place_id)
                     places.append({
                         "place_id": place_id,
@@ -84,6 +88,7 @@ class GoogleMapsService:
                         "rating": rating if rating > 0 else None,
                         "user_ratings_total": result.get("user_ratings_total", 0),
                         "opening_hours": result.get("opening_hours"),
+                        "photo_reference": photo_reference,
                     })
 
                 # Check for next page

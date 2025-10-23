@@ -8,49 +8,88 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1184ms
+ ✓ Ready in 1419ms
  ○ Compiling / ...
- ✓ Compiled / in 960ms (650 modules)
- GET / 200 in 1191ms
- ✓ Compiled in 95ms (247 modules)
- ○ Compiling /event ...
- ✓ Compiled /event in 755ms (679 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 959ms
- ✓ Compiled /icon in 212ms (493 modules)
- GET /icon 200 in 497ms
- GET / 200 in 176ms
- ✓ Compiled /my-events in 330ms (687 modules)
- GET /my-events 200 in 373ms
- GET /event?id=evt_c2865d86bc644829 200 in 38ms
- ✓ Compiled in 791ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 113ms
- ✓ Compiled in 745ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 232ms
- GET /event?id=evt_c2865d86bc644829 200 in 214ms
- GET /icon 200 in 432ms
- GET /event?id=evt_c2865d86bc644829 200 in 87ms
- GET /icon 200 in 35ms
- ✓ Compiled in 791ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 127ms
- GET /icon 200 in 615ms
- GET /icon 200 in 37ms
- ✓ Compiled in 812ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 194ms
- GET /icon 200 in 297ms
- GET /icon 200 in 11ms
- ✓ Compiled in 526ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 108ms
- GET /icon 200 in 385ms
- GET /icon 200 in 6ms
- GET /event?id=evt_c2865d86bc644829 200 in 208ms
- GET /icon 200 in 36ms
- ✓ Compiled in 451ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 118ms
- GET /icon 200 in 228ms
- GET /icon 200 in 5ms
- GET /event?id=evt_c2865d86bc644829 200 in 187ms
- GET /icon 200 in 42ms
- ○ Compiling / ...
- ✓ Compiled / in 1115ms (425 modules)
- GET / 200 in 1533ms
- GET /event?id=evt_8a010eb3807447bc 200 in 65ms
+ ✓ Compiled / in 2.1s (758 modules)
+ GET / 200 in 2456ms
+ ✓ Compiled in 63ms (299 modules)
+ GET / 200 in 85ms
+ ○ Compiling /icon ...
+ ✓ Compiled /icon in 790ms (524 modules)
+ GET /icon 200 in 949ms
+ ✓ Compiled /my-posts in 280ms (739 modules)
+ GET /my-posts 200 in 389ms
+ GET / 200 in 36ms
+ GET / 200 in 258ms
+ GET /icon 200 in 149ms
+ GET /my-posts 200 in 32ms
+ GET /my-posts 200 in 55ms
+ GET /icon 200 in 9ms
+ ✓ Compiled /login in 242ms (746 modules)
+ GET /login 200 in 289ms
+ GET / 200 in 20ms
+ GET /my-posts 200 in 52ms
+ ✓ Compiled in 409ms (760 modules)
+ GET /my-posts 200 in 68ms
+ ✓ Compiled in 223ms (755 modules)
+ ✓ Compiled /_not-found in 240ms (746 modules)
+ GET /my-posts 404 in 306ms
+ GET /my-posts 200 in 137ms
+ GET / 200 in 85ms
+ GET / 200 in 123ms
+ GET /icon 200 in 214ms
+ GET /my-posts 200 in 68ms
+ GET /my-posts 200 in 17ms
+ GET / 200 in 31ms
+ GET / 200 in 100ms
+ GET / 200 in 96ms
+ ✓ Compiled in 888ms (755 modules)
+ GET / 200 in 184ms
+ ✓ Compiled in 539ms (757 modules)
+ GET / 200 in 162ms
+ ✓ Compiled in 997ms (757 modules)
+ GET / 200 in 120ms
+ ✓ Compiled in 306ms (757 modules)
+ GET / 200 in 68ms
+ ✓ Compiled in 256ms (757 modules)
+ GET / 200 in 72ms
+ ✓ Compiled in 43ms (291 modules)
+ GET / 200 in 230ms
+ GET / 200 in 98ms
+ GET /icon 200 in 237ms
+ ○ Compiling /event-detail ...
+ ✓ Compiled /event-detail in 852ms (811 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 1037ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 18ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 526ms
+ GET /icon 200 in 356ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 106ms
+ GET /icon 200 in 45ms
+ GET / 200 in 63ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 56ms
+ ✓ Compiled in 635ms (811 modules)
+ ✓ Compiled in 380ms (825 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 78ms
+ ✓ Compiled in 246ms (825 modules)
+ ✓ Compiled /_not-found in 330ms (816 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 404 in 401ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 166ms
+ ✓ Compiled in 410ms (830 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 57ms
+ ✓ Compiled in 294ms (830 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 54ms
+ ✓ Compiled in 265ms (830 modules)
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 57ms
+ GET / 200 in 122ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 44ms
+ GET / 200 in 41ms
+ GET / 200 in 240ms
+ GET /icon 200 in 201ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 35ms
+ GET / 200 in 65ms
+ GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 92ms
+ GET / 200 in 146ms
+ GET /my-posts 200 in 50ms
+ GET / 200 in 39ms
+ GET /my-posts 200 in 36ms
+ GET / 200 in 59ms

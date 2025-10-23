@@ -80,6 +80,7 @@ class Candidate(Base):
     distance_from_center = Column(Float, nullable=True)  # in km
     in_circle = Column(Boolean, default=True)
     opening_hours = Column(Text, nullable=True)  # JSON string
+    photo_reference = Column(String(500), nullable=True)  # Google Places photo reference
     added_by = Column(String(20), default="system")  # system or organizer
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

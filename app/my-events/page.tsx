@@ -1,168 +1,245 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { api, Event } from '@/lib/api';
+import Header from '@/components/Header';
+import { Event } from '@/lib/api';
+
+interface EventWithDetails extends Event {
+  participant_count?: number;
+  candidate_count?: number;
+}
 
 export default function MyEventsPage() {
   const router = useRouter();
-  const { user, token } = useAuth();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, logout } = useAuth();
+  const [events, setEvents] = useState<EventWithDetails[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch user's events
   useEffect(() => {
-    const loadEvents = async () => {
-      setIsLoading(true);
+    const fetchMyEvents = async () => {
+      setLoading(true);
       setError(null);
 
       try {
-        if (token) {
-          // Logged in: fetch events from backend
-          const userEvents = await api.getUserEvents(token);
-          setEvents(userEvents);
-        } else {
-          // Anonymous: load events from localStorage
-          const storedEventIds = localStorage.getItem('my_events');
-          if (storedEventIds) {
-            const eventIds = JSON.parse(storedEventIds) as string[];
-            const eventPromises = eventIds.map(id => api.getEvent(id).catch(() => null));
-            const loadedEvents = (await Promise.all(eventPromises)).filter(e => e !== null) as Event[];
-            setEvents(loadedEvents);
-          }
+        // Get event IDs from localStorage (for anonymous users)
+        const storedEventIds = localStorage.getItem('my_events');
+        const eventIds = storedEventIds ? JSON.parse(storedEventIds) : [];
+
+        if (eventIds.length === 0) {
+          setEvents([]);
+          setLoading(false);
+          return;
         }
+
+        // Fetch events from backend
+        const eventsPromises = eventIds.map(async (id: string) => {
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/events/${id}`);
+            if (!response.ok) throw new Error('Failed to fetch event');
+            return await response.json();
+          } catch (err) {
+            console.error(`Failed to fetch event ${id}:`, err);
+            return null;
+          }
+        });
+
+        const fetchedEvents = (await Promise.all(eventsPromises)).filter(e => e !== null);
+        setEvents(fetchedEvents);
+        setLoading(false);
       } catch (err) {
-        console.error('Failed to load events:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load events');
-      } finally {
-        setIsLoading(false);
+        console.error('Failed to fetch events:', err);
+        setError('Failed to load your events. Please try again.');
+        setEvents([]);
+        setLoading(false);
       }
     };
 
-    loadEvents();
-  }, [token]);
+    fetchMyEvents();
+  }, [user]);
 
-  const handleEventClick = (eventId: string) => {
+  const handleViewEvent = (eventId: string) => {
     router.push(`/event?id=${eventId}`);
   };
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Navigation Bar */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-gray-800">
-            Where2Meet
-          </Link>
-          {user && (
-            <span className="text-gray-600">
-              Hello, {user.name || user.email}
-            </span>
-          )}
-        </div>
-      </nav>
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
 
-      <div className="max-w-4xl mx-auto p-4 pt-12">
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/events/${eventId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
+      }
+
+      // Remove from localStorage
+      const storedEventIds = localStorage.getItem('my_events');
+      if (storedEventIds) {
+        const eventIds = JSON.parse(storedEventIds);
+        const updatedIds = eventIds.filter((id: string) => id !== eventId);
+        localStorage.setItem('my_events', JSON.stringify(updatedIds));
+      }
+
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      alert('Failed to delete event. Please try again.');
+    }
+  };
+
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getExpiresIn = (expiresAt: string) => {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysLeft < 0) return 'Expired';
+    if (daysLeft === 0) return 'Expires today';
+    if (daysLeft === 1) return 'Expires tomorrow';
+    return `${daysLeft} days left`;
+  };
+
+  return (
+    <main className="min-h-screen bg-white">
+      {/* Navigation Bar */}
+      <Header user={user} onLogout={logout} />
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">My Events</h1>
-          <p className="text-gray-600">
-            {user
-              ? 'Events you have created'
-              : 'Events from this browser (stored locally)'}
-          </p>
+          <h1 className="text-3xl font-bold text-black mb-2">My Events</h1>
+          <p className="text-gray-600">Find Meeting Point events you've created or joined</p>
         </div>
 
         {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading your events...</p>
+        {loading && (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="border border-gray-300 bg-white p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-700">{error}</p>
+        {error && !loading && (
+          <div className="py-12 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 border border-black text-black hover:bg-gray-50 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         )}
 
         {/* Empty State */}
-        {!isLoading && events.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <div className="text-6xl mb-4">📅</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Events Yet</h2>
+        {!loading && !error && events.length === 0 && (
+          <div className="py-12 text-center">
+            <div className="text-6xl mb-4">📍</div>
+            <h3 className="text-xl font-bold text-black mb-2">No events yet</h3>
             <p className="text-gray-600 mb-6">
-              You haven't created any events. Start by creating one!
+              You haven't created any Find Meeting Point events yet.
             </p>
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-green-700 transition-all shadow-lg"
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
             >
-              Create New Event
-            </Link>
+              Create Your First Event
+            </button>
           </div>
         )}
 
         {/* Events List */}
-        {!isLoading && events.length > 0 && (
+        {!loading && !error && events.length > 0 && (
           <div className="space-y-4">
             {events.map((event) => (
-              <div
-                key={event.id}
-                onClick={() => handleEventClick(event.id)}
-                className="bg-white rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl transition-shadow border border-gray-200"
-              >
-                <div className="flex justify-between items-start">
+              <div key={event.id} className="border border-gray-300 bg-white p-6 hover:border-black transition-colors">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
-                      {event.title}
-                    </h3>
+                    <h3 className="text-xl font-semibold text-black mb-1">{event.title}</h3>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <span>📍</span>
-                        {event.category}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span>👁️</span>
-                        {event.visibility === 'blur' ? 'Blurred' : 'Exact'} locations
-                      </span>
-                      {event.allow_vote && (
-                        <span className="flex items-center gap-1">
-                          <span>🗳️</span>
-                          Voting enabled
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      Created {new Date(event.created_at).toLocaleDateString()}
+                      <span>📍 {event.category}</span>
+                      <span>👥 {event.participant_count || 0} participants</span>
+                      <span>🗺️ {event.candidate_count || 0} venues</span>
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-                      Active
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`text-xs font-medium px-3 py-1 ${
+                      getExpiresIn(event.expires_at).includes('Expired')
+                        ? 'bg-red-100 text-red-700'
+                        : getExpiresIn(event.expires_at).includes('today') || getExpiresIn(event.expires_at).includes('tomorrow')
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {getExpiresIn(event.expires_at)}
                     </span>
                   </div>
+                </div>
+
+                <div className="mb-4 text-sm text-gray-500">
+                  <span>Created: {formatDate(event.created_at)}</span>
+                  <span className="mx-2">•</span>
+                  <span>Expires: {formatDate(event.expires_at)}</span>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleViewEvent(event.id)}
+                    className="flex-1 py-2 px-4 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    View Event
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/event?id=${event.id}`);
+                      alert('Event link copied to clipboard!');
+                    }}
+                    className="py-2 px-4 border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors font-medium"
+                  >
+                    Copy Link
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEvent(event.id)}
+                    className="py-2 px-4 border border-red-300 text-red-600 hover:bg-red-50 transition-colors font-medium"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Create New Event Button */}
-        {!isLoading && events.length > 0 && (
-          <div className="mt-8 text-center">
-            <Link
-              href="/"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-green-700 transition-all shadow-lg"
-            >
-              Create New Event
-            </Link>
-          </div>
-        )}
+        {/* Back Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => router.push('/')}
+            className="text-gray-600 hover:text-black font-medium"
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </main>
   );

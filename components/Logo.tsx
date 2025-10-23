@@ -4,9 +4,10 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
   className?: string;
+  theme?: 'light' | 'dark';
 }
 
-export default function Logo({ size = 'md', showText = true, className = '' }: LogoProps) {
+export default function Logo({ size = 'md', showText = true, className = '', theme = 'light' }: LogoProps) {
   const sizes = {
     sm: { icon: 24, text: 'text-base' },
     md: { icon: 32, text: 'text-xl' },
@@ -54,7 +55,11 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
 
       {/* Logo Text */}
       {showText && (
-        <span className={`font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent ${text}`}>
+        <span className={`font-bold ${
+          theme === 'dark'
+            ? 'text-white'
+            : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent'
+        } ${text}`}>
           Where2Meet
         </span>
       )}
