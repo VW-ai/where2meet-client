@@ -2,6 +2,7 @@
 
 import { Search, MapPin, Star, Heart, RefreshCw, Utensils, Coffee, Beer, Trees, Dumbbell, Film, Navigation, Info } from 'lucide-react';
 import { Candidate, SortMode } from '@/types';
+import { useRef, useEffect } from 'react';
 
 interface SearchSubViewProps {
   keyword: string;
@@ -52,6 +53,18 @@ export default function SearchSubView({
   hasAutoSearched,
 }: SearchSubViewProps) {
 
+  // Refs for auto-scroll functionality
+  const candidateRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Auto-scroll to selected candidate when it changes
+  useEffect(() => {
+    if (selectedCandidate && candidateRefs.current[selectedCandidate.id]) {
+      candidateRefs.current[selectedCandidate.id]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedCandidate]);
 
   const handleCategoryClick = (category: string) => {
     onKeywordChange(category);
@@ -202,6 +215,7 @@ export default function SearchSubView({
             return (
               <div
                 key={candidate.id}
+                ref={(el) => { candidateRefs.current[candidate.id] = el; }}
                 onClick={() => onCandidateClick(candidate)}
                 className={`p-1.5 border-2 cursor-pointer transition-all ${
                   isSelected

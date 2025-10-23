@@ -1177,6 +1177,94 @@ components/LeftPanel/LeftPanel.tsx       # Removed searchType props
 
 ---
 
+## 2025-10-22: Two-Way Map ↔ List Binding Implementation ✅
+
+### Overview
+Implemented seamless two-way data binding between map markers and venue list entries, restoring functionality from the old version where clicking a map marker scrolls to and highlights the corresponding list item.
+
+### ✅ Auto-Scroll Implementation
+**Feature**: When a venue is selected (via map click or list click), the list automatically scrolls to show that venue's entry
+
+**Technical Implementation**:
+1. **SearchSubView.tsx** - Search results list:
+   - Added `useRef<{ [key: string]: HTMLDivElement | null }>({})` to track each candidate div by ID
+   - Added `useEffect` hook watching `selectedCandidate` changes
+   - Calls `scrollIntoView({ behavior: 'smooth', block: 'nearest' })` when selection changes
+   - Attached refs to each candidate: `ref={(el) => { candidateRefs.current[candidate.id] = el; }}`
+
+2. **VenueListSubView.tsx** - Saved venues list:
+   - Same implementation as SearchSubView
+   - Auto-scroll works for voted venues in saved list
+   - Ensures selected venue is visible even when list is long
+
+### ✅ User Flow
+**Scenario 1: Click Map Marker**
+1. User clicks orange/red venue marker on map
+2. Map marker highlights (turns red, scales up)
+3. List automatically scrolls to show that venue's entry
+4. Venue card highlights with black background
+5. Right panel shows venue details
+
+**Scenario 2: Click List Entry**
+1. User clicks venue card in search/saved list
+2. Venue card highlights with black background
+3. Map marker highlights (turns red, scales up)
+4. Map pans/zooms to show marker (existing behavior)
+5. Right panel shows venue details
+
+**Scenario 3: Long Lists**
+- List has 20+ venues, selected venue not visible
+- Auto-scroll brings selected venue into view
+- Uses `block: 'nearest'` to minimize scrolling (only scrolls if needed)
+- Smooth animation (`behavior: 'smooth'`) for better UX
+
+### 📊 Binding Behavior
+
+| User Action | Map Response | List Response | Panel Response |
+|-------------|--------------|---------------|----------------|
+| Click map marker | ✅ Marker highlights | ✅ Auto-scroll + highlight | ✅ Shows details |
+| Click list entry | ✅ Marker highlights | ✅ Highlights | ✅ Shows details |
+| Marker already visible | No scroll needed | Smart scroll (nearest) | Updates |
+
+### Technical Details
+
+**Scroll Options**:
+- `behavior: 'smooth'` - Animated scroll (300ms default)
+- `block: 'nearest'` - Minimal scroll movement
+  - If venue above viewport: scrolls to top
+  - If venue below viewport: scrolls to bottom
+  - If venue already visible: no scroll
+
+**Performance**:
+- Refs stored in object keyed by candidate ID
+- O(1) lookup time for scroll target
+- useEffect runs only when `selectedCandidate` changes
+- No unnecessary re-renders
+
+### Files Modified
+```
+components/LeftPanel/SearchSubView.tsx     # Added refs + auto-scroll
+components/LeftPanel/VenueListSubView.tsx  # Added refs + auto-scroll
+```
+
+### Testing Checklist
+- [x] Click map marker → list scrolls to venue
+- [x] Click list entry → marker highlights
+- [x] Long list (20+ items) scrolls correctly
+- [x] Short list (no scrollbar) doesn't break
+- [x] Smooth scroll animation works
+- [x] Works in both Search and Saved tabs
+- [x] No scroll when venue already visible
+
+### Next Steps
+1. Remove existing top panel (per user request)
+2. Remove existing right panel (per user request)
+3. Test multi-user voting scenarios
+4. Consider adding downvote backend implementation
+5. Test vote counts update via SSE
+
+---
+
 ## 2025-10-09: Project Initialization
 - Created repository structure
 - Wrote META documentation (PRODUCT.md, DESIGN.md, TODO.md)

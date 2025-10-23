@@ -2,6 +2,7 @@
 
 import { Trophy, Heart, MapPin, Star, Trash2 } from 'lucide-react';
 import { Candidate } from '@/types';
+import { useRef, useEffect } from 'react';
 
 interface VenueListSubViewProps {
   candidates: Candidate[];
@@ -26,6 +27,19 @@ export default function VenueListSubView({
   onRemoveCandidate,
   isHost,
 }: VenueListSubViewProps) {
+
+  // Refs for auto-scroll functionality
+  const candidateRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Auto-scroll to selected candidate when it changes
+  useEffect(() => {
+    if (selectedCandidate && candidateRefs.current[selectedCandidate.id]) {
+      candidateRefs.current[selectedCandidate.id]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedCandidate]);
 
   // Filter out venues with 0 votes, then sort by vote count (highest first), then by name
   const sortedCandidates = [...candidates]
@@ -103,6 +117,7 @@ export default function VenueListSubView({
           return (
             <div
               key={candidate.id}
+              ref={(el) => { candidateRefs.current[candidate.id] = el; }}
               onClick={() => onCandidateClick(candidate)}
               className={`p-1.5 border-2 cursor-pointer transition-all ${
                 isSelected
