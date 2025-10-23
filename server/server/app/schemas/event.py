@@ -94,7 +94,7 @@ class CandidateResponse(BaseModel):
 class CandidateSearch(BaseModel):
     """Schema for candidate search request."""
     keyword: str = Field(..., min_length=1, max_length=100)
-    radius_multiplier: float = Field(default=1.0, ge=1.0, le=2.0)  # Search exactly within MEC by default
+    radius_multiplier: float = Field(default=1.0, gt=0, le=2.0)  # Search radius multiplier (0 < x <= 2)
     custom_center_lat: Optional[float] = Field(None, ge=-90, le=90)  # Optional custom center point
     custom_center_lng: Optional[float] = Field(None, ge=-180, le=180)
     only_in_circle: bool = Field(default=True)  # Filter to only show venues within MEC circle
