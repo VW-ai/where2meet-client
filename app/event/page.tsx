@@ -5,16 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Toaster, toast } from 'sonner';
 import LeftPanel from '@/components/LeftPanel';
-import Tabs from '@/components/Tabs';
-import EmptyState from '@/components/EmptyState';
-import VenueSearchBox from '@/components/VenueSearchBox';
-import CandidatesPanel from '@/components/CandidatesPanel';
 import Instructions from '@/components/Instructions';
 import { Location, Candidate, Circle, SortMode } from '@/types';
 import { computeCentroid, computeMinimumEnclosingCircle } from '@/lib/algorithms';
 import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
 import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
 
@@ -872,79 +867,6 @@ function EventPageContent() {
         />
       </div>
 
-      {/* Floating Header */}
-      <header className="absolute top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-lg z-10">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="hover:opacity-80 transition-opacity"
-              title="Go back to main page"
-            >
-              <Logo size="md" showText={false} />
-            </button>
-            <LanguageSwitcher />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
-              <p className="text-sm font-medium text-gray-700">
-                {role === 'host' ? t.host : t.participant} • {participants.length} {t.participants}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {circle && (
-              <div className="hidden md:flex items-center gap-6 text-sm">
-                <div>
-                  <p className="text-gray-700 font-medium">{t.radius}</p>
-                  <p className="font-bold text-gray-900">{(circle.radius / 1000).toFixed(2)} km</p>
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">{t.venues}</p>
-                  <p className="font-bold text-gray-900">{candidates.length}</p>
-                </div>
-              </div>
-            )}
-            {role === 'host' && (
-              <div className="flex items-center gap-4 relative">
-                {/* Animated Arrow & Instruction - Left of Share Button */}
-                {participants.length <= 1 && (
-                  <div className="flex items-center gap-2 animate-pulse">
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold whitespace-nowrap">
-                      Invite people with a link!
-                    </div>
-                    <svg className="w-8 h-8 text-blue-600 transform -translate-x-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 relative group"
-                  title="Share this link to invite people to join your event"
-                >
-                  <span className="flex items-center gap-2">
-                    🔗 {t.shareLink}
-                  </span>
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
-                    Share link to invite participants
-                  </div>
-                </button>
-                {selectedCandidate && !event.final_decision && (
-                  <button
-                    onClick={handlePublish}
-                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                  >
-                    {t.publishDecision}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
       {/* Final Decision Banner */}
       {event.final_decision && (
         <div className="absolute top-20 left-0 right-0 bg-green-500 text-white text-center py-3 px-4 shadow-lg z-10">
@@ -1001,139 +923,6 @@ function EventPageContent() {
         />
       </div>
 
-      {/* Floating Right Panel - Tabbed Interface */}
-      {locations.length > 0 && (
-        <div className="absolute right-4 top-24 w-80 max-w-[calc(50vw-2rem)] bottom-4 z-10">
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden h-full">
-            <Tabs
-              tabs={[
-                {
-                  id: 'search',
-                  label: t.search,
-                  icon: '🔍',
-                  badge: sortedCandidates().filter(c => c.addedBy !== 'organizer').length,
-                  content: (
-                    <div className="h-full p-3">
-                      <CandidatesPanel
-                        candidates={sortedCandidates().filter(c => c.addedBy !== 'organizer')}
-                        selectedCandidate={selectedCandidate}
-                        sortMode={sortMode}
-                        onSortChange={setSortMode}
-                        onCandidateClick={setSelectedCandidate}
-                        keyword={keyword}
-                        onKeywordChange={setKeyword}
-                        onSearch={searchPlaces}
-                        isSearching={isSearching}
-                        onVote={event?.allow_vote ? handleVote : undefined}
-                        participantId={participantId || undefined}
-                        onRemoveCandidate={role === 'host' ? handleRemoveCandidate : undefined}
-                        onSaveCandidate={handleSaveCandidate}
-                        isHost={role === 'host'}
-                        onlyInCircle={onlyInCircle}
-                        onOnlyInCircleChange={setOnlyInCircle}
-                      />
-                    </div>
-                  ),
-                },
-                {
-                  id: 'custom-add',
-                  label: t.customAdd,
-                  icon: '➕',
-                  content: (
-                    <div className="p-3 h-full flex flex-col">
-                      <h3 className="text-sm font-bold text-gray-900 mb-2">{t.addSpecificVenue}</h3>
-                      <VenueSearchBox
-                        apiKey={apiKey}
-                        onPlaceSelected={handleAddVenueManually}
-                        disabled={!!event?.final_decision}
-                      />
-                      <p className="text-xs text-gray-700 mt-2 font-medium">
-                        {t.searchAndAddVenue}
-                      </p>
-                    </div>
-                  ),
-                },
-                {
-                  id: 'added',
-                  label: t.added,
-                  icon: '💜',
-                  badge: sortedCandidates().filter(c => c.addedBy === 'organizer').length,
-                  content: (
-                    <div className="p-3 h-full overflow-y-auto">
-                      {sortedCandidates().filter(c => c.addedBy === 'organizer').length === 0 ? (
-                        <EmptyState
-                          icon="💜"
-                          title={t.noUserAddedVenues}
-                          message={t.noUserAddedMessage}
-                        />
-                      ) : (
-                        <div className="space-y-2">
-                          {sortedCandidates()
-                            .filter(c => c.addedBy === 'organizer')
-                            .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
-                            .map((candidate) => (
-                              <div
-                                key={candidate.id}
-                                onClick={() => setSelectedCandidate(candidate)}
-                                className={`p-2 rounded-md cursor-pointer transition-all ${
-                                  selectedCandidate?.id === candidate.id
-                                    ? 'bg-purple-200 border-2 border-purple-600'
-                                    : 'bg-white hover:bg-purple-100 border-2 border-purple-200'
-                                }`}
-                              >
-                                <h4 className="font-semibold text-gray-900 text-sm">{candidate.name}</h4>
-                                {candidate.vicinity && (
-                                  <p className="text-xs text-gray-700 mt-1">{candidate.vicinity}</p>
-                                )}
-                                <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
-                                  {candidate.rating && (
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-yellow-500">★</span>
-                                      <span className="font-medium">{candidate.rating.toFixed(1)}</span>
-                                    </span>
-                                  )}
-                                  {event?.allow_vote && candidate.voteCount !== undefined && (
-                                    <span className="flex items-center gap-1 font-medium text-purple-600">
-                                      🗳️ {candidate.voteCount}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="mt-2 flex gap-1 flex-wrap">
-                                  {event?.allow_vote && participantId && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVote(candidate.id);
-                                      }}
-                                      className="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
-                                    >
-                                      {t.vote}
-                                    </button>
-                                  )}
-                                  {role === 'host' && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleUnsaveCandidate(candidate.id);
-                                      }}
-                                      className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                                    >
-                                      {t.remove}
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Share Modal */}
       {showShareModal && (
