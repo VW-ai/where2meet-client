@@ -127,7 +127,7 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
           {
             title: language === 'zh' ? '邀请参与者' : 'Invite Participants',
             description: language === 'zh' ? '用分享按钮发送链接。他们加入后即可搜索地点' : 'Share button sends link. Search venues once they join',
-            targetElement: null,
+            targetElement: undefined,
             position: 'center',
           },
         ];
@@ -169,7 +169,7 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
           {
             title: language === 'zh' ? '发布' : 'Publish',
             description: language === 'zh' ? '选择地点后点击发布按钮。所有人收到通知' : 'Select venue then hit Publish. Everyone gets notified',
-            targetElement: null,
+            targetElement: undefined,
             position: 'center',
           },
         ];
