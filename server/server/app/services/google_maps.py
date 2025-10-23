@@ -1,6 +1,8 @@
 """Google Maps API integration service."""
 
 import httpx
+import redis
+import json
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
 
@@ -11,6 +13,12 @@ class GoogleMapsService:
     def __init__(self):
         self.api_key = settings.GOOGLE_MAPS_API_KEY
         self.base_url = "https://maps.googleapis.com/maps/api"
+        # Initialize Redis client for caching
+        try:
+            self.redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+        except Exception as e:
+            print(f"⚠️ Redis connection failed: {e}. Photo caching will be disabled.")
+            self.redis_client = None
 
     async def search_places_nearby(
         self,
@@ -75,6 +83,10 @@ class GoogleMapsService:
                         continue
 
                     seen_place_ids.add(place_id)
+
+                    # Don't fetch photos during search for performance
+                    # Photos will be fetched on-demand when user selects a venue
+
                     places.append({
                         "place_id": place_id,
                         "name": result.get("name", ""),
@@ -103,6 +115,66 @@ class GoogleMapsService:
                 page_count += 1
 
             return places
+
+    async def get_place_photo_reference(self, place_id: str) -> Optional[str]:
+        """
+        Get photo reference for a specific place (with Redis caching).
+
+        Args:
+            place_id: Google Place ID
+
+        Returns:
+            Photo reference string or None
+        """
+        # Check Redis cache first
+        cache_key = f"photo_ref:{place_id}"
+        if self.redis_client:
+            try:
+                cached = self.redis_client.get(cache_key)
+                if cached is not None:
+                    print(f"📸 Photo cache HIT for {place_id}")
+                    return cached if cached != "None" else None
+            except Exception as e:
+                print(f"⚠️ Redis get error: {e}")
+
+        # Fetch from Google Places API
+        url = f"{self.base_url}/place/details/json"
+        params = {
+            "place_id": place_id,
+            "fields": "photos",  # Only fetch photos field
+            "key": self.api_key
+        }
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url, params=params, timeout=10.0)
+                response.raise_for_status()
+                data = response.json()
+
+                if data.get("status") != "OK":
+                    return None
+
+                result = data.get("result", {})
+                photos = result.get("photos", [])
+
+                photo_reference = None
+                if photos and len(photos) > 0:
+                    photo_reference = photos[0].get("photo_reference")
+                    print(f"📸 Photo fetched for {place_id}")
+
+                # Cache the result (cache "None" string for places without photos)
+                if self.redis_client:
+                    try:
+                        cache_value = photo_reference if photo_reference else "None"
+                        self.redis_client.setex(cache_key, 86400, cache_value)  # Cache for 24 hours
+                    except Exception as e:
+                        print(f"⚠️ Redis set error: {e}")
+
+                return photo_reference
+
+            except Exception as e:
+                print(f"❌ Error fetching photo for {place_id}: {e}")
+                return None
 
     async def get_place_details(self, place_id: str) -> Optional[Dict[str, Any]]:
         """

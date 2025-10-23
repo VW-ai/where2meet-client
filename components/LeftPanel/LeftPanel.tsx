@@ -49,6 +49,7 @@ interface LeftPanelProps {
   // Participation Section Props
   participants: Participant[];
   myParticipantId?: string;
+  selectedParticipantId?: string | null;
   onParticipantClick: (participantId: string) => void;
   onRemoveParticipant?: (participantId: string) => void;
   showParticipantNames?: boolean;
@@ -96,6 +97,7 @@ export default function LeftPanel({
   // Participation
   participants,
   myParticipantId,
+  selectedParticipantId,
   onParticipantClick,
   onRemoveParticipant,
   showParticipantNames,
@@ -116,25 +118,23 @@ export default function LeftPanel({
       />
 
 
-      {/* Section 1: Input View */}
-      {(!isJoined || isHost) && (
-        <>
-          <InputSection
-            isJoined={isJoined}
-            onJoinEvent={onJoinEvent}
-            onEditLocation={onEditLocation}
-            onRemoveOwnLocation={onRemoveOwnLocation}
-            currentUserName={currentUserName}
-            currentUserLocation={currentUserLocation}
-            isHost={isHost}
-          />
-          {isJoined && <div className="h-0.5 bg-black" />}
-        </>
-      )}
+      {/* Section 1: Input View - Always show, let InputSection handle expand/collapse */}
+      <div data-tutorial-section="input">
+        <InputSection
+          isJoined={isJoined}
+          onJoinEvent={onJoinEvent}
+          onEditLocation={onEditLocation}
+          onRemoveOwnLocation={onRemoveOwnLocation}
+          currentUserName={currentUserName}
+          currentUserLocation={currentUserLocation}
+          isHost={isHost}
+        />
+        {isJoined && <div className="h-0.5 bg-black" />}
+      </div>
 
-      {/* Section 2: Venues View */}
+      {/* Section 2: Venues View - Scrollable with max height */}
       {isJoined && (
-        <>
+        <div data-tutorial-section="venues" className="flex-1 overflow-hidden flex flex-col">
           <VenuesSection
             keyword={keyword}
             onKeywordChange={onKeywordChange}
@@ -158,20 +158,23 @@ export default function LeftPanel({
             candidateColors={candidateColors}
           />
           {participants.length > 0 && <div className="h-0.5 bg-black" />}
-        </>
+        </div>
       )}
 
       {/* Section 3: Participation View */}
       {isJoined && participants.length > 0 && (
-        <ParticipationSection
-          participants={participants}
-          myParticipantId={myParticipantId}
-          onParticipantClick={onParticipantClick}
-          onRemoveParticipant={onRemoveParticipant}
-          isHost={isHost}
-          showParticipantNames={showParticipantNames}
-          onToggleShowNames={onToggleShowNames}
-        />
+        <div data-tutorial-section="participants">
+          <ParticipationSection
+            participants={participants}
+            myParticipantId={myParticipantId}
+            selectedParticipantId={selectedParticipantId}
+            onParticipantClick={onParticipantClick}
+            onRemoveParticipant={onRemoveParticipant}
+            isHost={isHost}
+            showParticipantNames={showParticipantNames}
+            onToggleShowNames={onToggleShowNames}
+          />
+        </div>
       )}
     </div>
   );

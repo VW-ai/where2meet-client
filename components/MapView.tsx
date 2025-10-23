@@ -25,6 +25,7 @@ interface MapViewProps {
   candidateColors?: Map<string, string>; // Map of candidate ID to color (red shades)
   showParticipantNames?: boolean; // Toggle for showing participant names
   selectedParticipantId?: string | null; // For two-way binding with participant list
+  chartRouteMode?: boolean; // When true, show route in grey instead of participant color
 }
 
 function MapContent({
@@ -48,6 +49,7 @@ function MapContent({
   candidateColors,
   showParticipantNames = true,
   selectedParticipantId,
+  chartRouteMode = false,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
@@ -94,13 +96,16 @@ function MapContent({
     const hiddenPanel = document.createElement('div');
     hiddenPanel.style.display = 'none';
 
+    // Use grey color when in chart route mode, otherwise black
+    const routeColor = chartRouteMode ? '#808080' : '#000000';
+
     const renderer = new google.maps.DirectionsRenderer({
       map: map,
       suppressMarkers: true, // We'll use our own markers
       suppressInfoWindows: true, // Suppress the default info windows
       panel: hiddenPanel, // Use hidden div to capture any panel output
       polylineOptions: {
-        strokeColor: '#000000', // Black for techno style
+        strokeColor: routeColor, // Grey for chart mode, black otherwise
         strokeWeight: 6, // Thicker line (increased from 4)
         strokeOpacity: 1.0, // Fully opaque (increased from 0.8)
       },
@@ -114,7 +119,7 @@ function MapContent({
         hiddenPanel.parentNode.removeChild(hiddenPanel);
       }
     };
-  }, [map]);
+  }, [map, chartRouteMode]);
 
   // Calculate and display route when candidate is selected
   useEffect(() => {
@@ -402,13 +407,15 @@ export default function MapView(props: MapViewProps) {
     }
   };
 
-  const centerOnUserLocation = () => {
-    if (userLocation && mapRef.current) {
-      mapRef.current.setCenter(userLocation);
+  const centerOnCircle = () => {
+    if (props.circle?.center && mapRef.current) {
+      // Center on the circle's center point (centroid)
+      mapRef.current.setCenter(props.circle.center);
       mapRef.current.setZoom(14);
-    } else {
-      // Get fresh location
-      getUserLocation();
+    } else if (props.centroid && mapRef.current) {
+      // Fallback to centroid if circle not available
+      mapRef.current.setCenter(props.centroid);
+      mapRef.current.setZoom(14);
     }
   };
 
@@ -453,10 +460,19 @@ export default function MapView(props: MapViewProps) {
   }, [isGoogleLoaded, props.travelMode]);
 
   const handleTravelModeClick = useCallback((mode: 'DRIVING' | 'WALKING' | 'TRANSIT' | 'BICYCLING') => {
-    if (!isGoogleLoaded || !window.google?.maps?.TravelMode) return;
+    if (!isGoogleLoaded || !window.google?.maps?.TravelMode) {
+      console.log('Google Maps not loaded yet');
+      return;
+    }
     const modeEnum = google.maps.TravelMode[mode];
-    props.onTravelModeChange?.(modeEnum);
-  }, [isGoogleLoaded, props.onTravelModeChange]);
+    console.log('Travel mode clicked:', mode, 'enum:', modeEnum);
+    if (props.onTravelModeChange) {
+      props.onTravelModeChange(modeEnum);
+      console.log('onTravelModeChange called with:', modeEnum);
+    } else {
+      console.log('onTravelModeChange is not defined');
+    }
+  }, [isGoogleLoaded, props]);
 
   // Map language codes for Google Maps API
   const mapLanguage = props.language === 'zh' ? 'zh-CN' : props.language || 'en';
@@ -486,24 +502,17 @@ export default function MapView(props: MapViewProps) {
           />
         </Map>
 
-        {/* Locate Me Button */}
+        {/* Center on Circle Button - Techno Style */}
         <button
-          onClick={centerOnUserLocation}
-          disabled={isLocating}
-          className="absolute bottom-32 right-4 bg-white hover:bg-gray-50 text-gray-700 font-medium p-3 rounded-lg shadow-lg border-2 border-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
-          title="Center map on my location"
+          onClick={centerOnCircle}
+          disabled={!props.circle && !props.centroid}
+          className="absolute bottom-32 right-4 w-12 h-12 bg-white hover:bg-black text-black hover:text-white font-medium border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10 flex items-center justify-center"
+          title="Center map on search area"
         >
-          {isLocating ? (
-            <svg className="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          )}
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+            <circle cx="12" cy="12" r="3" fill="currentColor" />
+          </svg>
         </button>
 
         {/* Route Info Display - Compact with Horizontal Bottom Buttons (Top Right) */}

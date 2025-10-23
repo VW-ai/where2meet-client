@@ -348,6 +348,12 @@ export class Where2MeetAPI {
     );
   }
 
+  async getCandidatePhoto(eventId: string, candidateId: string): Promise<{ photo_reference: string | null }> {
+    return this.request<{ photo_reference: string | null }>(
+      `/api/v1/events/${eventId}/candidates/${candidateId}/photo`
+    );
+  }
+
   // ===== Vote Endpoints =====
 
   async castVote(

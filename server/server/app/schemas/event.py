@@ -85,6 +85,7 @@ class CandidateResponse(BaseModel):
     opening_hours: Optional[str]
     added_by: str
     vote_count: int = 0
+    photo_reference: Optional[str] = None
 
     class Config:
         from_attributes = True

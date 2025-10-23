@@ -12,12 +12,29 @@ import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '
 import { useTranslation } from '@/lib/i18n';
 import Logo from '@/components/Logo';
 import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
+import TravelChart from '@/components/TravelChart';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
 });
+
+// Helper function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+}
 
 // Participant color palette (blue/green shades - matches ParticipationSection)
 const PARTICIPANT_COLORS = [
@@ -67,6 +84,7 @@ function EventPageContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchRadius, setSearchRadius] = useState(2000); // DEPRECATED: Visual radius - kept for backward compat before search
   const [radiusMultiplier, setRadiusMultiplier] = useState(1.0); // Multiplier for MEC radius: 1.0 to 2.0 (default: 1.0x)
+  const [circleRadiusKm, setCircleRadiusKm] = useState(1); // Direct circle radius control in km (0.5-2km)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
   const [hasAutoSearched, setHasAutoSearched] = useState(false); // Track if auto-search has run
   const [myVotedCandidateIds, setMyVotedCandidateIds] = useState<Set<string>>(new Set()); // Track which candidates current user voted for
@@ -81,6 +99,9 @@ function EventPageContent() {
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
   const [showParticipantNames, setShowParticipantNames] = useState(true); // Toggle for showing participant names on map
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null); // For two-way binding with participant list
+  const [chartTravelMode, setChartTravelMode] = useState<any>('DRIVING'); // Travel mode for chart in location detail view
+  const [participantTravelData, setParticipantTravelData] = useState<Map<string, { distance: number; duration: number }>>(new Map()); // Travel data for chart
+  const [candidatePhotoCache, setCandidatePhotoCache] = useState<Map<string, string | null>>(new Map()); // Cache for candidate photos
 
   // Create participant colors map
   const participantColors = useMemo(() => {
@@ -301,21 +322,72 @@ function EventPageContent() {
 
   // Convert API candidates to frontend format
   const convertAPICandidates = (apiCandidates: APICandidate[]): Candidate[] => {
-    return apiCandidates.map((c) => ({
-      id: c.id,
-      placeId: c.place_id,
-      name: c.name,
-      lat: c.lat,
-      lng: c.lng,
-      rating: c.rating,
-      userRatingsTotal: c.user_ratings_total,
-      distanceFromCenter: c.distance_from_center,
-      inCircle: c.in_circle,
-      vicinity: c.address,
-      voteCount: c.vote_count || 0,
-      addedBy: c.added_by,
-    }));
+    return apiCandidates.map((c) => {
+      const photoRef = (c as any).photo_reference;
+      if (photoRef) {
+        console.log('📸 Photo reference found for', c.name, ':', photoRef);
+      }
+      return {
+        id: c.id,
+        placeId: c.place_id,
+        name: c.name,
+        lat: c.lat,
+        lng: c.lng,
+        rating: c.rating,
+        userRatingsTotal: c.user_ratings_total,
+        distanceFromCenter: c.distance_from_center,
+        inCircle: c.in_circle,
+        vicinity: c.address,
+        voteCount: c.vote_count || 0,
+        addedBy: c.added_by,
+        photoReference: photoRef,
+      };
+    });
   };
+
+  // Fetch photo when a candidate is selected
+  useEffect(() => {
+    if (!selectedCandidate || !eventId) return;
+
+    // Check if we already have the photo reference
+    if (selectedCandidate.photoReference) return;
+
+    // Check cache first
+    const cached = candidatePhotoCache.get(selectedCandidate.id);
+    if (cached !== undefined) {
+      // Update the selected candidate with cached photo
+      const photoRef = cached || undefined;
+      setSelectedCandidate({ ...selectedCandidate, photoReference: photoRef });
+      return;
+    }
+
+    // Fetch photo from backend
+    const fetchPhoto = async () => {
+      try {
+        console.log('📸 Fetching photo for', selectedCandidate.name);
+        const response = await api.getCandidatePhoto(eventId, selectedCandidate.id);
+        const photoRef = response.photo_reference || undefined;
+
+        // Update cache
+        setCandidatePhotoCache(prev => new Map(prev).set(selectedCandidate.id, photoRef || null));
+
+        // Update the selected candidate
+        setSelectedCandidate({ ...selectedCandidate, photoReference: photoRef });
+
+        // Update the candidate in the candidates list too
+        setCandidates(prev => prev.map(c =>
+          c.id === selectedCandidate.id ? { ...c, photoReference: photoRef } : c
+        ));
+
+        console.log('📸 Photo loaded:', photoRef ? 'Yes' : 'No photo available');
+      } catch (error) {
+        console.error('❌ Failed to fetch photo:', error);
+        setCandidatePhotoCache(prev => new Map(prev).set(selectedCandidate.id, null));
+      }
+    };
+
+    fetchPhoto();
+  }, [selectedCandidate?.id, eventId]);
 
   // Recompute centroid and circle
   useEffect(() => {
@@ -345,26 +417,22 @@ function EventPageContent() {
     const circleCenter = customCentroid || mec.center;
 
     // Use authoritative circle from backend if available (after search)
-    // Otherwise show preview with radiusMultiplier applied
+    // Otherwise show preview with direct circleRadiusKm
     if (authoritativeCircle) {
       console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
       setCircle(authoritativeCircle);
     } else {
-      // Apply radiusMultiplier to MEC radius for preview
-      // This shows users what the search area will be BEFORE they click search
-      // Use a minimum BASE radius of 1km (1000m) for visibility when MEC is too small
-      const MIN_BASE_RADIUS = 1000; // 1km minimum base
-      const effectiveMecRadius = Math.max(mec.radius, MIN_BASE_RADIUS);
-      const previewRadius = effectiveMecRadius * radiusMultiplier;
+      // Use direct circleRadiusKm value (1-20km range) for preview circle
+      const previewRadius = circleRadiusKm * 1000; // Convert km to meters
 
       const newCircle = {
         center: circleCenter,
         radius: previewRadius,
       };
-      console.log('🔵 Circle effect: Setting preview circle', newCircle, `(MEC: ${(mec.radius/1000).toFixed(2)}km, Base: ${(effectiveMecRadius/1000).toFixed(2)}km, Multiplier: ${radiusMultiplier.toFixed(1)}x, Preview: ${(previewRadius/1000).toFixed(2)}km)`);
+      console.log('🔵 Circle effect: Setting preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
       setCircle(newCircle);
     }
-  }, [locations, customCentroid, authoritativeCircle, radiusMultiplier]);
+  }, [locations, customCentroid, authoritativeCircle, circleRadiusKm]);
 
   // Add location (for participants)
   const handleAddLocation = useCallback(async (location: Location) => {
@@ -444,6 +512,12 @@ function EventPageContent() {
       return;
     }
 
+    // Unselect participant when clicking empty space on map
+    if (selectedParticipantId) {
+      setSelectedParticipantId(null);
+      return;
+    }
+
     // Ignore map clicks right after dragging centroid
     if (isDraggingCentroid) {
       setIsDraggingCentroid(false);
@@ -487,7 +561,7 @@ function EventPageContent() {
       console.error('Failed to add location:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to add location');
     }
-  }, [participantId, role, isDraggingCentroid, eventId, participants]);
+  }, [participantId, role, isDraggingCentroid, eventId, participants, selectedCandidate, selectedParticipantId]);
 
   // Search candidates via API
   const searchPlaces = useCallback(async () => {
@@ -501,21 +575,29 @@ function EventPageContent() {
     setSelectedCandidate(null);
 
     try {
-      // Search using the MEC with user-controlled multiplier
-      // The backend will compute the MEC and multiply by radiusMultiplier (1.0-2.0)
+      // Calculate multiplier based on desired circleRadiusKm and MEC radius
+      // Compute MEC to determine baseline
+      const mec = computeMinimumEnclosingCircle(locations);
+      const MIN_BASE_RADIUS_KM = 1; // 1km minimum
+      const mecRadiusKm = mec ? mec.radius / 1000 : MIN_BASE_RADIUS_KM;
+      const effectiveMecRadiusKm = Math.max(mecRadiusKm, MIN_BASE_RADIUS_KM);
+
+      // Calculate multiplier: desired km / MEC km
+      const calculatedMultiplier = circleRadiusKm / effectiveMecRadiusKm;
+
       // Include custom centroid if user has dragged the center point
       const searchParams: any = {
         keyword: keyword,
-        radius_multiplier: radiusMultiplier,
+        radius_multiplier: calculatedMultiplier,
         only_in_circle: onlyInCircle,
       };
 
       if (customCentroid) {
         searchParams.custom_center_lat = customCentroid.lat;
         searchParams.custom_center_lng = customCentroid.lng;
-        console.log('🎯 Searching with custom center:', customCentroid, 'multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
+        console.log('🎯 Searching with custom center:', customCentroid, 'radius:', circleRadiusKm.toFixed(1) + 'km', 'only_in_circle:', onlyInCircle);
       } else {
-        console.log('📍 Searching with computed MEC center, multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
+        console.log('📍 Searching with computed MEC center, radius:', circleRadiusKm.toFixed(1) + 'km', 'only_in_circle:', onlyInCircle);
       }
 
       const response = await api.searchCandidates(eventId, searchParams);
@@ -546,7 +628,7 @@ function EventPageContent() {
     } finally {
       setIsSearching(false);
     }
-  }, [eventId, keyword, customCentroid, onlyInCircle, t]);
+  }, [eventId, keyword, customCentroid, onlyInCircle, t, circleRadiusKm, locations]);
 
   // Auto-search when 2+ participants and keyword exists
   useEffect(() => {
@@ -835,6 +917,12 @@ function EventPageContent() {
   }, [eventId, participantId]);
 
   const handleParticipantClick = useCallback((participantId: string) => {
+    // Toggle selection: if clicking already selected participant, unselect it
+    if (selectedParticipantId === participantId) {
+      setSelectedParticipantId(null);
+      return;
+    }
+
     // Find the participant
     const participant = participants.find(p => p.id === participantId);
     if (!participant) return;
@@ -844,7 +932,13 @@ function EventPageContent() {
 
     // Pan map to their location by triggering MapView to center on this participant
     // MapView will handle the actual centering via the selectedParticipantId prop
-  }, [participants]);
+  }, [participants, selectedParticipantId]);
+
+  const handleCircleRadiusChange = useCallback((radiusKm: number) => {
+    setCircleRadiusKm(radiusKm);
+    // Clear authoritative circle to show the new preview with updated radius
+    setAuthoritativeCircle(null);
+  }, []);
 
   // Show enhanced loading screen during initialization
   if (isInitializing || !event) {
@@ -913,8 +1007,8 @@ function EventPageContent() {
             }
           }}
           myParticipantId={participantId || undefined}
-          routeFromParticipantId={routeFromParticipantId}
-          travelMode={travelMode}
+          routeFromParticipantId={selectedCandidate && selectedParticipantId ? selectedParticipantId : routeFromParticipantId}
+          travelMode={selectedCandidate && selectedParticipantId ? chartTravelMode : travelMode}
           onTravelModeChange={setTravelMode}
           onCentroidDrag={handleCentroidDrag}
           isHost={role === 'host'}
@@ -923,6 +1017,7 @@ function EventPageContent() {
           candidateColors={candidateColors}
           showParticipantNames={showParticipantNames}
           selectedParticipantId={selectedParticipantId}
+          chartRouteMode={selectedCandidate && selectedParticipantId ? true : false}
         />
       </div>
 
@@ -944,7 +1039,7 @@ function EventPageContent() {
           onPublishDecision={handlePublish}
 
           // Input Section
-          isJoined={!!participantId}
+          isJoined={!!participantId && participants.some(p => p.id === participantId)}
           onJoinEvent={handleJoinEvent}
           onEditLocation={handleEditOwnLocation}
           onRemoveOwnLocation={handleRemoveOwnLocation}
@@ -975,6 +1070,7 @@ function EventPageContent() {
             }
           }}
           onVote={handleVote}
+          onDownvote={handleVote}
           participantId={participantId || undefined}
           myVotedCandidateIds={myVotedCandidateIds}
           onSaveCandidate={handleSaveCandidate}
@@ -985,12 +1081,196 @@ function EventPageContent() {
           // Participation Section
           participants={participants}
           myParticipantId={participantId || undefined}
+          selectedParticipantId={selectedParticipantId}
           onParticipantClick={handleParticipantClick}
           onRemoveParticipant={role === 'host' ? handleRemoveLocation : undefined}
           showParticipantNames={showParticipantNames}
           onToggleShowNames={setShowParticipantNames}
         />
       </div>
+
+      {/* Venue Detail Panel - Middle Right (when venue selected) */}
+      {selectedCandidate && (
+        <div className="fixed bottom-64 right-6 w-96 h-[40 vh] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-20 flex flex-col">
+          {/* Header with Photo Background */}
+          <div
+            className="relative flex items-center justify-between px-4 py-3 bg-black text-white border-b-2 border-black h-32"
+            style={{
+              backgroundImage: selectedCandidate.photoReference
+                ? `url(https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${selectedCandidate.photoReference}&key=${apiKey})`
+                : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {/* Dark overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/50"></div>
+
+            {/* Content */}
+            <div className="relative flex items-center justify-between w-full">
+              <h3 className="font-bold text-sm uppercase truncate flex-1 text-white drop-shadow-lg">{selectedCandidate.name}</h3>
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="ml-2 hover:bg-white hover:text-black w-6 h-6 flex items-center justify-center transition-all bg-black/50 backdrop-blur-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Rating and Distance */}
+            {(selectedCandidate.rating || selectedCandidate.distanceFromCenter) && (
+              <div className="flex items-center gap-3 mb-3 text-xs text-black">
+                {selectedCandidate.rating && (
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="font-bold text-black">{selectedCandidate.rating.toFixed(1)}</span>
+                    {selectedCandidate.userRatingsTotal && (
+                      <span className="text-black">({selectedCandidate.userRatingsTotal})</span>
+                    )}
+                  </div>
+                )}
+                {selectedCandidate.distanceFromCenter && (
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-bold text-black">{(selectedCandidate.distanceFromCenter / 1000).toFixed(2)} km</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Address */}
+            {selectedCandidate.vicinity && (
+              <div className="mb-3">
+                <p className="text-xs text-black">{selectedCandidate.vicinity}</p>
+              </div>
+            )}
+
+            {/* Google Maps Link */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${selectedCandidate.lat},${selectedCandidate.lng}&query_place_id=${selectedCandidate.placeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full px-4 py-2 bg-black text-white text-center text-xs font-bold uppercase border-2 border-black hover:bg-white hover:text-black transition-all mb-3"
+            >
+              Open in Google Maps
+            </a>
+
+            {/* Participant Travel Chart */}
+            {participants.length > 0 && (
+              <div className="border-t-2 border-black pt-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-bold uppercase text-black">Travel Analysis</h4>
+
+                  {/* Transportation Mode Selector */}
+                  <div className="flex gap-1">
+                    {(['DRIVING', 'TRANSIT', 'WALKING', 'BICYCLING'] as const).map((mode) => {
+                      const icons = {
+                        DRIVING: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M3 7h18M5 7v10l2-1 2 1 2-1 2 1 2-1 2 1V7',
+                        TRANSIT: 'M5 13v6M5 5v6M5 11h14M19 5v14M12 8v5M8 8v5M16 8v5',
+                        WALKING: 'M16 7a2 2 0 11-4 0 2 2 0 014 0zM12 14l-2 6M12 14l2 6M12 14V9M10 9l2-2 2 2',
+                        BICYCLING: 'M5 19a3 3 0 100-6 3 3 0 000 6zM19 19a3 3 0 100-6 3 3 0 000 6zM7 8l4 8M11 8h4l-1 4',
+                      };
+                      const isActive = chartTravelMode === mode ||
+                        (typeof chartTravelMode === 'object' && chartTravelMode?.toString() === mode);
+
+                      return (
+                        <button
+                          key={mode}
+                          onClick={() => {
+                            if (typeof window !== 'undefined' && window.google?.maps?.TravelMode) {
+                              setChartTravelMode((google.maps.TravelMode as any)[mode]);
+                            } else {
+                              setChartTravelMode(mode);
+                            }
+                          }}
+                          className={`p-1.5 border-2 border-black transition-all ${
+                            isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                          }`}
+                          title={mode}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={icons[mode]} />
+                          </svg>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Travel Time vs Distance Chart */}
+                <TravelChart
+                  participants={participants}
+                  selectedCandidate={selectedCandidate}
+                  participantColors={participantColors}
+                  travelMode={chartTravelMode}
+                  apiKey={apiKey}
+                  selectedParticipantId={selectedParticipantId}
+                  onParticipantClick={handleParticipantClick}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Circle Radius Controller - Bottom Right (All joined users) */}
+      {participantId && !selectedCandidate && (
+        <div className={`fixed right-6 z-20 ${role === 'host' ? 'bottom-6' : 'bottom-6'}`}>
+          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-3 min-w-[280px]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase text-black">Search Radius</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-black">{circleRadiusKm.toFixed(1)} km</span>
+                <div className="group relative">
+                  <svg className="w-3.5 h-3.5 text-black cursor-help" fill="none" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4M12 8h.01"/>
+                  </svg>
+                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-56 px-3 py-2 bg-black text-white text-xs border-2 border-black shadow-lg z-10">
+                    Search area radius (0.5-2km). Adjust before searching. Larger = more venues, further distance.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
+                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+              >
+                −
+              </button>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={circleRadiusKm}
+                onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-gray-200 border-2 border-black appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, black ${((circleRadiusKm - 0.5) / 1.5) * 100}%, #e5e7eb ${((circleRadiusKm - 0.5) / 1.5) * 100}%)`
+                }}
+              />
+              <button
+                onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
+                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Share Modal */}
       {showShareModal && (

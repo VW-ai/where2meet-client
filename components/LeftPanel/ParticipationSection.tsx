@@ -7,6 +7,7 @@ import { Participant } from '@/lib/api';
 interface ParticipationSectionProps {
   participants: Participant[];
   myParticipantId?: string;
+  selectedParticipantId?: string | null;
   onParticipantClick: (participantId: string) => void;
   onRemoveParticipant?: (participantId: string) => void;
   isHost: boolean;
@@ -27,6 +28,7 @@ const PARTICIPANT_COLORS = [
 export default function ParticipationSection({
   participants,
   myParticipantId,
+  selectedParticipantId,
   onParticipantClick,
   onRemoveParticipant,
   isHost,
@@ -89,6 +91,8 @@ export default function ParticipationSection({
           const displayLat = participant.fuzzy_lat ?? participant.lat;
           const displayLng = participant.fuzzy_lng ?? participant.lng;
 
+          const isSelected = participant.id === selectedParticipantId;
+
           return (
             <div
               key={participant.id}
@@ -96,6 +100,8 @@ export default function ParticipationSection({
               className={`relative flex items-center border-2 border-black cursor-pointer transition-all overflow-hidden ${
                 isMe
                   ? 'bg-black text-white'
+                  : isSelected
+                  ? 'bg-gray-300 text-black'
                   : 'bg-white hover:bg-gray-100'
               }`}
             >

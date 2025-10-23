@@ -159,6 +159,7 @@ async def search_candidates(
             distance_from_center=distance,
             in_circle=in_circle,
             opening_hours=json.dumps(place.get("opening_hours")) if place.get("opening_hours") else None,
+            photo_reference=place.get("photo_reference"),
             added_by="system"
         )
 
@@ -216,7 +217,8 @@ async def search_candidates(
             in_circle=c.in_circle,
             opening_hours=c.opening_hours,
             added_by=c.added_by,
-            vote_count=vote_count_map.get(c.id, 0)
+            vote_count=vote_count_map.get(c.id, 0),
+            photo_reference=c.photo_reference
         ))
 
     # Build search area metadata
@@ -300,7 +302,8 @@ async def get_candidates(
             in_circle=c.in_circle,
             opening_hours=c.opening_hours,
             added_by=c.added_by,
-            vote_count=vote_count_map.get(c.id, 0)
+            vote_count=vote_count_map.get(c.id, 0),
+            photo_reference=c.photo_reference
         ))
 
     return responses
@@ -377,7 +380,8 @@ async def add_candidate_manually(
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
         added_by=candidate.added_by,
-        vote_count=0
+        vote_count=0,
+        photo_reference=candidate.photo_reference
     )
 
 
@@ -432,7 +436,8 @@ async def save_candidate_to_added(
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
         added_by=candidate.added_by,
-        vote_count=vote_count
+        vote_count=vote_count,
+        photo_reference=candidate.photo_reference
     )
 
 
@@ -487,7 +492,8 @@ async def unsave_candidate_from_added(
         in_circle=candidate.in_circle,
         opening_hours=candidate.opening_hours,
         added_by=candidate.added_by,
-        vote_count=vote_count
+        vote_count=vote_count,
+        photo_reference=candidate.photo_reference
     )
 
 
@@ -518,3 +524,38 @@ async def remove_candidate(
     await sse_manager.broadcast(event_id, "candidate_removed", {
         "candidate_id": candidate_id
     })
+
+
+@router.get("/events/{event_id}/candidates/{candidate_id}/photo")
+async def get_candidate_photo(
+    event_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch photo reference for a specific candidate (on-demand with caching).
+    """
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id,
+        Candidate.event_id == event_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Candidate not found"
+        )
+
+    # Check if we already have the photo reference
+    if candidate.photo_reference:
+        return {"photo_reference": candidate.photo_reference}
+
+    # Fetch photo reference from Google Places API (with Redis caching)
+    photo_reference = await google_maps_service.get_place_photo_reference(candidate.place_id)
+
+    # Update database with the fetched photo reference
+    if photo_reference:
+        candidate.photo_reference = photo_reference
+        db.commit()
+
+    return {"photo_reference": photo_reference}

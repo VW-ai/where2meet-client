@@ -53,12 +53,12 @@ export default function VenuesSection({
 }: VenuesSectionProps) {
   const [activeTab, setActiveTab] = useState<'search' | 'list'>('search');
 
-  // Split candidates into search results and saved venues
-  const searchResults = candidates.filter(c => c.addedBy !== 'organizer');
-  const savedVenues = candidates.filter(c => c.addedBy === 'organizer');
+  // Split candidates into search results and saved venues (saved = has votes)
+  const savedVenues = candidates.filter(c => (c.voteCount ?? 0) > 0);
+  const searchResults = candidates.filter(c => (c.voteCount ?? 0) === 0);
 
   return (
-    <div className="flex flex-col" style={{ maxHeight: '60vh' }}>
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Tab Headers - High contrast black/white */}
       <div className="flex border-b-2 border-black">
         <button

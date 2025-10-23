@@ -81,6 +81,7 @@ class Candidate(Base):
     in_circle = Column(Boolean, default=True)
     opening_hours = Column(Text, nullable=True)  # JSON string
     added_by = Column(String(20), default="system")  # system or organizer
+    photo_reference = Column(String(1000), nullable=True)  # Google Places photo reference
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
