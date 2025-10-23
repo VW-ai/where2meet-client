@@ -80,6 +80,7 @@ function EventPageContent() {
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
   const [showParticipantNames, setShowParticipantNames] = useState(true); // Toggle for showing participant names on map
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null); // For two-way binding with participant list
 
   // Create participant colors map
   const participantColors = useMemo(() => {
@@ -838,9 +839,11 @@ function EventPageContent() {
     const participant = participants.find(p => p.id === participantId);
     if (!participant) return;
 
-    // Pan map to their location (will be implemented in MapView)
-    console.log('Focus on participant:', participantId, participant);
-    // TODO: Add map pan functionality
+    // Set selected participant for two-way binding (will highlight and center on map)
+    setSelectedParticipantId(participantId);
+
+    // Pan map to their location by triggering MapView to center on this participant
+    // MapView will handle the actual centering via the selectedParticipantId prop
   }, [participants]);
 
   // Show enhanced loading screen during initialization
@@ -919,6 +922,7 @@ function EventPageContent() {
           participantColors={participantColors}
           candidateColors={candidateColors}
           showParticipantNames={showParticipantNames}
+          selectedParticipantId={selectedParticipantId}
         />
       </div>
 

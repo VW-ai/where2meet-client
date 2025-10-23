@@ -24,6 +24,7 @@ interface MapViewProps {
   participantColors?: Map<string, string>; // Map of participant ID to color
   candidateColors?: Map<string, string>; // Map of candidate ID to color (red shades)
   showParticipantNames?: boolean; // Toggle for showing participant names
+  selectedParticipantId?: string | null; // For two-way binding with participant list
 }
 
 function MapContent({
@@ -46,6 +47,7 @@ function MapContent({
   participantColors,
   candidateColors,
   showParticipantNames = true,
+  selectedParticipantId,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
@@ -72,6 +74,17 @@ function MapContent({
       setHasInitialCentered(true);
     }
   }, [map, userLocation, hasInitialCentered, locations.length]);
+
+  // Center map on selected participant (two-way binding from list click)
+  useEffect(() => {
+    if (map && selectedParticipantId) {
+      const participant = locations.find(loc => loc.id === selectedParticipantId);
+      if (participant) {
+        map.panTo({ lat: participant.lat, lng: participant.lng });
+        map.setZoom(14); // Zoom in a bit to focus on the participant
+      }
+    }
+  }, [map, selectedParticipantId, locations]);
 
   // Initialize directions renderer
   useEffect(() => {
@@ -229,6 +242,7 @@ function MapContent({
       {locations.map((location) => {
         // Identify user's own marker for special styling
         const isMyLocation = myParticipantId && location.id === myParticipantId;
+        const isSelected = selectedParticipantId === location.id;
         // Get assigned color from map, fallback to default
         const assignedColor = participantColors?.get(location.id) || '#3b82f6';
 
@@ -242,13 +256,13 @@ function MapContent({
               onLocationClick?.(location.lat, location.lng);
             }}
           >
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center group">
               {/* Triangle Marker */}
               <svg
-                width="32"
-                height="32"
+                width={isSelected ? "40" : "32"}
+                height={isSelected ? "40" : "32"}
                 viewBox="0 0 32 32"
-                className="drop-shadow-lg"
+                className={`drop-shadow-lg transition-all duration-200 ${isSelected ? 'scale-125' : ''}`}
               >
                 {/* Triangle pointing up */}
                 <path
@@ -262,11 +276,13 @@ function MapContent({
                   <circle cx="16" cy="22" r="2" fill="white" />
                 )}
               </svg>
-              {/* Name label - Use assigned color (only show if toggle is on) */}
-              {showParticipantNames && location.name && (
+              {/* Name label - Show if toggle is on OR on hover OR selected */}
+              {location.name && (
                 <div
-                  className={`mt-1 px-2 py-1 text-xs font-semibold shadow-md border-2 ${
+                  className={`mt-1 px-2 py-1 text-xs font-semibold shadow-md border-2 transition-opacity ${
                     isMyLocation ? 'border-white text-white' : 'border-black text-white'
+                  } ${
+                    showParticipantNames || isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                   }`}
                   style={{ backgroundColor: assignedColor }}
                 >
