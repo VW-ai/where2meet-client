@@ -2,7 +2,7 @@
 
 import { Search, MapPin, Star, Heart, RefreshCw, Utensils, Coffee, Beer, Trees, Dumbbell, Film, Navigation, Info } from 'lucide-react';
 import { Candidate, SortMode } from '@/types';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 interface SearchSubViewProps {
   keyword: string;
@@ -56,6 +56,51 @@ export default function SearchSubView({
   // Refs for auto-scroll functionality
   const candidateRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+  // Google Places Autocomplete for keyword input
+  const keywordInputRef = useRef<HTMLInputElement>(null);
+  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+
+  // Wait for Google Maps Places library to load
+  useEffect(() => {
+    const checkGoogleLoaded = () => {
+      if (typeof window !== 'undefined' && window.google?.maps?.places?.Autocomplete) {
+        setIsGoogleLoaded(true);
+      } else {
+        setTimeout(checkGoogleLoaded, 100);
+      }
+    };
+    checkGoogleLoaded();
+  }, []);
+
+  // Initialize Google Places Autocomplete for keyword input
+  useEffect(() => {
+    if (!keywordInputRef.current || !isGoogleLoaded) {
+      return;
+    }
+
+    // Initialize Autocomplete - focus on establishments (venues)
+    const autocompleteInstance = new google.maps.places.Autocomplete(keywordInputRef.current, {
+      types: ['establishment'], // Focus on businesses/venues
+      fields: ['name', 'place_id'],
+    });
+
+    // Listen for place selection
+    autocompleteInstance.addListener('place_changed', () => {
+      const place = autocompleteInstance.getPlace();
+
+      if (place.name) {
+        // Set the venue name as the keyword
+        onKeywordChange(place.name);
+      }
+    });
+
+    return () => {
+      if (autocompleteInstance) {
+        google.maps.event.clearInstanceListeners(autocompleteInstance);
+      }
+    };
+  }, [isGoogleLoaded, onKeywordChange]);
+
   // Auto-scroll to selected candidate when it changes
   useEffect(() => {
     if (selectedCandidate && candidateRefs.current[selectedCandidate.id]) {
@@ -95,12 +140,14 @@ export default function SearchSubView({
         <div className="flex-1 relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black" />
           <input
+            ref={keywordInputRef}
             type="text"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-            placeholder="restaurant"
-            className="w-full pl-8 pr-2 py-1.5 text-xs text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
+            placeholder={isGoogleLoaded ? "restaurant or venue name" : "loading..."}
+            disabled={!isGoogleLoaded}
+            className="w-full pl-8 pr-2 py-1.5 text-xs text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400 disabled:cursor-wait"
           />
         </div>
         <button
