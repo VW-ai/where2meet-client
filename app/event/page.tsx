@@ -19,7 +19,7 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
 });
 
-// Participant color palette (matches ParticipationSection)
+// Participant color palette (blue/green shades - matches ParticipationSection)
 const PARTICIPANT_COLORS = [
   '#10b981', // emerald
   '#0d9488', // teal
@@ -27,6 +27,16 @@ const PARTICIPANT_COLORS = [
   '#9333ea', // purple
   '#ec4899', // pink
   '#3b82f6', // blue
+];
+
+// Candidate/Location color palette (red shades - distinguishable from participants)
+const CANDIDATE_COLORS = [
+  '#ef4444', // red-500
+  '#dc2626', // red-600
+  '#f97316', // orange-500
+  '#ea580c', // orange-600
+  '#fb923c', // orange-400
+  '#f87171', // red-400
 ];
 
 function EventPageContent() {
@@ -69,6 +79,7 @@ function EventPageContent() {
   const [travelMode, setTravelMode] = useState<any>('DRIVING'); // Start with string, will be converted when Google loads
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
+  const [showParticipantNames, setShowParticipantNames] = useState(true); // Toggle for showing participant names on map
 
   // Create participant colors map
   const participantColors = useMemo(() => {
@@ -78,6 +89,15 @@ function EventPageContent() {
     });
     return colorMap;
   }, [participants]);
+
+  // Create candidate/location colors map
+  const candidateColors = useMemo(() => {
+    const colorMap = new Map<string, string>();
+    candidates.forEach((candidate, index) => {
+      colorMap.set(candidate.id, CANDIDATE_COLORS[index % CANDIDATE_COLORS.length]);
+    });
+    return colorMap;
+  }, [candidates]);
 
   // Initialize event from URL
   useEffect(() => {
@@ -417,6 +437,12 @@ function EventPageContent() {
   }, [eventId]);
 
   const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    // Unselect candidate when clicking empty space on map
+    if (selectedCandidate) {
+      setSelectedCandidate(null);
+      return;
+    }
+
     // Ignore map clicks right after dragging centroid
     if (isDraggingCentroid) {
       setIsDraggingCentroid(false);
@@ -875,7 +901,14 @@ function EventPageContent() {
           candidates={sortedCandidates()}
           selectedCandidate={selectedCandidate}
           onMapClick={handleMapClick}
-          onCandidateClick={setSelectedCandidate}
+          onCandidateClick={(candidate) => {
+            // Toggle selection: if clicking already selected candidate, unselect it
+            if (selectedCandidate?.id === candidate.id) {
+              setSelectedCandidate(null);
+            } else {
+              setSelectedCandidate(candidate);
+            }
+          }}
           myParticipantId={participantId || undefined}
           routeFromParticipantId={routeFromParticipantId}
           travelMode={travelMode}
@@ -884,6 +917,8 @@ function EventPageContent() {
           isHost={role === 'host'}
           language={language}
           participantColors={participantColors}
+          candidateColors={candidateColors}
+          showParticipantNames={showParticipantNames}
         />
       </div>
 
@@ -927,19 +962,29 @@ function EventPageContent() {
           onOnlyInCircleChange={setOnlyInCircle}
           candidates={candidates}
           selectedCandidate={selectedCandidate}
-          onCandidateClick={setSelectedCandidate}
+          onCandidateClick={(candidate) => {
+            // Toggle selection: if clicking already selected candidate, unselect it
+            if (selectedCandidate?.id === candidate.id) {
+              setSelectedCandidate(null);
+            } else {
+              setSelectedCandidate(candidate);
+            }
+          }}
           onVote={handleVote}
           participantId={participantId || undefined}
           myVotedCandidateIds={myVotedCandidateIds}
           onSaveCandidate={handleSaveCandidate}
           onRemoveCandidate={handleRemoveCandidate}
           hasAutoSearched={hasAutoSearched}
+          candidateColors={candidateColors}
 
           // Participation Section
           participants={participants}
           myParticipantId={participantId || undefined}
           onParticipantClick={handleParticipantClick}
           onRemoveParticipant={role === 'host' ? handleRemoveLocation : undefined}
+          showParticipantNames={showParticipantNames}
+          onToggleShowNames={setShowParticipantNames}
         />
       </div>
 

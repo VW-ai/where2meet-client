@@ -44,12 +44,15 @@ interface LeftPanelProps {
   onSaveCandidate?: (candidateId: string) => void;
   onRemoveCandidate?: (candidateId: string) => void;
   hasAutoSearched: boolean;
+  candidateColors?: Map<string, string>;
 
   // Participation Section Props
   participants: Participant[];
   myParticipantId?: string;
   onParticipantClick: (participantId: string) => void;
   onRemoveParticipant?: (participantId: string) => void;
+  showParticipantNames?: boolean;
+  onToggleShowNames?: (show: boolean) => void;
 }
 
 export default function LeftPanel({
@@ -88,12 +91,15 @@ export default function LeftPanel({
   onSaveCandidate,
   onRemoveCandidate,
   hasAutoSearched,
+  candidateColors,
 
   // Participation
   participants,
   myParticipantId,
   onParticipantClick,
   onRemoveParticipant,
+  showParticipantNames,
+  onToggleShowNames,
 }: LeftPanelProps) {
 
   return (
@@ -149,6 +155,7 @@ export default function LeftPanel({
             onRemoveCandidate={onRemoveCandidate}
             isHost={isHost}
             hasAutoSearched={hasAutoSearched}
+            candidateColors={candidateColors}
           />
           {participants.length > 0 && <div className="h-0.5 bg-black" />}
         </>
@@ -162,6 +169,8 @@ export default function LeftPanel({
           onParticipantClick={onParticipantClick}
           onRemoveParticipant={onRemoveParticipant}
           isHost={isHost}
+          showParticipantNames={showParticipantNames}
+          onToggleShowNames={onToggleShowNames}
         />
       )}
     </div>

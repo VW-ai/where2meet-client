@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap, MapMouseEvent } from '@vis.gl/react-google-maps';
 import { Location, Circle, Candidate } from '@/types';
-import { Car, PersonStanding, Train, Bike, Clock, Route } from 'lucide-react';
+import { Car, PersonStanding, Train, Bike, Clock, Route, Heart } from 'lucide-react';
 
 interface MapViewProps {
   apiKey: string;
@@ -22,6 +22,8 @@ interface MapViewProps {
   isHost?: boolean;
   language?: string;
   participantColors?: Map<string, string>; // Map of participant ID to color
+  candidateColors?: Map<string, string>; // Map of candidate ID to color (red shades)
+  showParticipantNames?: boolean; // Toggle for showing participant names
 }
 
 function MapContent({
@@ -42,6 +44,8 @@ function MapContent({
   onMapReady,
   onLocationClick,
   participantColors,
+  candidateColors,
+  showParticipantNames = true,
 }: Omit<MapViewProps, 'apiKey' | 'onTravelModeChange'> & {
   onRouteInfoChange?: (info: { distance: string; duration: string } | null) => void;
   userLocation?: { lat: number; lng: number } | null;
@@ -258,8 +262,8 @@ function MapContent({
                   <circle cx="16" cy="22" r="2" fill="white" />
                 )}
               </svg>
-              {/* Name label - Use assigned color */}
-              {location.name && (
+              {/* Name label - Use assigned color (only show if toggle is on) */}
+              {showParticipantNames && location.name && (
                 <div
                   className={`mt-1 px-2 py-1 text-xs font-semibold shadow-md border-2 ${
                     isMyLocation ? 'border-white text-white' : 'border-black text-white'
@@ -293,33 +297,47 @@ function MapContent({
         </AdvancedMarker>
       )}
 
-      {/* Candidate markers - Differentiate user-added (squares) from search results (circles) - Techno style */}
+      {/* Candidate markers - Hearts for saved (voted), Circles for search results */}
       {candidates.map((candidate) => {
-        const isUserAdded = candidate.addedBy === 'organizer';
         const isSelected = selectedCandidate?.id === candidate.id;
+        const isSaved = (candidate.voteCount ?? 0) > 0; // Saved locations have votes
+        // Get assigned color from map, fallback to red for saved, grey for search results
+        const assignedColor = isSaved
+          ? (candidateColors?.get(candidate.id) || '#ef4444')
+          : '#6b7280'; // grey for search results
 
         return (
           <AdvancedMarker
             key={candidate.id}
             position={{ lat: candidate.lat, lng: candidate.lng }}
-            title={`${candidate.name}${isUserAdded ? ' (User Added)' : ''}`}
+            title={candidate.name}
             onClick={() => onCandidateClick(candidate)}
           >
-            <div
-              className={`border-2 border-black shadow-lg cursor-pointer transition-all duration-200 hover:scale-150 ${
-                isUserAdded
-                  ? 'rounded-sm' // Square for user-added
-                  : 'rounded-full' // Circle for search results
-              } ${
-                isSelected
-                  ? isUserAdded
-                    ? 'w-7 h-7 bg-gray-800 ring-4 ring-black scale-90'
-                    : 'w-7 h-7 bg-gray-800 ring-4 ring-black scale-150'
-                  : isUserAdded
-                  ? 'w-4 h-4 bg-gray-600'
-                  : 'w-4 h-4 bg-gray-500'
-              }`}
-            />
+            {isSaved ? (
+              // Saved locations: Hearts with red color palette
+              <Heart
+                className={`cursor-pointer transition-all duration-200 drop-shadow-lg ${
+                  isSelected
+                    ? 'w-8 h-8' // Bigger when selected
+                    : 'w-5 h-5'
+                }`}
+                fill={isSelected ? '#fbbf24' : assignedColor} // Bright yellow when selected, assigned red shade otherwise
+                stroke="black"
+                strokeWidth={2}
+              />
+            ) : (
+              // Search results: Simple grey circles
+              <div
+                className={`border-2 border-black shadow-lg cursor-pointer transition-all duration-200 rounded-full ${
+                  isSelected
+                    ? 'w-6 h-6' // Bigger when selected
+                    : 'w-4 h-4'
+                }`}
+                style={{
+                  backgroundColor: isSelected ? '#fbbf24' : assignedColor // Bright yellow when selected, grey otherwise
+                }}
+              />
+            )}
           </AdvancedMarker>
         );
       })}

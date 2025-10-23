@@ -14,6 +14,7 @@ interface VenueListSubViewProps {
   myVotedCandidateIds: Set<string>;
   onRemoveCandidate?: (candidateId: string) => void;
   isHost: boolean;
+  candidateColors?: Map<string, string>;
 }
 
 export default function VenueListSubView({
@@ -26,6 +27,7 @@ export default function VenueListSubView({
   myVotedCandidateIds,
   onRemoveCandidate,
   isHost,
+  candidateColors,
 }: VenueListSubViewProps) {
 
   // Refs for auto-scroll functionality
@@ -113,20 +115,21 @@ export default function VenueListSubView({
           const isSelected = selectedCandidate?.id === candidate.id;
           const voteCount = candidate.voteCount || 0;
           const hasUserVoted = myVotedCandidateIds.has(candidate.id);
+          const assignedColor = candidateColors?.get(candidate.id) || '#ef4444';
 
           return (
             <div
               key={candidate.id}
               ref={(el) => { candidateRefs.current[candidate.id] = el; }}
               onClick={() => onCandidateClick(candidate)}
-              className={`p-1.5 border-2 cursor-pointer transition-all ${
+              className={`relative p-1.5 border-2 cursor-pointer transition-all overflow-hidden ${
                 isSelected
                   ? 'bg-black text-white border-black'
                   : 'bg-white border-black hover:bg-gray-100'
               }`}
             >
               {/* Line 1: Name + Trophy (if top) + Rating + Distance */}
-              <div className="flex items-center justify-between gap-1 mb-0.5">
+              <div className="relative z-10 flex items-center justify-between gap-1 mb-0.5">
                 <div className="flex items-center gap-1 flex-1 min-w-0">
                   {isTopChoice && <Trophy className={`w-3 h-3 flex-shrink-0 ${
                     isSelected ? 'text-white' : 'text-black'
@@ -140,20 +143,16 @@ export default function VenueListSubView({
                 <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
                   {candidate.rating && (
                     <div className="flex items-center gap-0.5">
-                      <Star className={`w-3 h-3 ${
-                        isSelected ? 'fill-white text-white' : 'fill-yellow-400 text-yellow-400'
-                      }`} />
-                      <span className={`font-medium ${
-                        isSelected ? 'text-white' : 'text-neutral-700'
-                      }`}>{candidate.rating.toFixed(1)}</span>
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium text-black">
+                        {candidate.rating.toFixed(1)}
+                      </span>
                     </div>
                   )}
                   {candidate.distanceFromCenter !== undefined && (
                     <div className="flex items-center gap-0.5">
-                      <MapPin className={`w-3 h-3 ${
-                        isSelected ? 'text-white' : 'text-neutral-500'
-                      }`} />
-                      <span className={isSelected ? 'text-white' : 'text-neutral-600'}>
+                      <MapPin className="w-3 h-3 text-black" />
+                      <span className="text-black">
                         {(candidate.distanceFromCenter / 1000).toFixed(1)}km
                       </span>
                     </div>
@@ -162,7 +161,7 @@ export default function VenueListSubView({
               </div>
 
               {/* Line 2: Address + Vote/Remove */}
-              <div className="flex items-center justify-between gap-1">
+              <div className="relative z-10 flex items-center justify-between gap-1">
                 <p className={`text-xs truncate flex-1 ${
                   isSelected ? 'text-gray-300' : 'text-neutral-500'
                 }`}>
@@ -227,6 +226,16 @@ export default function VenueListSubView({
                   )}
                 </div>
               </div>
+
+              {/* Color tag - Rightmost with angled left edge (similar to participant list) */}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-[30%] flex-shrink-0 z-0"
+                style={{
+                  backgroundColor: assignedColor,
+                  clipPath: 'polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)',
+                }}
+                title={`Map marker color: ${assignedColor}`}
+              />
             </div>
           );
         })}

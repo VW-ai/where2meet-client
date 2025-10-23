@@ -1,6 +1,7 @@
 'use client';
 
-import { Users, EyeOff, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Users, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Participant } from '@/lib/api';
 
 interface ParticipationSectionProps {
@@ -9,6 +10,8 @@ interface ParticipationSectionProps {
   onParticipantClick: (participantId: string) => void;
   onRemoveParticipant?: (participantId: string) => void;
   isHost: boolean;
+  showParticipantNames?: boolean;
+  onToggleShowNames?: (show: boolean) => void;
 }
 
 // Predefined color palette for participant markers
@@ -27,7 +30,10 @@ export default function ParticipationSection({
   onParticipantClick,
   onRemoveParticipant,
   isHost,
+  showParticipantNames = true,
+  onToggleShowNames,
 }: ParticipationSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(true); // Default expanded
 
   const getParticipantColor = (index: number) => {
     return PARTICIPANT_COLORS[index % PARTICIPANT_COLORS.length];
@@ -39,16 +45,40 @@ export default function ParticipationSection({
 
   return (
     <div className="px-4 py-3 space-y-2">
-      {/* Header - Compact */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <Users className="w-4 h-4 text-black" />
-        <h3 className="text-xs font-bold text-black uppercase">
-          Participants ({participants.length})
-        </h3>
+      {/* Header - Compact with Collapse Toggle and Names Toggle */}
+      <div className="flex items-center justify-between mb-1">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+        >
+          <Users className="w-4 h-4 text-black" />
+          <h3 className="text-xs font-bold text-black uppercase">
+            Participants ({participants.length})
+          </h3>
+          {isExpanded ? (
+            <ChevronUp className="w-3 h-3 text-black" />
+          ) : (
+            <ChevronDown className="w-3 h-3 text-black" />
+          )}
+        </button>
+        {onToggleShowNames && (
+          <button
+            onClick={() => onToggleShowNames(!showParticipantNames)}
+            className={`px-2 py-0.5 text-xs font-bold uppercase border-2 border-black transition-all ${
+              showParticipantNames
+                ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+            title={showParticipantNames ? 'Hide names on map' : 'Show names on map'}
+          >
+            Names
+          </button>
+        )}
       </div>
 
-      {/* Ultra-compact 1-line participant list */}
-      <div className="space-y-0.5 max-h-48 overflow-y-auto">
+      {/* Ultra-compact 1-line participant list (collapsible) */}
+      {isExpanded && (
+        <div className="space-y-0.5 max-h-48 overflow-y-auto">
         {participants.map((participant, index) => {
           const isMe = participant.id === myParticipantId;
           const color = getParticipantColor(index);
@@ -129,7 +159,8 @@ export default function ParticipationSection({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

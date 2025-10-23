@@ -26,6 +26,7 @@ interface VenuesSectionProps {
   onRemoveCandidate?: (candidateId: string) => void;
   isHost: boolean;
   hasAutoSearched: boolean;
+  candidateColors?: Map<string, string>;
 }
 
 export default function VenuesSection({
@@ -48,6 +49,7 @@ export default function VenuesSection({
   onRemoveCandidate,
   isHost,
   hasAutoSearched,
+  candidateColors,
 }: VenuesSectionProps) {
   const [activeTab, setActiveTab] = useState<'search' | 'list'>('search');
 
@@ -126,6 +128,7 @@ export default function VenuesSection({
             myVotedCandidateIds={myVotedCandidateIds}
             onRemoveCandidate={onRemoveCandidate}
             isHost={isHost}
+            candidateColors={candidateColors}
           />
         )}
       </div>
