@@ -959,6 +959,8 @@ function EventPageContent() {
           eventTitle={event?.title}
           eventId={eventId || undefined}
           token={joinToken || undefined}
+          finalDecision={event?.final_decision}
+          onPublishDecision={handlePublish}
 
           // Input Section
           isJoined={!!participantId}

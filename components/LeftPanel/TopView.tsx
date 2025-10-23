@@ -8,9 +8,21 @@ interface TopViewProps {
   eventTitle?: string;
   eventId?: string;
   token?: string;
+  isHost?: boolean;
+  selectedCandidate?: { name: string } | null;
+  finalDecision?: string | null;
+  onPublishDecision?: () => void;
 }
 
-export default function TopView({ eventTitle, eventId, token }: TopViewProps) {
+export default function TopView({
+  eventTitle,
+  eventId,
+  token,
+  isHost,
+  selectedCandidate,
+  finalDecision,
+  onPublishDecision
+}: TopViewProps) {
   const { language, setLanguage, t } = useLanguage();
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
@@ -91,6 +103,17 @@ export default function TopView({ eventTitle, eventId, token }: TopViewProps) {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Publish Decision Button (Host only) */}
+          {isHost && selectedCandidate && !finalDecision && onPublishDecision && (
+            <button
+              onClick={onPublishDecision}
+              className="px-3 py-2 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all font-bold text-xs uppercase"
+              title={t.publishDecision}
+            >
+              {t.publishDecision}
+            </button>
           )}
         </div>
       </div>

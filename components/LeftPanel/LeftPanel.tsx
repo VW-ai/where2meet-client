@@ -13,7 +13,8 @@ interface LeftPanelProps {
   eventTitle?: string;
   eventId?: string;
   token?: string;
-
+  finalDecision?: string | null;
+  onPublishDecision?: () => void;
 
   // Input Section Props
   isJoined: boolean;
@@ -56,6 +57,8 @@ export default function LeftPanel({
   eventTitle,
   eventId,
   token,
+  finalDecision,
+  onPublishDecision,
 
   // Input
   isJoined,
@@ -96,7 +99,15 @@ export default function LeftPanel({
   return (
     <div className="w-96 max-w-[calc(50vw-2rem)] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col">
       {/* TopView - Always visible */}
-      <TopView eventTitle={eventTitle} eventId={eventId} token={token} />
+      <TopView
+        eventTitle={eventTitle}
+        eventId={eventId}
+        token={token}
+        isHost={isHost}
+        selectedCandidate={selectedCandidate}
+        finalDecision={finalDecision}
+        onPublishDecision={onPublishDecision}
+      />
 
 
       {/* Section 1: Input View */}
