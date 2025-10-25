@@ -1,208 +1,28 @@
 
-> where2meet-client@1.0.0 dev /Users/waynewang/where2meet-client
+> where2meet-client@1.0.0 dev /Users/victor/work/where2meet-clientside/where2meet-client
 > next dev -p 4000
-
- ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
- We detected multiple lockfiles and selected the directory of /Users/waynewang/package-lock.json as the root directory.
- To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
-   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
- Detected additional lockfiles: 
-   * /Users/waynewang/where2meet-client/pnpm-lock.yaml
 
    ▲ Next.js 15.5.4
    - Local:        http://localhost:4000
-   - Network:      http://192.168.1.109:4000
+   - Network:      http://10.13.0.99:4000
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1351ms
+ ✓ Ready in 1248ms
  ○ Compiling / ...
-(node:87419) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
-(Use `node --trace-warnings ...` to show where the warning was created)
- ✓ Compiled / in 1469ms (745 modules)
- GET / 200 in 1871ms
- ✓ Compiled in 205ms (299 modules)
- ✓ Compiled /signup in 209ms (738 modules)
- GET /signup 200 in 413ms
- ✓ Compiled /icon in 258ms (526 modules)
- GET /icon 200 in 488ms
- GET / 200 in 80ms
- ⨯ ./app/event/page.tsx
-Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1425:1]
- [2m1422[0m |             </a>
- [2m1423[0m |           </div>
- [2m1424[0m |         </div>
- [2m1425[0m |       )}
-      : [35;1m       ^[0m
- [2m1426[0m | 
- [2m1427[0m |       {/* Travel Analysis View - Separate view below detail card */}
- [2m1428[0m |       {showTravelChart && selectedCandidate && participants.length > 0 && (
-      `----
-  [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1697:1]
- [2m1694[0m |       />
- [2m1695[0m |     </main>
- [2m1696[0m |   );
- [2m1697[0m | }
-      : [35;1m^[0m
- [2m1698[0m | 
- [2m1699[0m | // Loading component for Suspense fallback
- [2m1700[0m | function LoadingFallback() {
-      `----
-  [31mx[0m Expected '</', got 'jsx text (
-  [31m|[0m   );
-  [31m|[0m }
-  [31m|[0m
-  [31m|[0m // Loading component for Suspense fallback
-  [31m|[0m function LoadingFallback() )'
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1695:1]
- [2m1692[0m |             hasLocations={locations.length > 0}
- [2m1693[0m |             hasCandidates={candidates.length > 0}
- [2m1694[0m |           />
- [2m1695[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m     </main>
- [2m1696[0m | [35;1m|[0m     );
- [2m1697[0m | [35;1m|[0m   }
- [2m1698[0m | [35;1m|[0m   
- [2m1699[0m | [35;1m|[0m   // Loading component for Suspense fallback
- [2m1700[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m function LoadingFallback() {
- [2m1701[0m |       return (
- [2m1702[0m |         <div className="min-h-screen flex items-center justify-center bg-white">
- [2m1703[0m |           <div className="text-center">
-      `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/event/page.tsx
- ○ Compiling /_not-found ...
- ⨯ ./app/event/page.tsx
-Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1425:1]
- [2m1422[0m |             </a>
- [2m1423[0m |           </div>
- [2m1424[0m |         </div>
- [2m1425[0m |       )}
-      : [35;1m       ^[0m
- [2m1426[0m | 
- [2m1427[0m |       {/* Travel Analysis View - Separate view below detail card */}
- [2m1428[0m |       {showTravelChart && selectedCandidate && participants.length > 0 && (
-      `----
-  [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1697:1]
- [2m1694[0m |       />
- [2m1695[0m |     </main>
- [2m1696[0m |   );
- [2m1697[0m | }
-      : [35;1m^[0m
- [2m1698[0m | 
- [2m1699[0m | // Loading component for Suspense fallback
- [2m1700[0m | function LoadingFallback() {
-      `----
-  [31mx[0m Expected '</', got 'jsx text (
-  [31m|[0m   );
-  [31m|[0m }
-  [31m|[0m
-  [31m|[0m // Loading component for Suspense fallback
-  [31m|[0m function LoadingFallback() )'
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1695:1]
- [2m1692[0m |             hasLocations={locations.length > 0}
- [2m1693[0m |             hasCandidates={candidates.length > 0}
- [2m1694[0m |           />
- [2m1695[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m     </main>
- [2m1696[0m | [35;1m|[0m     );
- [2m1697[0m | [35;1m|[0m   }
- [2m1698[0m | [35;1m|[0m   
- [2m1699[0m | [35;1m|[0m   // Loading component for Suspense fallback
- [2m1700[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m function LoadingFallback() {
- [2m1701[0m |       return (
- [2m1702[0m |         <div className="min-h-screen flex items-center justify-center bg-white">
- [2m1703[0m |           <div className="text-center">
-      `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/event/page.tsx
- ⨯ ./app/event/page.tsx
-Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1425:1]
- [2m1422[0m |             </a>
- [2m1423[0m |           </div>
- [2m1424[0m |         </div>
- [2m1425[0m |       )}
-      : [35;1m       ^[0m
- [2m1426[0m | 
- [2m1427[0m |       {/* Travel Analysis View - Separate view below detail card */}
- [2m1428[0m |       {showTravelChart && selectedCandidate && participants.length > 0 && (
-      `----
-  [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1697:1]
- [2m1694[0m |       />
- [2m1695[0m |     </main>
- [2m1696[0m |   );
- [2m1697[0m | }
-      : [35;1m^[0m
- [2m1698[0m | 
- [2m1699[0m | // Loading component for Suspense fallback
- [2m1700[0m | function LoadingFallback() {
-      `----
-  [31mx[0m Expected '</', got 'jsx text (
-  [31m|[0m   );
-  [31m|[0m }
-  [31m|[0m
-  [31m|[0m // Loading component for Suspense fallback
-  [31m|[0m function LoadingFallback() )'
-      ,-[[36;1;4m/Users/waynewang/where2meet-client/app/event/page.tsx[0m:1695:1]
- [2m1692[0m |             hasLocations={locations.length > 0}
- [2m1693[0m |             hasCandidates={candidates.length > 0}
- [2m1694[0m |           />
- [2m1695[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m     </main>
- [2m1696[0m | [35;1m|[0m     );
- [2m1697[0m | [35;1m|[0m   }
- [2m1698[0m | [35;1m|[0m   
- [2m1699[0m | [35;1m|[0m   // Loading component for Suspense fallback
- [2m1700[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m function LoadingFallback() {
- [2m1701[0m |       return (
- [2m1702[0m |         <div className="min-h-screen flex items-center justify-center bg-white">
- [2m1703[0m |           <div className="text-center">
-      `----
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/event/page.tsx
- GET /event?id=evt_d7a4e049540f42d7 500 in 2768ms
- GET /event?id=evt_d7a4e049540f42d7 500 in 13ms
- GET /event?id=evt_d7a4e049540f42d7 500 in 14ms
- GET /event?id=evt_d7a4e049540f42d7 500 in 18ms
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- ✓ Compiled /_not-found in 1163ms (1215 modules)
- GET /event?id=evt_d7a4e049540f42d7 200 in 774ms
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET /event?id=evt_d7a4e049540f42d7 200 in 279ms
- ⚠ Fast Refresh had to perform a full reload due to a runtime error.
- GET /event?id=evt_d7a4e049540f42d7 200 in 95ms
- GET /icon 200 in 196ms
- GET /event?id=evt_d7a4e049540f42d7&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldmVudF9pZCI6ImV2dF9kN2E0ZTA0OTU0MGY0MmQ3IiwiZXhwIjoxNzY0MDI1MTM3LCJ0eXBlIjoiam9pbl9saW5rIn0.tULb1EmsESzjzEQwz78gutoSCgQ5Ljn0Si7Ztca4Bns 200 in 58ms
- GET /icon 200 in 23ms
- GET / 200 in 174ms
- GET /icon 200 in 17ms
- GET / 200 in 20ms
- GET / 200 in 24ms
- GET / 200 in 21ms
- ✓ Compiled /my-posts in 433ms (1219 modules)
- GET /my-posts 200 in 543ms
- ○ Compiling /event-detail ...
- ✓ Compiled /event-detail in 727ms (1289 modules)
- GET /event-detail?id=evt_7e21a3c2064a4aa7 200 in 877ms
- GET / 200 in 53ms
- GET /event-detail?id=evt_e4a0f4c61e0c48c4 200 in 27ms
- GET / 200 in 26ms
- GET /my-posts 200 in 39ms
- GET /event-detail?id=evt_e4a0f4c61e0c48c4 200 in 24ms
- GET / 200 in 23ms
+ ✓ Compiled / in 1322ms (745 modules)
+ GET / 200 in 1663ms
+ ✓ Compiled in 225ms (299 modules)
+ GET / 200 in 112ms
+ ○ Compiling /icon ...
+ ✓ Compiled /icon in 758ms (524 modules)
+ GET /icon 200 in 962ms
+ GET / 200 in 93ms
+ GET /icon 200 in 8ms
+ ○ Compiling /event ...
+ ✓ Compiled /event in 519ms (863 modules)
+ GET /event?id=evt_7eeea4c51bd84bc7 200 in 643ms
+ GET /event?id=evt_80fa600b0402473d 200 in 69ms
+ GET /event?id=evt_80fa600b0402473d 200 in 170ms
+ GET /icon 200 in 475ms
+ GET / 200 in 125ms
