@@ -1,27 +1,61 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Toaster, toast } from 'sonner';
-import InputPanel from '@/components/InputPanel';
-import CandidatesPanel from '@/components/CandidatesPanel';
-import VenueSearchBox from '@/components/VenueSearchBox';
-import Tabs, { TabItem } from '@/components/Tabs';
-import EmptyState from '@/components/EmptyState';
+import LeftPanel from '@/components/LeftPanel';
+import Instructions from '@/components/Instructions';
 import { Location, Candidate, Circle, SortMode } from '@/types';
 import { computeCentroid, computeMinimumEnclosingCircle } from '@/lib/algorithms';
 import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import Instructions from '@/components/Instructions';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
+import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
+import TravelChart from '@/components/TravelChart';
+import { ChevronUp, ChevronDown, Heart } from 'lucide-react';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-gray-200 flex items-center justify-center">Loading map...</div>,
 });
+
+// Helper function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+}
+
+// Participant color palette (blue/green shades - matches ParticipationSection)
+const PARTICIPANT_COLORS = [
+  '#10b981', // emerald
+  '#0d9488', // teal
+  '#f59e0b', // amber
+  '#9333ea', // purple
+  '#ec4899', // pink
+  '#3b82f6', // blue
+];
+
+// Candidate/Location color palette (red shades - distinguishable from participants)
+const CANDIDATE_COLORS = [
+  '#ef4444', // red-500
+  '#dc2626', // red-600
+  '#f97316', // orange-500
+  '#ea580c', // orange-600
+  '#fb923c', // orange-400
+  '#f87171', // red-400
+];
 
 function EventPageContent() {
   const router = useRouter();
@@ -51,18 +85,50 @@ function EventPageContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchRadius, setSearchRadius] = useState(2000); // DEPRECATED: Visual radius - kept for backward compat before search
   const [radiusMultiplier, setRadiusMultiplier] = useState(1.0); // Multiplier for MEC radius: 1.0 to 2.0 (default: 1.0x)
+  const [circleRadiusKm, setCircleRadiusKm] = useState(1); // Direct circle radius control in km (0.5-2km)
   const [onlyInCircle, setOnlyInCircle] = useState(true); // Filter search results to MEC circle only
+  const [hasAutoSearched, setHasAutoSearched] = useState(false); // Track if auto-search has run
+  const [myVotedCandidateIds, setMyVotedCandidateIds] = useState<Set<string>>(new Set()); // Track which candidates current user voted for
+  const [myVotes, setMyVotes] = useState<Map<string, string>>(new Map()); // Map: candidateId -> voteId
 
   // UI state
   const [isInitializing, setIsInitializing] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [travelMode, setTravelMode] = useState<any>('DRIVING'); // Start with string, will be converted when Google loads
-  const [showNicknamePrompt, setShowNicknamePrompt] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [pendingLocation, setPendingLocation] = useState<Location | null>(null);
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
   const [routeFromParticipantId, setRouteFromParticipantId] = useState<string | null>(null); // For hosts to view routes from any participant
+  const [showParticipantNames, setShowParticipantNames] = useState(true); // Toggle for showing participant names on map
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null); // For two-way binding with participant list
+  const [chartTravelMode, setChartTravelMode] = useState<any>('DRIVING'); // Travel mode for chart in location detail view
+  const [participantTravelData, setParticipantTravelData] = useState<Map<string, { distance: number; duration: number }>>(new Map()); // Travel data for chart
+  const [candidatePhotoCache, setCandidatePhotoCache] = useState<Map<string, string | null>>(new Map()); // Cache for candidate photos
+  const [showTravelChart, setShowTravelChart] = useState(false); // Show/hide travel chart as separate view
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false); // Custom publish confirmation modal
+  const [candidateEditorialSummary, setCandidateEditorialSummary] = useState<string | null>(null); // Editorial summary for selected candidate
+  const [candidateOpeningHours, setCandidateOpeningHours] = useState<any>(null); // Opening hours for selected candidate
+  const [isAboutExpanded, setIsAboutExpanded] = useState(true); // Collapsible About section
+  const [isHoursExpanded, setIsHoursExpanded] = useState(true); // Collapsible Hours section
+  const [showLocationConfirm, setShowLocationConfirm] = useState(false); // Custom location confirmation modal
+  const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number; address: string | null } | null>(null); // Temporary clicked location
+
+  // Create participant colors map
+  const participantColors = useMemo(() => {
+    const colorMap = new Map<string, string>();
+    participants.forEach((participant, index) => {
+      colorMap.set(participant.id, PARTICIPANT_COLORS[index % PARTICIPANT_COLORS.length]);
+    });
+    return colorMap;
+  }, [participants]);
+
+  // Create candidate/location colors map
+  const candidateColors = useMemo(() => {
+    const colorMap = new Map<string, string>();
+    candidates.forEach((candidate, index) => {
+      colorMap.set(candidate.id, CANDIDATE_COLORS[index % CANDIDATE_COLORS.length]);
+    });
+    return colorMap;
+  }, [candidates]);
 
   // Initialize event from URL
   useEffect(() => {
@@ -130,7 +196,7 @@ function EventPageContent() {
   }, []); // Only run once on mount
 
   // Load event data
-  const loadEventData = async (id: string) => {
+  const loadEventData = async (id: string, currentParticipantId?: string | null) => {
     try {
       const eventData = await api.getEvent(id);
       setEvent(eventData);
@@ -150,19 +216,42 @@ function EventPageContent() {
       const participantData = await api.getParticipants(id);
       setParticipants(participantData);
 
-      // Convert participants to locations for map display
+      // Convert participants to locations
+      // Use ACTUAL coordinates (not fuzzy) for circle calculation
+      // The circle represents the optimal meeting area based on real distances
       const locs: Location[] = participantData.map((p) => ({
         id: p.id,
-        lat: p.fuzzy_lat || p.lat,
-        lng: p.fuzzy_lng || p.lng,
+        lat: p.lat,  // Use actual lat for circle calculation
+        lng: p.lng,  // Use actual lng for circle calculation
         address: p.name || `Participant ${p.id.slice(0, 8)}`,
         name: p.name,
       }));
+      console.log('📍 loadEventData: Setting locations from participants', locs);
       setLocations(locs);
 
       // Load candidates if any
       const candidateData = await api.getCandidates(id);
       setCandidates(convertAPICandidates(candidateData));
+
+      // Load current user's votes if they're a participant
+      // Use passed parameter or fall back to state
+      const pId = currentParticipantId ?? participantId;
+      if (pId && pId.trim()) {
+        try {
+          const votes = await api.getVotes(id, pId);
+          const votedIds = new Set(votes.map(v => v.candidate_id));
+          const votesMap = new Map(votes.map(v => [v.candidate_id, v.id]));
+          setMyVotedCandidateIds(votedIds);
+          setMyVotes(votesMap);
+        } catch (err) {
+          console.error('Failed to load votes:', err);
+          // Don't fail the whole load if votes fail
+        }
+      } else {
+        // Clear votes if no participant
+        setMyVotedCandidateIds(new Set());
+        setMyVotes(new Map());
+      }
     } catch (err) {
       console.error('Failed to load event:', err);
       setError(err instanceof Error ? err.message : 'Failed to load event');
@@ -245,24 +334,103 @@ function EventPageContent() {
 
   // Convert API candidates to frontend format
   const convertAPICandidates = (apiCandidates: APICandidate[]): Candidate[] => {
-    return apiCandidates.map((c) => ({
-      id: c.id,
-      placeId: c.place_id,
-      name: c.name,
-      lat: c.lat,
-      lng: c.lng,
-      rating: c.rating,
-      userRatingsTotal: c.user_ratings_total,
-      distanceFromCenter: c.distance_from_center,
-      inCircle: c.in_circle,
-      vicinity: c.address,
-      voteCount: c.vote_count || 0,
-      addedBy: c.added_by,
-    }));
+    return apiCandidates.map((c) => {
+      const photoRef = (c as any).photo_reference;
+      if (photoRef) {
+        console.log('📸 Photo reference found for', c.name, ':', photoRef);
+      }
+      return {
+        id: c.id,
+        placeId: c.place_id,
+        name: c.name,
+        lat: c.lat,
+        lng: c.lng,
+        rating: c.rating,
+        userRatingsTotal: c.user_ratings_total,
+        distanceFromCenter: c.distance_from_center,
+        inCircle: c.in_circle,
+        vicinity: c.address,
+        voteCount: c.vote_count || 0,
+        addedBy: c.added_by,
+        photoReference: photoRef,
+      };
+    });
   };
 
-  // Recompute centroid and circle
+  // Fetch photo when a candidate is selected
   useEffect(() => {
+    if (!selectedCandidate || !eventId) return;
+
+    // Check if we already have the photo reference
+    if (selectedCandidate.photoReference) return;
+
+    // Check cache first
+    const cached = candidatePhotoCache.get(selectedCandidate.id);
+    if (cached !== undefined) {
+      // Update the selected candidate with cached photo
+      const photoRef = cached || undefined;
+      setSelectedCandidate({ ...selectedCandidate, photoReference: photoRef });
+      return;
+    }
+
+    // Fetch photo from backend
+    const fetchPhoto = async () => {
+      try {
+        console.log('📸 Fetching photo for', selectedCandidate.name);
+        const response = await api.getCandidatePhoto(eventId, selectedCandidate.id);
+        const photoRef = response.photo_reference || undefined;
+
+        // Update cache
+        setCandidatePhotoCache(prev => new Map(prev).set(selectedCandidate.id, photoRef || null));
+
+        // Update the selected candidate
+        setSelectedCandidate({ ...selectedCandidate, photoReference: photoRef });
+
+        // Update the candidate in the candidates list too
+        setCandidates(prev => prev.map(c =>
+          c.id === selectedCandidate.id ? { ...c, photoReference: photoRef } : c
+        ));
+
+        console.log('📸 Photo loaded:', photoRef ? 'Yes' : 'No photo available');
+      } catch (error) {
+        console.error('❌ Failed to fetch photo:', error);
+        setCandidatePhotoCache(prev => new Map(prev).set(selectedCandidate.id, null));
+      }
+    };
+
+    fetchPhoto();
+  }, [selectedCandidate?.id, eventId]);
+
+  // Fetch editorial summary and opening hours when a candidate is selected
+  useEffect(() => {
+    if (!selectedCandidate || !eventId) {
+      setCandidateEditorialSummary(null);
+      setCandidateOpeningHours(null);
+      setShowTravelChart(false); // Close travel chart when changing venues
+      return;
+    }
+
+    const fetchDetails = async () => {
+      try {
+        console.log('📝 Fetching details for', selectedCandidate.name);
+        const response = await api.getCandidateDetails(eventId, selectedCandidate.id);
+        setCandidateEditorialSummary(response.editorial_summary);
+        setCandidateOpeningHours(response.opening_hours);
+        console.log('📝 Details loaded - Summary:', response.editorial_summary ? 'Yes' : 'No', '| Hours:', response.opening_hours ? 'Yes' : 'No');
+      } catch (error) {
+        console.error('❌ Failed to fetch candidate details:', error);
+        setCandidateEditorialSummary(null);
+        setCandidateOpeningHours(null);
+      }
+    };
+
+    fetchDetails();
+  }, [selectedCandidate?.id, eventId]);
+
+  // Recompute centroid and circle with 2-second debounce
+  useEffect(() => {
+    console.log('🔵 Circle effect triggered - locations:', locations.length, 'customCentroid:', customCentroid, 'authCircle:', authoritativeCircle);
+
     if (locations.length === 0) {
       console.log('🔵 Circle effect: No locations, clearing circle');
       setCentroid(null);
@@ -270,60 +438,75 @@ function EventPageContent() {
       return;
     }
 
-    // Use custom centroid if available, otherwise compute automatically
-    const effectiveCentroid = customCentroid || computeCentroid(locations);
-    setCentroid(effectiveCentroid);
-    console.log('🔵 Circle effect: Centroid set to', effectiveCentroid);
+    // Debounce: Wait 2 seconds before recalculating circle
+    console.log('⏱️ Circle recalculation scheduled in 2 seconds...');
+    const timeoutId = setTimeout(() => {
+      console.log('🔵 Circle recalculation starting now (after 2s delay)');
 
-    // Compute MEC to get the baseline radius
-    const mec = computeMinimumEnclosingCircle(locations);
-    if (!mec) {
-      console.log('🔵 Circle effect: MEC computation failed, clearing circle');
-      setCircle(null);
-      return;
-    }
+      // Use custom centroid if available, otherwise compute automatically
+      const effectiveCentroid = customCentroid || computeCentroid(locations);
+      setCentroid(effectiveCentroid);
+      console.log('🔵 Circle effect: Centroid set to', effectiveCentroid, 'from locations:', locations.map(l => ({ lat: l.lat, lng: l.lng })));
 
-    console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
+      // Compute MEC to get the baseline radius
+      const mec = computeMinimumEnclosingCircle(locations);
+      if (!mec) {
+        console.log('🔵 Circle effect: MEC computation failed, clearing circle');
+        setCircle(null);
+        return;
+      }
 
-    // Use custom centroid for circle center if available, otherwise use MEC center
-    const circleCenter = customCentroid || mec.center;
+      console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
 
-    // Use authoritative circle from backend if available (after search)
-    // Otherwise show preview with radiusMultiplier applied
-    if (authoritativeCircle) {
-      console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
-      setCircle(authoritativeCircle);
-    } else {
-      // Apply radiusMultiplier to MEC radius for preview
-      // This shows users what the search area will be BEFORE they click search
-      // Use a minimum BASE radius of 1km (1000m) for visibility when MEC is too small
-      const MIN_BASE_RADIUS = 1000; // 1km minimum base
-      const effectiveMecRadius = Math.max(mec.radius, MIN_BASE_RADIUS);
-      const previewRadius = effectiveMecRadius * radiusMultiplier;
+      // Use custom centroid for circle center if available, otherwise use MEC center
+      const circleCenter = customCentroid || mec.center;
 
-      const newCircle = {
-        center: circleCenter,
-        radius: previewRadius,
-      };
-      console.log('🔵 Circle effect: Setting preview circle', newCircle, `(MEC: ${(mec.radius/1000).toFixed(2)}km, Base: ${(effectiveMecRadius/1000).toFixed(2)}km, Multiplier: ${radiusMultiplier.toFixed(1)}x, Preview: ${(previewRadius/1000).toFixed(2)}km)`);
-      setCircle(newCircle);
-    }
-  }, [locations, customCentroid, authoritativeCircle, radiusMultiplier]);
+      // Use authoritative circle from backend if available (after search)
+      // Otherwise show preview with direct circleRadiusKm
+      if (authoritativeCircle) {
+        console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
+        setCircle(authoritativeCircle);
+      } else {
+        // Use direct circleRadiusKm value (1-20km range) for preview circle
+        const previewRadius = circleRadiusKm * 1000; // Convert km to meters
+
+        const newCircle = {
+          center: circleCenter,
+          radius: previewRadius,
+        };
+        console.log('🔵 Circle effect: Setting preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
+        setCircle(newCircle);
+      }
+    }, 2000); // 2 second delay
+
+    // Cleanup: Cancel pending recalculation if locations change again
+    return () => {
+      console.log('⏱️ Circle recalculation cancelled (locations changed before timeout)');
+      clearTimeout(timeoutId);
+    };
+  }, [locations, customCentroid, authoritativeCircle, circleRadiusKm]);
 
   // Add location (for participants)
   const handleAddLocation = useCallback(async (location: Location) => {
     if (!eventId) return;
 
     try {
+      // Generate unique anonymous name
+      const existingNames = extractExistingNames(participants);
+      const anonymousName = generateUniqueName(existingNames);
+
       const participant = await api.addParticipant(eventId, {
         lat: location.lat,
         lng: location.lng,
-        name: location.name || location.address,
+        name: anonymousName,
       });
 
       // Store participant ID
       sessionStorage.setItem('participantId', participant.id);
       setParticipantId(participant.id);
+
+      // Show success toast with generated name
+      toast.success(`Added as ${anonymousName}`);
 
       // Reload event data to get updated list
       await loadEventData(eventId);
@@ -331,7 +514,7 @@ function EventPageContent() {
       console.error('Failed to add location:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to add location');
     }
-  }, [eventId]);
+  }, [eventId, participants]);
 
   const handleRemoveLocation = useCallback(async (id: string) => {
     if (!eventId || role !== 'host') return;
@@ -374,7 +557,19 @@ function EventPageContent() {
     }
   }, [eventId]);
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    // Unselect candidate when clicking empty space on map
+    if (selectedCandidate) {
+      setSelectedCandidate(null);
+      return;
+    }
+
+    // Unselect participant when clicking empty space on map
+    if (selectedParticipantId) {
+      setSelectedParticipantId(null);
+      return;
+    }
+
     // Ignore map clicks right after dragging centroid
     if (isDraggingCentroid) {
       setIsDraggingCentroid(false);
@@ -384,23 +579,68 @@ function EventPageContent() {
     // If user already has a participant ID and is not a host, they can't add another location
     if (participantId && role !== 'host') return;
 
-    const newLocation: Location = {
-      id: Date.now().toString(),
-      lat,
-      lng,
-      address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-    };
+    if (!eventId) return;
 
-    // Show confirmation dialog first, then prompt for nickname
-    const confirmed = confirm(
-      `Add location at:\n${lat.toFixed(6)}, ${lng.toFixed(6)}?\n\nClick OK to confirm this location.`
-    );
+    // Fetch address via reverse geocoding
+    let address: string | null = null;
+    try {
+      const geocodeResult = await api.reverseGeocode(lat, lng);
+      address = geocodeResult.address;
 
-    if (confirmed) {
-      setPendingLocation(newLocation);
-      setShowNicknamePrompt(true);
+      // If we got snapped coordinates (nearest building), use those instead of raw click
+      if (geocodeResult.lat !== lat || geocodeResult.lng !== lng) {
+        console.log('📍 Snapped to nearest address:', {
+          original: { lat, lng },
+          snapped: { lat: geocodeResult.lat, lng: geocodeResult.lng },
+          address
+        });
+        lat = geocodeResult.lat;
+        lng = geocodeResult.lng;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch address, using coordinates only:', err);
     }
-  }, [participantId, role, isDraggingCentroid]);
+
+    // Set clicked location and show custom modal
+    setClickedLocation({ lat, lng, address });
+    setShowLocationConfirm(true);
+  }, [participantId, role, isDraggingCentroid, eventId, selectedCandidate, selectedParticipantId]);
+
+  // Confirm location selection from modal
+  const confirmLocationSelection = useCallback(async () => {
+    if (!clickedLocation || !eventId) return;
+
+    try {
+      // Generate unique anonymous name
+      const existingNames = extractExistingNames(participants);
+      const anonymousName = generateUniqueName(existingNames);
+
+      // Add participant with anonymous name
+      const participant = await api.addParticipant(eventId, {
+        lat: clickedLocation.lat,
+        lng: clickedLocation.lng,
+        name: anonymousName,
+        address: clickedLocation.address || undefined,
+      });
+
+      // Store participant ID
+      sessionStorage.setItem('participantId', participant.id);
+      setParticipantId(participant.id);
+
+      // Close modal
+      setShowLocationConfirm(false);
+      setClickedLocation(null);
+
+      // Show success toast with generated name
+      toast.success(`Added as ${anonymousName}`);
+
+      // Reload event data to get updated list
+      await loadEventData(eventId);
+    } catch (err) {
+      console.error('Failed to add location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to add location');
+    }
+  }, [clickedLocation, eventId, participants]);
 
   // Search candidates via API
   const searchPlaces = useCallback(async () => {
@@ -414,21 +654,29 @@ function EventPageContent() {
     setSelectedCandidate(null);
 
     try {
-      // Search using the MEC with user-controlled multiplier
-      // The backend will compute the MEC and multiply by radiusMultiplier (1.0-2.0)
+      // Calculate multiplier based on desired circleRadiusKm and MEC radius
+      // Compute MEC to determine baseline
+      const mec = computeMinimumEnclosingCircle(locations);
+      const MIN_BASE_RADIUS_KM = 1; // 1km minimum
+      const mecRadiusKm = mec ? mec.radius / 1000 : MIN_BASE_RADIUS_KM;
+      const effectiveMecRadiusKm = Math.max(mecRadiusKm, MIN_BASE_RADIUS_KM);
+
+      // Calculate multiplier: desired km / MEC km
+      const calculatedMultiplier = circleRadiusKm / effectiveMecRadiusKm;
+
       // Include custom centroid if user has dragged the center point
       const searchParams: any = {
         keyword: keyword,
-        radius_multiplier: radiusMultiplier,
+        radius_multiplier: calculatedMultiplier,
         only_in_circle: onlyInCircle,
       };
 
       if (customCentroid) {
         searchParams.custom_center_lat = customCentroid.lat;
         searchParams.custom_center_lng = customCentroid.lng;
-        console.log('🎯 Searching with custom center:', customCentroid, 'multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
+        console.log('🎯 Searching with custom center:', customCentroid, 'radius:', circleRadiusKm.toFixed(1) + 'km', 'only_in_circle:', onlyInCircle);
       } else {
-        console.log('📍 Searching with computed MEC center, multiplier:', radiusMultiplier.toFixed(1) + 'x', 'only_in_circle:', onlyInCircle);
+        console.log('📍 Searching with computed MEC center, radius:', circleRadiusKm.toFixed(1) + 'km', 'only_in_circle:', onlyInCircle);
       }
 
       const response = await api.searchCandidates(eventId, searchParams);
@@ -459,7 +707,22 @@ function EventPageContent() {
     } finally {
       setIsSearching(false);
     }
-  }, [eventId, keyword, customCentroid, onlyInCircle, t]);
+  }, [eventId, keyword, customCentroid, onlyInCircle, t, circleRadiusKm, locations]);
+
+  // Auto-search when 2+ participants and keyword exists
+  useEffect(() => {
+    if (
+      !hasAutoSearched &&
+      locations.length >= 2 &&
+      keyword.trim() &&
+      !isSearching &&
+      !isInitializing
+    ) {
+      console.log('🚀 Auto-search triggered: 2+ participants, keyword exists');
+      searchPlaces();
+      setHasAutoSearched(true);
+    }
+  }, [locations.length, keyword, hasAutoSearched, isSearching, isInitializing, searchPlaces]);
 
   // Sort candidates
   const sortedCandidates = useCallback(() => {
@@ -490,35 +753,100 @@ function EventPageContent() {
   const handleVote = useCallback(async (candidateId: string) => {
     if (!eventId || !participantId || !event?.allow_vote) return;
 
+    const isCurrentlyVoted = myVotedCandidateIds.has(candidateId);
+    const voteId = myVotes.get(candidateId);
+
+    // Optimistically update UI
+    setMyVotedCandidateIds(prev => {
+      const newSet = new Set(prev);
+      if (isCurrentlyVoted) {
+        newSet.delete(candidateId);
+      } else {
+        newSet.add(candidateId);
+      }
+      return newSet;
+    });
+
+    if (isCurrentlyVoted) {
+      // Also optimistically update the votes map
+      setMyVotes(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(candidateId);
+        return newMap;
+      });
+    }
+
     try {
-      await api.castVote(eventId, participantId, candidateId);
-      await loadEventData(eventId);
+      if (isCurrentlyVoted && voteId) {
+        // Remove existing vote
+        await api.removeVote(eventId, voteId, participantId);
+      } else {
+        // Cast new vote
+        await api.castVote(eventId, participantId, candidateId);
+      }
+      // Reload to get updated vote counts from server
+      await loadEventData(eventId, participantId);
     } catch (err) {
       console.error('Failed to vote:', err);
+      // Revert optimistic update on error
+      setMyVotedCandidateIds(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyVoted) {
+          newSet.add(candidateId);
+        } else {
+          newSet.delete(candidateId);
+        }
+        return newSet;
+      });
+      if (isCurrentlyVoted && voteId) {
+        // Revert the votes map as well
+        setMyVotes(prev => {
+          const newMap = new Map(prev);
+          newMap.set(candidateId, voteId);
+          return newMap;
+        });
+      }
       toast.error(err instanceof Error ? err.message : 'Failed to vote');
     }
-  }, [eventId, participantId, event]);
+  }, [eventId, participantId, event, myVotedCandidateIds, myVotes]);
 
-  // Publish final decision (host only)
-  const handlePublish = useCallback(async () => {
+  // Show publish confirmation modal
+  const handlePublish = useCallback(() => {
     if (!eventId || role !== 'host' || !selectedCandidate) {
       toast.info(t.pleaseSelectVenue);
       return;
     }
+    setShowPublishConfirm(true);
+  }, [eventId, role, selectedCandidate, t]);
 
-    if (!confirm('Publish this as the final decision? This will notify all participants.')) {
-      return;
-    }
+  // Confirm and publish final decision
+  const confirmPublish = useCallback(async () => {
+    if (!eventId || !selectedCandidate) return;
 
     try {
       await api.publishEvent(eventId, selectedCandidate.name);
       await loadEventData(eventId);
+      setShowPublishConfirm(false);
       toast.success(t.finalDecisionPublished);
     } catch (err) {
       console.error('Failed to publish:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to publish');
     }
-  }, [eventId, role, selectedCandidate, t]);
+  }, [eventId, selectedCandidate, t, loadEventData]);
+
+  // Unpublish final decision
+  const handleUnpublish = useCallback(async () => {
+    if (!eventId || role !== 'host') return;
+
+    try {
+      await api.unpublishEvent(eventId);
+      await loadEventData(eventId);
+      toast.success('Decision unpublished successfully');
+    } catch (err) {
+      console.error('Failed to unpublish:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to unpublish');
+    }
+  }, [eventId, role, loadEventData]);
 
   // Add venue manually (for both host and participants)
   const handleAddVenueManually = useCallback(async (place: {
@@ -546,13 +874,24 @@ function EventPageContent() {
 
     try {
       await api.saveCandidate(eventId, candidateId);
+
+      // Automatically vote for the venue if user is a participant, voting is enabled, and they haven't voted yet
+      if (participantId && event?.allow_vote && !myVotedCandidateIds.has(candidateId)) {
+        try {
+          await api.castVote(eventId, participantId, candidateId);
+        } catch (voteErr: any) {
+          console.error('Failed to auto-vote:', voteErr);
+          // Don't show error to user - saving is the main action
+        }
+      }
+
       await loadEventData(eventId);
-      toast.success('Venue saved to added list');
+      toast.success(participantId && event?.allow_vote && !myVotedCandidateIds.has(candidateId) ? 'Venue added and voted!' : 'Venue saved to list');
     } catch (err) {
       console.error('Failed to save venue:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to save venue');
     }
-  }, [eventId]);
+  }, [eventId, participantId, event, myVotedCandidateIds]);
 
   // Remove from added list (but keep in database as search result)
   const handleUnsaveCandidate = useCallback(async (candidateId: string) => {
@@ -568,29 +907,6 @@ function EventPageContent() {
     }
   }, [eventId]);
 
-  // Handle nickname confirmation
-  const handleConfirmNickname = useCallback(() => {
-    if (!nickname.trim()) {
-      toast.info(t.pleaseEnterNickname);
-      return;
-    }
-
-    if (pendingLocation) {
-      handleAddLocation({
-        ...pendingLocation,
-        name: nickname.trim(),
-      });
-      setShowNicknamePrompt(false);
-      setPendingLocation(null);
-      setNickname('');
-    }
-  }, [nickname, pendingLocation, handleAddLocation, t]);
-
-  const handleCancelNickname = useCallback(() => {
-    setShowNicknamePrompt(false);
-    setPendingLocation(null);
-    setNickname('');
-  }, []);
 
   // Handle centroid drag (host only)
   const handleCentroidDrag = useCallback(async (lat: number, lng: number) => {
@@ -640,6 +956,132 @@ function EventPageContent() {
     navigator.clipboard.writeText(link);
     toast.success(t.joinLinkCopied);
   };
+
+  // Handler functions for new LeftPanel component
+  const handleJoinEvent = useCallback(async (data: { name: string; lat: number; lng: number; blur: boolean }) => {
+    if (!eventId) return;
+
+    try {
+      // Fetch address via reverse geocoding if privacy mode is OFF
+      let address: string | undefined;
+      if (!data.blur) {
+        try {
+          const geocodeResult = await api.reverseGeocode(data.lat, data.lng);
+          if (geocodeResult.address) {
+            address = geocodeResult.address;
+          }
+        } catch (geocodeErr) {
+          console.warn('Failed to fetch address, continuing without it:', geocodeErr);
+        }
+      }
+
+      const participant = await api.addParticipant(eventId, {
+        lat: data.lat,
+        lng: data.lng,
+        name: data.name,
+        address: address,
+        visibility: data.blur ? 'blur' : 'show',  // Per-participant visibility
+      });
+
+      // Store participant ID
+      sessionStorage.setItem('participantId', participant.id);
+      setParticipantId(participant.id);
+
+      // Clear authoritative circle when new participant joins
+      setAuthoritativeCircle(null);
+
+      toast.success(`Joined as ${data.name}`);
+
+      // Reload event data
+      await loadEventData(eventId);
+    } catch (err) {
+      console.error('Failed to join event:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to join event');
+      throw err;
+    }
+  }, [eventId]);
+
+  const handleEditOwnLocation = useCallback(async (data: { name?: string; lat?: number; lng?: number; blur?: boolean }) => {
+    if (!eventId || !participantId) return;
+
+    try {
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.lat !== undefined) updateData.lat = data.lat;
+      if (data.lng !== undefined) updateData.lng = data.lng;
+      if (data.blur !== undefined) {
+        updateData.visibility = data.blur ? 'blur' : 'show';
+      }
+
+      // Fetch address via reverse geocoding if coordinates changed and privacy mode is OFF
+      if (data.lat !== undefined && data.lng !== undefined && !data.blur) {
+        try {
+          const geocodeResult = await api.reverseGeocode(data.lat, data.lng);
+          if (geocodeResult.address) {
+            updateData.address = geocodeResult.address;
+          }
+        } catch (geocodeErr) {
+          console.warn('Failed to fetch address, continuing without it:', geocodeErr);
+        }
+      }
+
+      await api.updateParticipant(eventId, participantId, updateData);
+
+      // Clear authoritative circle when participant location changes
+      // This forces recalculation based on new participant positions
+      setAuthoritativeCircle(null);
+
+      await loadEventData(eventId);
+      toast.success('Location updated');
+    } catch (err) {
+      console.error('Failed to update location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to update location');
+      throw err;
+    }
+  }, [eventId, participantId]);
+
+  const handleRemoveOwnLocation = useCallback(async () => {
+    if (!eventId || !participantId) return;
+
+    try {
+      await api.removeParticipant(eventId, participantId);
+      sessionStorage.removeItem('participantId');
+      setParticipantId(null);
+
+      // Clear authoritative circle when participant is removed
+      setAuthoritativeCircle(null);
+
+      await loadEventData(eventId);
+      toast.success('Location removed');
+    } catch (err) {
+      console.error('Failed to remove location:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to remove location');
+    }
+  }, [eventId, participantId]);
+
+  const handleParticipantClick = useCallback((participantId: string) => {
+    // Toggle selection: if clicking already selected participant, unselect it
+    if (selectedParticipantId === participantId) {
+      setSelectedParticipantId(null);
+      return;
+    }
+
+    // Find the participant
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+
+    // Set selected participant for two-way binding (will highlight and center on map)
+    setSelectedParticipantId(participantId);
+
+    // Pan map to their location by triggering MapView to center on this participant
+    // MapView will handle the actual centering via the selectedParticipantId prop
+  }, [participants, selectedParticipantId]);
+
+  const handleCircleRadiusChange = useCallback((radiusKm: number) => {
+    setCircleRadiusKm(radiusKm);
+    // Clear authoritative circle to show the new preview with updated radius
+    setAuthoritativeCircle(null);
+  }, []);
 
   // Show enhanced loading screen during initialization
   if (isInitializing || !event) {
@@ -699,313 +1141,384 @@ function EventPageContent() {
           candidates={sortedCandidates()}
           selectedCandidate={selectedCandidate}
           onMapClick={handleMapClick}
-          onCandidateClick={setSelectedCandidate}
+          onCandidateClick={(candidate) => {
+            // Toggle selection: if clicking already selected candidate, unselect it
+            if (selectedCandidate?.id === candidate.id) {
+              setSelectedCandidate(null);
+            } else {
+              setSelectedCandidate(candidate);
+            }
+          }}
           myParticipantId={participantId || undefined}
-          routeFromParticipantId={routeFromParticipantId}
-          travelMode={travelMode}
+          routeFromParticipantId={selectedCandidate && selectedParticipantId ? selectedParticipantId : routeFromParticipantId}
+          travelMode={selectedCandidate && selectedParticipantId ? chartTravelMode : travelMode}
           onTravelModeChange={setTravelMode}
           onCentroidDrag={handleCentroidDrag}
           isHost={role === 'host'}
           language={language}
+          participantColors={participantColors}
+          candidateColors={candidateColors}
+          showParticipantNames={showParticipantNames}
+          selectedParticipantId={selectedParticipantId}
+          chartRouteMode={selectedCandidate && selectedParticipantId ? true : false}
         />
       </div>
 
-      {/* Floating Header */}
-      <header className="absolute top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-lg z-10">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="hover:opacity-80 transition-opacity"
-              title="Go back to main page"
-            >
-              <Logo size="md" showText={false} />
-            </button>
-            <LanguageSwitcher />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
-              <p className="text-sm font-medium text-gray-700">
-                {role === 'host' ? t.host : t.participant} • {participants.length} {t.participants}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {circle && (
-              <div className="hidden md:flex items-center gap-6 text-sm">
-                <div>
-                  <p className="text-gray-700 font-medium">{t.radius}</p>
-                  <p className="font-bold text-gray-900">{(circle.radius / 1000).toFixed(2)} km</p>
-                </div>
-                <div>
-                  <p className="text-gray-700 font-medium">{t.venues}</p>
-                  <p className="font-bold text-gray-900">{candidates.length}</p>
-                </div>
-              </div>
-            )}
-            {role === 'host' && (
-              <div className="flex items-center gap-4 relative">
-                {/* Animated Arrow & Instruction - Left of Share Button */}
-                {participants.length <= 1 && (
-                  <div className="flex items-center gap-2 animate-pulse">
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold whitespace-nowrap">
-                      Invite people with a link!
-                    </div>
-                    <svg className="w-8 h-8 text-blue-600 transform -translate-x-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 relative group"
-                  title="Share this link to invite people to join your event"
-                >
-                  <span className="flex items-center gap-2">
-                    🔗 {t.shareLink}
-                  </span>
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
-                    Share link to invite participants
-                  </div>
-                </button>
-                {selectedCandidate && !event.final_decision && (
-                  <button
-                    onClick={handlePublish}
-                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                  >
-                    {t.publishDecision}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Final Decision Banner */}
+      {/* Final Decision Banner - Brutalist/Techno Style */}
       {event.final_decision && (
-        <div className="absolute top-20 left-0 right-0 bg-green-500 text-white text-center py-3 px-4 shadow-lg z-10">
-          <p className="font-bold text-lg">{t.finalDecision}: {event.final_decision}</p>
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50 max-w-2xl">
+          <div className="bg-black text-white px-6 py-2 border-b-4 border-black flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="font-bold text-xs uppercase tracking-wider">{t.finalDecision}</p>
+          </div>
+          <div className="px-6 py-4">
+            <p className="font-bold text-xl text-black uppercase text-center">{event.final_decision}</p>
+          </div>
         </div>
       )}
 
-      {/* Floating Left Panel - Input & Controls */}
-      <div className="absolute left-4 top-24 w-72 max-w-[calc(50vw-2rem)] flex flex-col gap-2 z-10 transition-all duration-300">
-        {/* Input Panel - Show for non-participants OR for host (host can always add location) */}
-        {(!participantId || role === 'host') && (
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden">
-            <div className="p-3">
-              <InputPanel
-                locations={locations}
-                onAddLocation={handleAddLocation}
-                onRemoveLocation={handleRemoveLocation}
-                onUpdateLocation={handleUpdateLocation}
-                myParticipantId={participantId || undefined}
-                isHost={role === 'host'}
-                selectedCandidate={selectedCandidate}
-                routeFromParticipantId={routeFromParticipantId}
-                onRouteFromChange={setRouteFromParticipantId}
-              />
+      {/* New Unified Left Panel */}
+      <div className="absolute left-0 top-0 z-10">
+        <LeftPanel
+          // TopView
+          eventTitle={event?.title}
+          eventId={eventId || undefined}
+          token={joinToken || undefined}
+          finalDecision={event?.final_decision}
+          onPublishDecision={handlePublish}
+          onUnpublishDecision={handleUnpublish}
+
+          // Input Section
+          isJoined={!!participantId && participants.some(p => p.id === participantId)}
+          onJoinEvent={handleJoinEvent}
+          onEditLocation={handleEditOwnLocation}
+          onRemoveOwnLocation={handleRemoveOwnLocation}
+          currentParticipant={participants.find(p => p.id === participantId)}
+          isHost={role === 'host'}
+
+          // Venues Section
+          keyword={keyword}
+          onKeywordChange={setKeyword}
+          onSearch={searchPlaces}
+          isSearching={isSearching}
+          sortMode={sortMode}
+          onSortChange={setSortMode}
+          onlyInCircle={onlyInCircle}
+          onOnlyInCircleChange={setOnlyInCircle}
+          candidates={candidates}
+          selectedCandidate={selectedCandidate}
+          onCandidateClick={(candidate) => {
+            // Toggle selection: if clicking already selected candidate, unselect it
+            if (selectedCandidate?.id === candidate.id) {
+              setSelectedCandidate(null);
+            } else {
+              setSelectedCandidate(candidate);
+            }
+          }}
+          onVote={handleVote}
+          onDownvote={handleVote}
+          participantId={participantId || undefined}
+          myVotedCandidateIds={myVotedCandidateIds}
+          onSaveCandidate={handleSaveCandidate}
+          onRemoveCandidate={handleRemoveCandidate}
+          hasAutoSearched={hasAutoSearched}
+          candidateColors={candidateColors}
+
+          // Participation Section
+          participants={participants}
+          myParticipantId={participantId || undefined}
+          selectedParticipantId={selectedParticipantId}
+          onParticipantClick={handleParticipantClick}
+          onRemoveParticipant={role === 'host' ? handleRemoveLocation : undefined}
+          showParticipantNames={showParticipantNames}
+          onToggleShowNames={setShowParticipantNames}
+        />
+      </div>
+
+      {/* Venue Detail Panel - Middle Right (when venue selected) */}
+      {selectedCandidate && (
+        <div className="fixed bottom-64 right-6 w-96 h-[40 vh] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-20 flex flex-col">
+          {/* Header with Photo Background */}
+          <div
+            className="relative flex items-center justify-between px-4 py-3 bg-black text-white border-b-2 border-black h-32"
+            style={{
+              backgroundImage: selectedCandidate.photoReference
+                ? `url(https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${selectedCandidate.photoReference}&key=${apiKey})`
+                : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {/* Dark overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/50"></div>
+
+            {/* Content */}
+            <div className="relative flex items-center justify-between w-full">
+              <h3 className="font-bold text-sm uppercase truncate flex-1 text-white drop-shadow-lg">{selectedCandidate.name}</h3>
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="ml-2 hover:bg-white hover:text-black w-6 h-6 flex items-center justify-center transition-all bg-black/50 backdrop-blur-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Host Controls */}
-        {role === 'host' && (
-          <>
-            {/* Search Radius Multiplier Control */}
-            {locations.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl p-3">
-                <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-sm font-bold text-gray-900">Search Area Size</h3>
-                  <div className="relative group">
-                    <button className="w-4 h-4 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center hover:bg-gray-400 transition-colors">
-                      ?
-                    </button>
-                    <div className="absolute left-0 top-6 w-64 bg-gray-900 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      Adjust search radius multiplier. 1.0x searches exactly within the MEC circle. 2.0x doubles the search area for more results.
-                    </div>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Rating, Distance, and Vote */}
+            <div className="flex items-center justify-between mb-3 text-xs text-black">
+              {/* Left side: Rating and Distance */}
+              <div className="flex items-center gap-3">
+                {selectedCandidate.rating && (
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="font-bold text-black">{selectedCandidate.rating.toFixed(1)}</span>
+                    {selectedCandidate.userRatingsTotal && (
+                      <span className="text-black">({selectedCandidate.userRatingsTotal})</span>
+                    )}
                   </div>
-                </div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">1.0x</span>
-                  <span className="text-xs font-bold text-blue-700">
-                    {radiusMultiplier.toFixed(1)}x MEC
-                  </span>
-                  <span className="text-xs font-medium text-gray-700">2.0x</span>
-                </div>
-                <input
-                  type="range"
-                  min={1.0}
-                  max={2.0}
-                  step={0.1}
-                  value={radiusMultiplier}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    const newMultiplier = Math.min(2.0, Math.max(1.0, value));
-                    console.log('🎚️ Slider changed: radiusMultiplier', radiusMultiplier, '→', newMultiplier);
-                    setRadiusMultiplier(newMultiplier);
-                    setAuthoritativeCircle(null); // Clear authoritative circle to show preview
-                    console.log('🎚️ Cleared authoritativeCircle to show preview with new multiplier');
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  Controls how far beyond the optimal meeting point to search for venues
-                </p>
+                )}
+                {selectedCandidate.distanceFromCenter && (
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-bold text-black">{(selectedCandidate.distanceFromCenter / 1000).toFixed(2)} km</span>
+                  </div>
+                )}
+              </div>
 
-                {/* Reset Center Point Button - Only show when customCentroid exists */}
-                {customCentroid && (
-                  <div className="mt-3 pt-3 border-t border-gray-300">
-                    <button
-                      onClick={handleResetCentroid}
-                      className="w-full px-3 py-2 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-200 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <span>↺</span>
-                      <span>Reset Center Point</span>
-                    </button>
-                    <p className="text-xs text-gray-600 mt-1 text-center">
-                      Restore auto-calculated center
-                    </p>
+              {/* Right side: Chart Button and Vote Button */}
+              <div className="flex items-center gap-2">
+                {/* Chart Button */}
+                {participants.length > 0 && (
+                  <button
+                    onClick={() => setShowTravelChart(!showTravelChart)}
+                    className={`p-1.5 border-2 border-black transition-all ${
+                      showTravelChart ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                    }`}
+                    title="Travel Analysis"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Vote Button */}
+                {participantId && (
+                  <button
+                    onClick={() => handleVote(selectedCandidate.id)}
+                    className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                  >
+                    <Heart className={`w-5 h-5 ${
+                      myVotedCandidateIds.has(selectedCandidate.id)
+                        ? 'fill-black text-black'
+                        : 'text-neutral-400'
+                    }`} />
+                    <span className="font-bold text-sm text-black">
+                      {selectedCandidate.voteCount || 0}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Address */}
+            {selectedCandidate.vicinity && (
+              <div className="mb-3">
+                <p className="text-xs text-black">{selectedCandidate.vicinity}</p>
+              </div>
+            )}
+
+            {/* About / Editorial Summary Section */}
+            {candidateEditorialSummary && (
+              <div className="border-t-2 border-black pt-3 mb-3">
+                <button
+                  onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                  className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                >
+                  {isAboutExpanded ? (
+                    <ChevronUp className="w-3 h-3 text-black" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 text-black" />
+                  )}
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4 className="text-xs font-bold uppercase text-black">About</h4>
+                </button>
+                {isAboutExpanded && (
+                  <div className="text-xs text-black leading-relaxed">
+                    {candidateEditorialSummary}
                   </div>
                 )}
               </div>
             )}
-          </>
-        )}
-      </div>
 
-      {/* Floating Right Panel - Tabbed Interface */}
-      {locations.length > 0 && (
-        <div className="absolute right-4 top-24 w-80 max-w-[calc(50vw-2rem)] bottom-4 z-10">
-          <div className="bg-white/70 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden h-full">
-            <Tabs
-              tabs={[
-                {
-                  id: 'search',
-                  label: t.search,
-                  icon: '🔍',
-                  badge: sortedCandidates().filter(c => c.addedBy !== 'organizer').length,
-                  content: (
-                    <div className="h-full p-3">
-                      <CandidatesPanel
-                        candidates={sortedCandidates().filter(c => c.addedBy !== 'organizer')}
-                        selectedCandidate={selectedCandidate}
-                        sortMode={sortMode}
-                        onSortChange={setSortMode}
-                        onCandidateClick={setSelectedCandidate}
-                        keyword={keyword}
-                        onKeywordChange={setKeyword}
-                        onSearch={searchPlaces}
-                        isSearching={isSearching}
-                        onVote={event?.allow_vote ? handleVote : undefined}
-                        participantId={participantId || undefined}
-                        onRemoveCandidate={role === 'host' ? handleRemoveCandidate : undefined}
-                        onSaveCandidate={handleSaveCandidate}
-                        isHost={role === 'host'}
-                        onlyInCircle={onlyInCircle}
-                        onOnlyInCircleChange={setOnlyInCircle}
-                      />
-                    </div>
-                  ),
-                },
-                {
-                  id: 'custom-add',
-                  label: t.customAdd,
-                  icon: '➕',
-                  content: (
-                    <div className="p-3 h-full flex flex-col">
-                      <h3 className="text-sm font-bold text-gray-900 mb-2">{t.addSpecificVenue}</h3>
-                      <VenueSearchBox
-                        apiKey={apiKey}
-                        onPlaceSelected={handleAddVenueManually}
-                        disabled={!!event?.final_decision}
-                      />
-                      <p className="text-xs text-gray-700 mt-2 font-medium">
-                        {t.searchAndAddVenue}
-                      </p>
-                    </div>
-                  ),
-                },
-                {
-                  id: 'added',
-                  label: t.added,
-                  icon: '💜',
-                  badge: sortedCandidates().filter(c => c.addedBy === 'organizer').length,
-                  content: (
-                    <div className="p-3 h-full overflow-y-auto">
-                      {sortedCandidates().filter(c => c.addedBy === 'organizer').length === 0 ? (
-                        <EmptyState
-                          icon="💜"
-                          title={t.noUserAddedVenues}
-                          message={t.noUserAddedMessage}
-                        />
-                      ) : (
-                        <div className="space-y-2">
-                          {sortedCandidates()
-                            .filter(c => c.addedBy === 'organizer')
-                            .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
-                            .map((candidate) => (
-                              <div
-                                key={candidate.id}
-                                onClick={() => setSelectedCandidate(candidate)}
-                                className={`p-2 rounded-md cursor-pointer transition-all ${
-                                  selectedCandidate?.id === candidate.id
-                                    ? 'bg-purple-200 border-2 border-purple-600'
-                                    : 'bg-white hover:bg-purple-100 border-2 border-purple-200'
-                                }`}
-                              >
-                                <h4 className="font-semibold text-gray-900 text-sm">{candidate.name}</h4>
-                                {candidate.vicinity && (
-                                  <p className="text-xs text-gray-700 mt-1">{candidate.vicinity}</p>
-                                )}
-                                <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
-                                  {candidate.rating && (
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-yellow-500">★</span>
-                                      <span className="font-medium">{candidate.rating.toFixed(1)}</span>
-                                    </span>
-                                  )}
-                                  {event?.allow_vote && candidate.voteCount !== undefined && (
-                                    <span className="flex items-center gap-1 font-medium text-purple-600">
-                                      🗳️ {candidate.voteCount}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="mt-2 flex gap-1 flex-wrap">
-                                  {event?.allow_vote && participantId && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVote(candidate.id);
-                                      }}
-                                      className="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
-                                    >
-                                      {t.vote}
-                                    </button>
-                                  )}
-                                  {role === 'host' && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleUnsaveCandidate(candidate.id);
-                                      }}
-                                      className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                                    >
-                                      {t.remove}
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  ),
-                },
-              ]}
+            {/* Opening Hours */}
+            {candidateOpeningHours && (
+              <div className="border-t-2 border-black pt-3 mb-3">
+                <button
+                  onClick={() => setIsHoursExpanded(!isHoursExpanded)}
+                  className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                >
+                  {isHoursExpanded ? (
+                    <ChevronUp className="w-3 h-3 text-black" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 text-black" />
+                  )}
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4 className="text-xs font-bold uppercase text-black">Hours</h4>
+                </button>
+                {isHoursExpanded && candidateOpeningHours.weekday_text && (
+                  <div className="text-xs text-black space-y-1">
+                    {candidateOpeningHours.weekday_text.map((day: string, index: number) => (
+                      <div key={index} className="leading-relaxed">{day}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Google Maps Link */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${selectedCandidate.lat},${selectedCandidate.lng}&query_place_id=${selectedCandidate.placeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-black text-white text-xs font-bold uppercase border-2 border-black hover:bg-white hover:text-black transition-all"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              Google Map
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Travel Analysis View - Separate view below detail card */}
+      {showTravelChart && selectedCandidate && participants.length > 0 && (
+        <div className="absolute top-16 right-6 w-96 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-30 max-h-[calc(100vh-5rem)] flex flex-col">
+          {/* Header */}
+          <div className="bg-black text-white px-4 py-3 border-b-4 border-black flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase">Travel Analysis</h3>
+            <button
+              onClick={() => setShowTravelChart(false)}
+              className="text-white hover:text-gray-300 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Transportation Mode Selector */}
+            <div className="flex gap-1 mb-4 justify-center">
+              {(['DRIVING', 'TRANSIT', 'WALKING', 'BICYCLING'] as const).map((mode) => {
+                const icons = {
+                  DRIVING: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M3 7h18M5 7v10l2-1 2 1 2-1 2 1 2-1 2 1V7',
+                  TRANSIT: 'M5 13v6M5 5v6M5 11h14M19 5v14M12 8v5M8 8v5M16 8v5',
+                  WALKING: 'M16 7a2 2 0 11-4 0 2 2 0 014 0zM12 14l-2 6M12 14l2 6M12 14V9M10 9l2-2 2 2',
+                  BICYCLING: 'M5 19a3 3 0 100-6 3 3 0 000 6zM19 19a3 3 0 100-6 3 3 0 000 6zM7 8l4 8M11 8h4l-1 4',
+                };
+                const isActive = chartTravelMode === mode ||
+                  (typeof chartTravelMode === 'object' && chartTravelMode?.toString() === mode);
+
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && window.google?.maps?.TravelMode) {
+                        setChartTravelMode((google.maps.TravelMode as any)[mode]);
+                      } else {
+                        setChartTravelMode(mode);
+                      }
+                    }}
+                    className={`p-1.5 border-2 border-black transition-all ${
+                      isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                    }`}
+                    title={mode}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={icons[mode]} />
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Travel Chart */}
+            <TravelChart
+              participants={participants}
+              selectedCandidate={selectedCandidate}
+              participantColors={participantColors}
+              travelMode={chartTravelMode}
+              apiKey={apiKey}
+              selectedParticipantId={selectedParticipantId}
+              onParticipantClick={handleParticipantClick}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Circle Radius Controller - Bottom Right (All joined users) */}
+      {participantId && !selectedCandidate && (
+        <div className={`fixed right-6 z-20 ${role === 'host' ? 'bottom-6' : 'bottom-6'}`}>
+          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-3 min-w-[280px]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase text-black">Search Radius</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-black">{circleRadiusKm.toFixed(1)} km</span>
+                <div className="group relative">
+                  <svg className="w-3.5 h-3.5 text-black cursor-help" fill="none" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4M12 8h.01"/>
+                  </svg>
+                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-56 px-3 py-2 bg-black text-white text-xs border-2 border-black shadow-lg z-10">
+                    Search area radius (0.5-2km). Adjust before searching. Larger = more venues, further distance.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
+                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+              >
+                −
+              </button>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={circleRadiusKm}
+                onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-gray-200 border-2 border-black appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, black ${((circleRadiusKm - 0.5) / 1.5) * 100}%, #e5e7eb ${((circleRadiusKm - 0.5) / 1.5) * 100}%)`
+                }}
+              />
+              <button
+                onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
+                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1039,46 +1552,106 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Nickname Prompt Modal (for map clicks) */}
-      {showNicknamePrompt && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50" onClick={handleCancelNickname}>
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-3">{t.enterNickname}</h3>
-            <p className="text-sm text-gray-700 mb-4">
-              {role === 'host'
-                ? 'This will be visible to all participants and displayed on the map.'
-                : t.nicknameVisible}
-            </p>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleConfirmNickname()}
-              placeholder={t.nicknamePlaceholder}
-              autoFocus
-              className="w-full px-4 py-3 text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 mb-4"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleConfirmNickname}
-                disabled={!nickname.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {t.confirm}
-              </button>
-              <button
-                onClick={handleCancelNickname}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 font-medium rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                {t.cancel}
-              </button>
+      {/* Toast Notifications - Brutalist/Techno style */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'white',
+            color: 'black',
+            border: '4px solid black',
+            boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)',
+            fontWeight: 'bold',
+            fontSize: '20px',
+            textTransform: 'uppercase',
+            padding: '18px 24px',
+          },
+          className: 'toast-brutalist',
+        }}
+      />
+
+      {/* Publish Confirmation Modal */}
+      {showPublishConfirm && selectedCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-lg font-bold uppercase">Publish Final Decision</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-black mb-4 font-medium">
+                You are about to publish <span className="font-bold">{selectedCandidate.name}</span> as the final meeting location.
+              </p>
+              <p className="text-black text-sm mb-6">
+                All participants will be notified of this decision. This action cannot be undone.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPublishConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPublish}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Publish
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toast Notifications */}
-      <Toaster position="top-center" richColors closeButton />
+      {/* Location Confirmation Modal */}
+      {showLocationConfirm && clickedLocation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-lg font-bold uppercase">Add Your Location</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-black mb-3 font-bold text-sm uppercase">Location:</p>
+              {clickedLocation.address ? (
+                <p className="text-black mb-6 font-medium">
+                  {clickedLocation.address}
+                </p>
+              ) : (
+                <p className="text-black mb-6 font-mono text-sm">
+                  {clickedLocation.lat.toFixed(6)}, {clickedLocation.lng.toFixed(6)}
+                </p>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowLocationConfirm(false);
+                    setClickedLocation(null);
+                  }}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmLocationSelection}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Instructions & Help */}
       <Instructions

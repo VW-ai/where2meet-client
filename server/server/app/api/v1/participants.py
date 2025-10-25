@@ -61,7 +61,8 @@ async def add_participant(
         lng=participant_data.lng,
         fuzzy_lat=fuzzy_lat,
         fuzzy_lng=fuzzy_lng,
-        name=participant_data.name
+        name=participant_data.name,
+        address=participant_data.address
     )
 
     db.add(participant)
@@ -82,7 +83,10 @@ async def add_participant(
         event_id=participant.event_id,
         lat=fuzzy_lat if event.visibility == "blur" else participant.lat,
         lng=fuzzy_lng if event.visibility == "blur" else participant.lng,
+        fuzzy_lat=participant.fuzzy_lat,
+        fuzzy_lng=participant.fuzzy_lng,
         name=participant.name,
+        address=participant.address,
         joined_at=participant.joined_at
     )
 
@@ -122,7 +126,10 @@ async def get_participants(
             event_id=p.event_id,
             lat=p.fuzzy_lat if event.visibility == "blur" else p.lat,
             lng=p.fuzzy_lng if event.visibility == "blur" else p.lng,
+            fuzzy_lat=p.fuzzy_lat,
+            fuzzy_lng=p.fuzzy_lng,
             name=p.name,
+            address=p.address,
             joined_at=p.joined_at
         ))
 
@@ -180,6 +187,9 @@ async def update_participant(
     if update_data.name is not None:
         participant.name = update_data.name
 
+    if update_data.address is not None:
+        participant.address = update_data.address
+
     db.commit()
     db.refresh(participant)
 
@@ -196,7 +206,10 @@ async def update_participant(
         event_id=participant.event_id,
         lat=participant.fuzzy_lat if event.visibility == "blur" else participant.lat,
         lng=participant.fuzzy_lng if event.visibility == "blur" else participant.lng,
+        fuzzy_lat=participant.fuzzy_lat,
+        fuzzy_lng=participant.fuzzy_lng,
         name=participant.name,
+        address=participant.address,
         joined_at=participant.joined_at
     )
 
@@ -228,3 +241,61 @@ async def remove_participant(
     await sse_manager.broadcast(event_id, "participant_left", {
         "participant_id": participant_id
     })
+
+
+@router.post("/geocode/reverse")
+async def reverse_geocode_location(
+    lat: float,
+    lng: float
+):
+    """
+    Reverse geocode a lat/lng to get a human-readable address.
+    Also snaps to the nearest valid building/address if the clicked location is not addressable.
+
+    This endpoint is used when users submit their location via geolocation or map click,
+    allowing us to display a readable address instead of coordinates.
+    """
+    from app.services.google_maps import google_maps_service
+
+    try:
+        # First, try reverse geocoding the exact location
+        geocode_result = await google_maps_service.reverse_geocode(lat, lng)
+
+        # Check if the location is valid (has proper address components)
+        if geocode_result and not google_maps_service.is_water_location(geocode_result):
+            # Location is valid, use it as-is
+            return {
+                "address": geocode_result.get("formatted_address"),
+                "lat": lat,
+                "lng": lng
+            }
+
+        # Location is water or not addressable, snap to nearest land/building
+        print(f"📍 Location not addressable, snapping to nearest building: {lat}, {lng}")
+        land_point = await google_maps_service.find_nearest_land_point(lat, lng, max_radius=5.0)
+
+        if land_point:
+            # Get address for the snapped location
+            snapped_geocode = await google_maps_service.reverse_geocode(
+                land_point["lat"],
+                land_point["lng"]
+            )
+
+            return {
+                "address": snapped_geocode.get("formatted_address") if snapped_geocode else None,
+                "lat": land_point["lat"],
+                "lng": land_point["lng"]
+            }
+
+        # Fallback: return original coordinates with no address
+        return {
+            "address": None,
+            "lat": lat,
+            "lng": lng,
+            "error": "Unable to snap to valid address"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Geocoding error: {str(e)}"
+        )

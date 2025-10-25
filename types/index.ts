@@ -21,6 +21,7 @@ export interface Candidate {
   types?: string[];
   voteCount?: number;
   addedBy?: string; // 'system' or 'organizer'
+  photoReference?: string; // Google Places photo reference
 }
 
 export interface Circle {

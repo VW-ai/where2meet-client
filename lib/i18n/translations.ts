@@ -179,7 +179,7 @@ export const translations: Record<Language, Translations> = {
     publishDecision: 'Publish Decision',
 
     // Final decision
-    finalDecision: '🎉 Final Decision',
+    finalDecision: 'Final Decision',
 
     // Input panel
     addYourLocation: 'Add Your Location',
@@ -339,7 +339,7 @@ export const translations: Record<Language, Translations> = {
     publishDecision: '发布决定',
 
     // Final decision
-    finalDecision: '🎉 最终决定',
+    finalDecision: '最终决定',
 
     // Input panel
     addYourLocation: '添加您的位置',

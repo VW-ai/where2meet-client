@@ -1,6 +1,14 @@
 import type { Metadata } from 'next';
+import { Afacad_Flux } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+
+const afacadFlux = Afacad_Flux({
+  subsets: ['latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-afacad-flux',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.app'),
@@ -122,7 +130,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased">
+      <body className={`${afacadFlux.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -117,3 +117,152 @@
 > Deliverables: ✅ minimal backend (Event/Participant/Candidate/Vote 4 tables), REST + SSE API, Alembic migrations, Docker Compose setup.
 >
 > **Status**: All M2 features implemented. FastAPI server with PostgreSQL & Redis ready. Database schema complete. API documented at `/docs` endpoint.
+
+### UI/UX Improvements - In Progress
+
+**Left Panel Refactor (2025-10-22)** ✅ COMPLETED
+- [x] **Unified Left Panel** ✅ - Three-section vertical stack (Input, Venues, Participation)
+- [x] **Anonymous Name Generation** ✅ - Auto-generate names (e.g., "swift_wolf") with shuffle button
+- [x] **Privacy Toggle** ✅ - Blur location on by default (~500m offset)
+- [x] **Search Type Toggle** ✅ - Search by Type (with category chips) or by Name
+- [x] **Click-to-Vote** ✅ - Entire venue card clickable for voting
+- [x] **Top Choice Banner** ✅ - Always show winner with trophy icon in Venue List
+- [x] **Colored Participant Markers** ✅ - 6-color palette with triangle indicators
+- [x] **Collapsible Input** ✅ - Input section collapses after joining event
+- [x] **Lucide Icons** ✅ - All icons replaced with Lucide React (no emojis)
+
+**Phase 1: Core UX Polish (HIGH PRIORITY)** 🔥
+
+1. [ ] **Expandable Venue Cards** ⭐ TOP PRIORITY
+   - Click venue card → Expands to show full details
+   - Include: Photos carousel (Google Places Photos API), top reviews, rating breakdown
+   - External links: Google Maps, Website, Phone number
+   - Scrollable content for long descriptions
+   - Smooth animation (slide down / modal overlay)
+   - Estimated: 1 day
+
+2. [ ] **Compact List View - Space Optimization** ⭐ TOP PRIORITY
+   - **Search Results**: Max 2 lines per venue
+     - Line 1: Name + Rating + Distance (inline)
+     - Line 2: Address (truncated with ellipsis)
+     - Remove verbose labels, use icons only
+   - **Participants**: Max 1 line each
+     - Format: `▲ swift_wolf • 123.45, -89.01 (blurred)`
+     - Remove extra padding/spacing
+   - Goal: Show 10+ venues without scrolling on laptop screen (1440px height)
+   - Estimated: 3-4 hours
+
+3. [ ] **Top Panel (Header) Refactor** ⭐ TOP PRIORITY
+   - Single row, max 64px height
+   - Layout: `[Logo] [Event Title] [Participants: 5] [🏆 Top Choice: Joe's Pizza (3 votes)] [Share Link]`
+   - Remove: Venue count, Radius display (move to left panel if needed)
+   - Make responsive: Stack on mobile
+   - Estimated: 3-4 hours
+
+4. [ ] **Event Cards on Homepage**
+   - Show list of user's events with status (active/completed)
+   - Click card → Expandable detail view
+   - Include: Title, Participant count, Top venue, Created date, Status badge
+   - Actions: Join, View, Delete
+   - Estimated: 4-6 hours
+
+5. [ ] **Typography & Design System Update**
+   - Replace Arial with modern system font stack: `Inter` or `-apple-system`
+   - Establish type scale: `text-xs (10px)`, `text-sm (12px)`, `text-base (14px)`, `text-lg (16px)`
+   - Consistent spacing: Use only 4/8/12/16/24/32px increments
+   - Color consistency: Strictly use emerald-600, teal-600, neutral-50/200/400/700/950
+   - Remove all custom colors and random values
+   - Estimated: 2-3 hours
+
+6. [ ] **Less Text, More Visual Hints**
+   - Remove instructional text labels where icons are sufficient
+   - Examples:
+     - "Search by Type" → Just show toggle with icons
+     - "Only show within circle" → Icon + checkbox (no label)
+     - "Sort by: Rating Distance Votes" → Just icon buttons
+   - Use tooltips on hover instead of permanent labels
+   - Estimated: 2 hours
+
+7. [ ] **Route Distance/Time Panel Refactor**
+   - Current: Bottom-center panel with transportation modes
+   - New: Compact floating pill
+   - Show: Travel mode icon + time + distance (e.g., `🚗 15 min • 8.2 km`)
+   - Click to expand: All modes comparison table
+   - Auto-hide when no route selected
+   - Estimated: 2-3 hours
+
+**Phase 2: Quick Wins (MEDIUM PRIORITY)** 🎯
+
+8. [ ] **Auto-search on 2+ Participants**
+   - Effect already coded (line 482-494)
+   - Just needs testing and connection
+   - Estimated: 30 mins
+
+9. [ ] **Host Can Vote**
+   - Remove `role === 'host'` check in `handleVote`
+   - Simple one-line change
+   - Estimated: 5 mins
+
+10. [ ] **Remove Publish Button**
+    - Delete publish button from header
+    - Top Choice updates automatically via SSE
+    - Estimated: 10 mins
+
+11. [ ] **One-click Share Link**
+    - Replace modal with `navigator.clipboard.writeText()` + toast
+    - Location: Share button in header
+    - Estimated: 20 mins
+
+12. [ ] **Nicer Confirmation Dialog**
+    - Replace browser `confirm()` with custom styled modal
+    - Show coordinates preview, "Are you sure?" text
+    - Green/gray buttons (Confirm/Cancel)
+    - Animated entrance (fade + scale)
+    - Estimated: 1-2 hours
+
+13. [ ] **Top Choice in Header (Always Visible)**
+    - Move from Venue List tab to header
+    - Format: `🏆 Top Choice: Joe's Pizza (3 votes)`
+    - Real-time update via SSE
+    - Estimated: 2 hours
+
+**Phase 3: Advanced Features (LOWER PRIORITY)** 📋
+
+14. [ ] **Google Autocomplete for Address**
+    - Integrate with InputSection address field
+    - Replace manual coordinate entry
+    - Estimated: 2-3 hours
+
+15. [ ] **Map Pan to Participant**
+    - Click participant → Map pans/zooms to their location
+    - Marker pulses to indicate focus
+    - Estimated: 1-2 hours
+
+16. [ ] **Search Area Slider to Header**
+    - Move radius multiplier control to header (host only)
+    - Compact slider: `1.0x ──●── 2.0x`
+    - Estimated: 1 hour
+
+17. [ ] **Remove Right Panel**
+    - All features migrated to left panel
+    - Delete old Tabs/CandidatesPanel components
+    - Estimated: 2-3 hours
+
+18. [ ] **Mobile Responsive Design**
+    - Touch targets: 44×44px minimum
+    - Bottom sheet layout for panels
+    - Test on iPhone/Android devices
+    - Estimated: 1-2 days
+
+19. [ ] **Accessibility (A11y)**
+    - ARIA labels for all interactive elements
+    - Keyboard navigation (Tab, Enter, Escape)
+    - Screen reader support
+    - Focus indicators
+    - Estimated: 1 day
+
+20. [ ] **Unit Tests**
+    - Test all LeftPanel components
+    - Test anonymous name generation
+    - Test vote/save/remove actions
+    - Estimated: 2-3 days

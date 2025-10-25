@@ -1,56 +1,1028 @@
 
-> where2meet-client@1.0.0 dev /Users/victor/work/where2meet-clientside/where2meet-client
+> where2meet-client@1.0.0 dev /Users/waynewang/where2meet-client
 > next dev -p 4000
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/waynewang/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/waynewang/where2meet-client/pnpm-lock.yaml
 
    ▲ Next.js 15.5.4
    - Local:        http://localhost:4000
-   - Network:      http://10.13.0.99:4000
+   - Network:      http://192.168.1.104:4000
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1184ms
- ○ Compiling / ...
- ✓ Compiled / in 960ms (650 modules)
- GET / 200 in 1191ms
- ✓ Compiled in 95ms (247 modules)
+ ✓ Ready in 1107ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
  ○ Compiling /event ...
- ✓ Compiled /event in 755ms (679 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 959ms
- ✓ Compiled /icon in 212ms (493 modules)
- GET /icon 200 in 497ms
- GET / 200 in 176ms
- ✓ Compiled /my-events in 330ms (687 modules)
- GET /my-events 200 in 373ms
- GET /event?id=evt_c2865d86bc644829 200 in 38ms
- ✓ Compiled in 791ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 113ms
- ✓ Compiled in 745ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 232ms
- GET /event?id=evt_c2865d86bc644829 200 in 214ms
- GET /icon 200 in 432ms
- GET /event?id=evt_c2865d86bc644829 200 in 87ms
- GET /icon 200 in 35ms
- ✓ Compiled in 791ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 127ms
- GET /icon 200 in 615ms
- GET /icon 200 in 37ms
- ✓ Compiled in 812ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 194ms
- GET /icon 200 in 297ms
- GET /icon 200 in 11ms
- ✓ Compiled in 526ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 108ms
- GET /icon 200 in 385ms
- GET /icon 200 in 6ms
- GET /event?id=evt_c2865d86bc644829 200 in 208ms
- GET /icon 200 in 36ms
- ✓ Compiled in 451ms (641 modules)
- GET /event?id=evt_c2865d86bc644829 200 in 118ms
- GET /icon 200 in 228ms
- GET /icon 200 in 5ms
- GET /event?id=evt_c2865d86bc644829 200 in 187ms
- GET /icon 200 in 42ms
- ○ Compiling / ...
- ✓ Compiled / in 1115ms (425 modules)
- GET / 200 in 1533ms
- GET /event?id=evt_8a010eb3807447bc 200 in 65ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Setting up new context...
+Finding changed files: 4.548ms
+(node:11364) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Reading changed files: 58.5ms
+Sorting candidates: 1.374ms
+Generate rules: 36.768ms
+Build stylesheet: 1.299ms
+Potential classes:  3359
+Active contexts:  1
+JIT TOTAL: 207.726ms
+
+
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled /event in 2.3s (757 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.266ms
+Reading changed files: 0.004ms
+Sorting candidates: 0.002ms
+Generate rules: 0.074ms
+Build stylesheet: 0.001ms
+Potential classes:  1
+Active contexts:  1
+JIT TOTAL: 18.478ms
+
+
+ ✓ Compiled in 515ms (300 modules)
+ GET / 200 in 566ms
+ GET /event?id=evt_7a3ee5b5f14f4e1e 200 in 549ms
+ ○ Compiling /icon ...
+ ✓ Compiled /icon in 719ms (525 modules)
+ GET /icon 200 in 899ms
+ GET /icon 200 in 8ms
+ GET / 200 in 31ms
+ GET / 200 in 50ms
+ GET /event?id=evt_7316dd73f7aa432c 200 in 23ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.913ms
+Reading changed files: 9.255ms
+Sorting candidates: 0.16ms
+Generate rules: 1.561ms
+Build stylesheet: 0.001ms
+Potential classes:  348
+Active contexts:  1
+JIT TOTAL: 30.55ms
+
+
+ ✓ Compiled in 344ms (764 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.126ms
+Reading changed files: 4.008ms
+Sorting candidates: 0.1ms
+Generate rules: 1.242ms
+Build stylesheet: 0.001ms
+Potential classes:  344
+Active contexts:  1
+JIT TOTAL: 18.566ms
+
+
+ ✓ Compiled in 173ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.426ms
+Reading changed files: 5.629ms
+Sorting candidates: 0.122ms
+Generate rules: 3.893ms
+Build stylesheet: 0.997ms
+Potential classes:  329
+Active contexts:  1
+JIT TOTAL: 27.544ms
+
+
+ ✓ Compiled in 279ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.201ms
+Reading changed files: 8.577ms
+Sorting candidates: 0.106ms
+Generate rules: 0.811ms
+Build stylesheet: 0.899ms
+Potential classes:  211
+Active contexts:  1
+JIT TOTAL: 27.238ms
+
+
+ ✓ Compiled in 430ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.123ms
+Reading changed files: 3.714ms
+Sorting candidates: 0.085ms
+Generate rules: 0.872ms
+Build stylesheet: 0.001ms
+Potential classes:  235
+Active contexts:  1
+JIT TOTAL: 19.721ms
+
+
+ ✓ Compiled in 196ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1ms
+Reading changed files: 2.833ms
+Sorting candidates: 0.054ms
+Generate rules: 0.406ms
+Build stylesheet: 0.001ms
+Potential classes:  161
+Active contexts:  1
+JIT TOTAL: 14.438ms
+
+
+ ✓ Compiled in 158ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.196ms
+Reading changed files: 3.463ms
+Sorting candidates: 0.107ms
+Generate rules: 0.902ms
+Build stylesheet: 0.001ms
+Potential classes:  316
+Active contexts:  1
+JIT TOTAL: 16.645ms
+
+
+ ✓ Compiled in 160ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 3.002ms
+Reading changed files: 5.494ms
+Sorting candidates: 0.12ms
+Generate rules: 0.905ms
+Build stylesheet: 0.002ms
+Potential classes:  312
+Active contexts:  1
+JIT TOTAL: 20.114ms
+
+
+ ✓ Compiled in 166ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.764ms
+Reading changed files: 5.04ms
+Sorting candidates: 0.092ms
+Generate rules: 0.5ms
+Build stylesheet: 0.001ms
+Potential classes:  213
+Active contexts:  1
+JIT TOTAL: 19.167ms
+
+
+ ✓ Compiled in 166ms (768 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 96ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.419ms
+Reading changed files: 5.046ms
+Sorting candidates: 0.116ms
+Generate rules: 1.929ms
+Build stylesheet: 0.877ms
+Potential classes:  334
+Active contexts:  1
+JIT TOTAL: 20.906ms
+
+
+ ✓ Compiled in 268ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.098ms
+Reading changed files: 4.494ms
+Sorting candidates: 0.11ms
+Generate rules: 1.11ms
+Build stylesheet: 0.001ms
+Potential classes:  349
+Active contexts:  1
+JIT TOTAL: 17.335ms
+
+
+ ✓ Compiled in 171ms (768 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 35ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.482ms
+Reading changed files: 5.35ms
+Sorting candidates: 0.15ms
+Generate rules: 1.266ms
+Build stylesheet: 0.001ms
+Potential classes:  349
+Active contexts:  1
+JIT TOTAL: 20.631ms
+
+
+ ✓ Compiled in 228ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 3.008ms
+Reading changed files: 11.664ms
+Sorting candidates: 0.126ms
+Generate rules: 1.281ms
+Build stylesheet: 0.001ms
+Potential classes:  355
+Active contexts:  1
+JIT TOTAL: 27.393ms
+
+
+ ✓ Compiled in 243ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.546ms
+Reading changed files: 9.605ms
+Sorting candidates: 0.164ms
+Generate rules: 1.273ms
+Build stylesheet: 0.001ms
+Potential classes:  422
+Active contexts:  1
+JIT TOTAL: 26.395ms
+
+
+ ✓ Compiled in 210ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.004ms
+Reading changed files: 4.15ms
+Sorting candidates: 0.164ms
+Generate rules: 2.075ms
+Build stylesheet: 0.949ms
+Potential classes:  426
+Active contexts:  1
+JIT TOTAL: 19.617ms
+
+
+ ✓ Compiled in 146ms (768 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 45ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.48ms
+Reading changed files: 10.158ms
+Sorting candidates: 0.17ms
+Generate rules: 1.098ms
+Build stylesheet: 0.001ms
+Potential classes:  385
+Active contexts:  1
+JIT TOTAL: 29.2ms
+
+
+ ✓ Compiled in 295ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.208ms
+Reading changed files: 4.019ms
+Sorting candidates: 0.162ms
+Generate rules: 0.976ms
+Build stylesheet: 0.001ms
+Potential classes:  389
+Active contexts:  1
+JIT TOTAL: 16.233ms
+
+
+ ✓ Compiled in 171ms (768 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 54ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.107ms
+Reading changed files: 16.842ms
+Sorting candidates: 0.736ms
+Generate rules: 3.037ms
+Build stylesheet: 0.001ms
+Potential classes:  1274
+Active contexts:  1
+JIT TOTAL: 36.108ms
+
+
+ ✓ Compiled in 503ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.404ms
+Reading changed files: 29.308ms
+Sorting candidates: 0.073ms
+Generate rules: 0.677ms
+Build stylesheet: 1.659ms
+Potential classes:  153
+Active contexts:  1
+JIT TOTAL: 57.545ms
+
+
+ ✓ Compiled in 449ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.21ms
+Reading changed files: 4.488ms
+Sorting candidates: 0.177ms
+Generate rules: 1.076ms
+Build stylesheet: 0.001ms
+Potential classes:  391
+Active contexts:  1
+JIT TOTAL: 18.526ms
+
+
+ ✓ Compiled in 164ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.113ms
+Reading changed files: 3.836ms
+Sorting candidates: 0.111ms
+Generate rules: 1.107ms
+Build stylesheet: 0.543ms
+Potential classes:  391
+Active contexts:  1
+JIT TOTAL: 17.991ms
+
+
+ ✓ Compiled in 151ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.394ms
+Reading changed files: 5.825ms
+Sorting candidates: 0.141ms
+Generate rules: 1.248ms
+Build stylesheet: 0.001ms
+Potential classes:  385
+Active contexts:  1
+JIT TOTAL: 22.994ms
+
+
+ ✓ Compiled in 206ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.245ms
+Reading changed files: 10.975ms
+Sorting candidates: 0.063ms
+Generate rules: 0.431ms
+Build stylesheet: 0.001ms
+Potential classes:  157
+Active contexts:  1
+JIT TOTAL: 25.399ms
+
+
+ ✓ Compiled in 196ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.035ms
+Reading changed files: 3.108ms
+Sorting candidates: 0.068ms
+Generate rules: 0.44ms
+Build stylesheet: 0.001ms
+Potential classes:  211
+Active contexts:  1
+JIT TOTAL: 14.774ms
+
+
+ ✓ Compiled in 136ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.17ms
+Reading changed files: 4.968ms
+Sorting candidates: 0.166ms
+Generate rules: 1.178ms
+Build stylesheet: 0.001ms
+Potential classes:  426
+Active contexts:  1
+JIT TOTAL: 17.755ms
+
+
+ ✓ Compiled in 148ms (768 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.195ms
+Reading changed files: 8.937ms
+Sorting candidates: 0.122ms
+Generate rules: 0.999ms
+Build stylesheet: 0.001ms
+Potential classes:  235
+Active contexts:  1
+JIT TOTAL: 23.047ms
+
+
+ ✓ Compiled in 179ms (768 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 64ms
+ GET /event?id=evt_7316dd73f7aa432c 200 in 22ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.023ms
+Reading changed files: 10.208ms
+Sorting candidates: 0.17ms
+Generate rules: 1.086ms
+Build stylesheet: 0.001ms
+Potential classes:  390
+Active contexts:  1
+JIT TOTAL: 27.692ms
+
+
+ ✓ Compiled in 441ms (766 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.394ms
+Reading changed files: 6.271ms
+Sorting candidates: 0.168ms
+Generate rules: 3.141ms
+Build stylesheet: 0.577ms
+Potential classes:  408
+Active contexts:  1
+JIT TOTAL: 23.378ms
+
+
+ ✓ Compiled in 218ms (772 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 41ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 0.969ms
+Reading changed files: 5.522ms
+Sorting candidates: 0.132ms
+Generate rules: 2.075ms
+Build stylesheet: 0.001ms
+Potential classes:  409
+Active contexts:  1
+JIT TOTAL: 18.798ms
+
+
+ ✓ Compiled in 158ms (774 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.766ms
+Reading changed files: 12.531ms
+Sorting candidates: 0.146ms
+Generate rules: 1.533ms
+Build stylesheet: 0.692ms
+Potential classes:  411
+Active contexts:  1
+JIT TOTAL: 30.853ms
+
+
+ ✓ Compiled in 264ms (774 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 49ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.374ms
+Reading changed files: 7.21ms
+Sorting candidates: 0.185ms
+Generate rules: 1.233ms
+Build stylesheet: 0.001ms
+Potential classes:  418
+Active contexts:  1
+JIT TOTAL: 25.457ms
+
+
+ ✓ Compiled in 276ms (774 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 34ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.68ms
+Reading changed files: 33.101ms
+Sorting candidates: 0.233ms
+Generate rules: 2.285ms
+Build stylesheet: 1.29ms
+Potential classes:  427
+Active contexts:  1
+JIT TOTAL: 53.86ms
+
+
+ ✓ Compiled in 311ms (770 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 46ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.497ms
+Reading changed files: 15.621ms
+Sorting candidates: 0.066ms
+Generate rules: 0.463ms
+Build stylesheet: 0.876ms
+Potential classes:  154
+Active contexts:  1
+JIT TOTAL: 32.662ms
+
+
+ ✓ Compiled in 364ms (770 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 31ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.442ms
+Reading changed files: 4.82ms
+Sorting candidates: 0.069ms
+Generate rules: 0.314ms
+Build stylesheet: 0.002ms
+Potential classes:  156
+Active contexts:  1
+JIT TOTAL: 24.337ms
+
+
+ ✓ Compiled in 289ms (770 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 55ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.138ms
+Reading changed files: 4.534ms
+Sorting candidates: 0.07ms
+Generate rules: 2.498ms
+Build stylesheet: 1.184ms
+Potential classes:  157
+Active contexts:  1
+JIT TOTAL: 25.935ms
+
+
+ ✓ Compiled in 232ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.226ms
+Reading changed files: 14.052ms
+Sorting candidates: 0.059ms
+Generate rules: 0.657ms
+Build stylesheet: 0.813ms
+Potential classes:  158
+Active contexts:  1
+JIT TOTAL: 32.074ms
+
+
+ ✓ Compiled in 211ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.134ms
+Reading changed files: 4.082ms
+Sorting candidates: 0.175ms
+Generate rules: 1.795ms
+Build stylesheet: 0.841ms
+Potential classes:  434
+Active contexts:  1
+JIT TOTAL: 20.099ms
+
+
+ ✓ Compiled in 151ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 0.866ms
+Reading changed files: 4.451ms
+Sorting candidates: 0.139ms
+Generate rules: 1.871ms
+Build stylesheet: 0.334ms
+Potential classes:  435
+Active contexts:  1
+JIT TOTAL: 21.288ms
+
+
+ ✓ Compiled in 148ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.925ms
+Reading changed files: 5.635ms
+Sorting candidates: 0.147ms
+Generate rules: 1.179ms
+Build stylesheet: 0.001ms
+Potential classes:  434
+Active contexts:  1
+JIT TOTAL: 21.652ms
+
+
+ ✓ Compiled in 192ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 0.909ms
+Reading changed files: 3.94ms
+Sorting candidates: 0.17ms
+Generate rules: 1.15ms
+Build stylesheet: 0.001ms
+Potential classes:  431
+Active contexts:  1
+JIT TOTAL: 17.763ms
+
+
+ ✓ Compiled in 148ms (770 modules)
+ GET /event?id=evt_7316dd73f7aa432c 200 in 51ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.569ms
+Reading changed files: 7.988ms
+Sorting candidates: 0.175ms
+Generate rules: 1.297ms
+Build stylesheet: 0.001ms
+Potential classes:  413
+Active contexts:  1
+JIT TOTAL: 27.485ms
+
+
+ ✓ Compiled in 282ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.172ms
+Reading changed files: 4.426ms
+Sorting candidates: 0.2ms
+Generate rules: 2.006ms
+Build stylesheet: 0.745ms
+Potential classes:  432
+Active contexts:  1
+JIT TOTAL: 19.439ms
+
+
+ ✓ Compiled in 159ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.071ms
+Reading changed files: 5.908ms
+Sorting candidates: 0.168ms
+Generate rules: 1.327ms
+Build stylesheet: 0.001ms
+Potential classes:  433
+Active contexts:  1
+JIT TOTAL: 21.563ms
+
+
+ ✓ Compiled in 412ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.189ms
+Reading changed files: 5.919ms
+Sorting candidates: 0.155ms
+Generate rules: 2.289ms
+Build stylesheet: 0.74ms
+Potential classes:  433
+Active contexts:  1
+JIT TOTAL: 24.868ms
+
+
+ ✓ Compiled in 189ms (770 modules)
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.391ms
+Reading changed files: 8.298ms
+Sorting candidates: 0.212ms
+Generate rules: 1.48ms
+Build stylesheet: 0.001ms
+Potential classes:  428
+Active contexts:  1
+JIT TOTAL: 28.19ms
+
+
+ ✓ Compiled in 257ms (770 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 909ms (1096 modules)
+ GET /event?id=evt_7316dd73f7aa432c 500 in 1345ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.055ms
+Reading changed files: 5.629ms
+Sorting candidates: 0.139ms
+Generate rules: 1.466ms
+Build stylesheet: 0.679ms
+Potential classes:  429
+Active contexts:  1
+JIT TOTAL: 21.727ms
+
+
+ ✓ Compiled in 227ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 65ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 233ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 2.071ms
+Reading changed files: 6.384ms
+Sorting candidates: 0.169ms
+Generate rules: 1.499ms
+Build stylesheet: 0.626ms
+Potential classes:  427
+Active contexts:  1
+JIT TOTAL: 24.101ms
+
+
+ ✓ Compiled in 219ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 43ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 230ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.344ms
+Reading changed files: 7.453ms
+Sorting candidates: 0.076ms
+Generate rules: 0.769ms
+Build stylesheet: 0.001ms
+Potential classes:  236
+Active contexts:  1
+JIT TOTAL: 20.603ms
+
+
+ ✓ Compiled in 179ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 34ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 230ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.096ms
+Reading changed files: 5.046ms
+Sorting candidates: 0.084ms
+Generate rules: 0.79ms
+Build stylesheet: 0.001ms
+Potential classes:  233
+Active contexts:  1
+JIT TOTAL: 18.882ms
+
+
+ ✓ Compiled in 214ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 50ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 233ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 3.273ms
+Reading changed files: 10.016ms
+Sorting candidates: 0.08ms
+Generate rules: 0.789ms
+Build stylesheet: 0.001ms
+Potential classes:  234
+Active contexts:  1
+JIT TOTAL: 27.482ms
+
+
+ ✓ Compiled in 208ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 84ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 227ms
+
+
+Source path: /Users/waynewang/where2meet-client/app/globals.css
+Finding changed files: 1.16ms
+Reading changed files: 5.11ms
+Sorting candidates: 0.071ms
+Generate rules: 0.68ms
+Build stylesheet: 0.001ms
+Potential classes:  231
+Active contexts:  1
+JIT TOTAL: 18.386ms
+
+
+ ✓ Compiled in 180ms (1110 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /event?id=evt_7316dd73f7aa432c 500 in 45ms
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js'
+    at <unknown> (.next/server/app/event/page.js:621:47)
+    at Object.<anonymous> (.next/server/app/event/page.js:624:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/waynewang/where2meet-client/.next/server/vendor-chunks/lucide-react@0.546.0_react@19.2.0.js',
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 251ms
+ ⨯ Error: Cannot find module './35.js'
+Require stack:
+- /Users/waynewang/where2meet-client/.next/server/webpack-runtime.js
+- /Users/waynewang/where2meet-client/.next/server/app/event/page.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/require.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/load-components.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/utils.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/options.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/index.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/event/page.js:5:10123)
+    at Object.<anonymous> (.next/server/app/event/page.js:5:10175) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 238ms
+ ⨯ Error: Cannot find module './35.js'
+Require stack:
+- /Users/waynewang/where2meet-client/.next/server/webpack-runtime.js
+- /Users/waynewang/where2meet-client/.next/server/app/event/page.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/require.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/load-components.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/utils.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/options.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/index.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/event/page.js:5:10123)
+    at Object.<anonymous> (.next/server/app/event/page.js:5:10175) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/event'
+}
+ GET /event?id=evt_7316dd73f7aa432c 500 in 250ms
+ ⨯ Error: Cannot find module './35.js'
+Require stack:
+- /Users/waynewang/where2meet-client/.next/server/webpack-runtime.js
+- /Users/waynewang/where2meet-client/.next/server/app/event/page.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/require.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/load-components.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/utils.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/options.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/index.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/page.js:2:17058)
+    at Object.<anonymous> (.next/server/app/page.js:2:17114) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/'
+}
+ GET / 500 in 256ms
+ ⨯ Error: Cannot find module './35.js'
+Require stack:
+- /Users/waynewang/where2meet-client/.next/server/webpack-runtime.js
+- /Users/waynewang/where2meet-client/.next/server/app/event/page.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/require.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/load-components.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/utils.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/options.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/index.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/page.js:2:17058)
+    at Object.<anonymous> (.next/server/app/page.js:2:17114) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/'
+}
+ GET / 500 in 259ms
+ ⨯ Error: Cannot find module './35.js'
+Require stack:
+- /Users/waynewang/where2meet-client/.next/server/webpack-runtime.js
+- /Users/waynewang/where2meet-client/.next/server/app/event/page.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/require.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/load-components.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/utils.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/options.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/swc/index.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/config.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next.js
+- /Users/waynewang/where2meet-client/node_modules/.pnpm/next@15.5.4_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/app/page.js:2:17058)
+    at Object.<anonymous> (.next/server/app/page.js:2:17114) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/'
+}
+ GET / 500 in 250ms
