@@ -130,7 +130,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${afacadFlux.variable} antialiased`}>
+      <body className={`${afacadFlux.variable} antialiased font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -23,26 +23,26 @@ export default function Tabs({ tabs, defaultTab }: TabsProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Tab Headers */}
-      <div className="flex border-b border-gray-200 bg-white/50">
+      <div className="flex border-b border-black/10 bg-white">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-3 py-2 text-sm font-semibold transition-colors relative ${
+            className={`flex-1 px-3 py-3 text-sm font-medium transition-colors relative ${
               activeTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-[#08c605] border-b-2 border-[#08c605]'
+                : 'text-gray-500 hover:text-black'
             }`}
           >
-            <span className="flex items-center justify-center gap-1">
+            <span className="flex items-center justify-center gap-1.5">
               {tab.icon && <span>{tab.icon}</span>}
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
                 <span
-                  className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                  className={`ml-1 px-2 py-0.5 text-xs rounded-full font-medium ${
                     activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-200 text-gray-700'
+                      ? 'bg-[#08c605] text-white'
+                      : 'bg-gray-200 text-gray-600'
                   }`}
                 >
                   {tab.badge}

@@ -24,7 +24,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-afacad-flux)', 'sans-serif'],
+        sans: ['var(--font-afacad-flux)', 'system-ui', 'sans-serif'],
       },
     },
   },

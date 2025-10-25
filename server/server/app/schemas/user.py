@@ -23,6 +23,8 @@ class UserResponse(BaseModel):
     id: str
     email: str
     name: Optional[str]
+    bio: Optional[str]
+    avatar: Optional[str]
     created_at: datetime
     last_login: Optional[datetime]
 
@@ -40,4 +42,6 @@ class TokenResponse(BaseModel):
 class UserUpdate(BaseModel):
     """Schema for updating user profile."""
     name: Optional[str] = Field(None, max_length=100)
+    bio: Optional[str] = Field(None, max_length=500)
+    avatar: Optional[str] = Field(None, max_length=500)
     password: Optional[str] = Field(None, min_length=8, max_length=100)
