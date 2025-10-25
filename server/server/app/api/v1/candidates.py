@@ -218,8 +218,7 @@ async def search_candidates(
             opening_hours=c.opening_hours,
             photo_reference=c.photo_reference,
             added_by=c.added_by,
-            vote_count=vote_count_map.get(c.id, 0),
-            photo_reference=c.photo_reference
+            vote_count=vote_count_map.get(c.id, 0)
         ))
 
     # Build search area metadata
@@ -304,8 +303,7 @@ async def get_candidates(
             opening_hours=c.opening_hours,
             photo_reference=c.photo_reference,
             added_by=c.added_by,
-            vote_count=vote_count_map.get(c.id, 0),
-            photo_reference=c.photo_reference
+            vote_count=vote_count_map.get(c.id, 0)
         ))
 
     return responses
@@ -383,8 +381,7 @@ async def add_candidate_manually(
         opening_hours=candidate.opening_hours,
         photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
-        vote_count=0,
-        photo_reference=candidate.photo_reference
+        vote_count=0
     )
 
 
@@ -440,8 +437,7 @@ async def save_candidate_to_added(
         opening_hours=candidate.opening_hours,
         photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
-        vote_count=vote_count,
-        photo_reference=candidate.photo_reference
+        vote_count=vote_count
     )
 
 
@@ -497,8 +493,7 @@ async def unsave_candidate_from_added(
         opening_hours=candidate.opening_hours,
         photo_reference=candidate.photo_reference,
         added_by=candidate.added_by,
-        vote_count=vote_count,
-        photo_reference=candidate.photo_reference
+        vote_count=vote_count
     )
 
 

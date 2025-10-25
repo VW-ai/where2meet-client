@@ -18,7 +18,16 @@ depends_on = None
 
 def upgrade() -> None:
     # Add photo_reference column to candidates table
-    op.add_column('candidates', sa.Column('photo_reference', sa.String(500), nullable=True))
+    # Check if column already exists before adding
+    from sqlalchemy import inspect
+    from alembic import context
+
+    conn = context.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('candidates')]
+
+    if 'photo_reference' not in columns:
+        op.add_column('candidates', sa.Column('photo_reference', sa.String(500), nullable=True))
 
 
 def downgrade() -> None:
