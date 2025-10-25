@@ -11,7 +11,7 @@ class EventCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     category: str = Field(..., min_length=1, max_length=100)
     deadline: Optional[datetime] = None
-    visibility: str = Field(default="blur", pattern="^(blur|show)$")
+    visibility: str = Field(default="show", pattern="^(blur|show)$")  # Default to "show" - participants control their own privacy
     allow_vote: bool = True
 
 
@@ -46,6 +46,7 @@ class ParticipantCreate(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
     lng: float = Field(..., ge=-180, le=180)
     name: Optional[str] = Field(None, max_length=100)
+    address: Optional[str] = None  # Human-readable address
 
 
 class ParticipantUpdate(BaseModel):
@@ -53,6 +54,7 @@ class ParticipantUpdate(BaseModel):
     lat: Optional[float] = Field(None, ge=-90, le=90)
     lng: Optional[float] = Field(None, ge=-180, le=180)
     name: Optional[str] = Field(None, max_length=100)
+    address: Optional[str] = None  # Human-readable address
 
 
 class ParticipantResponse(BaseModel):
@@ -61,7 +63,10 @@ class ParticipantResponse(BaseModel):
     event_id: str
     lat: float  # May be fuzzy depending on visibility
     lng: float  # May be fuzzy depending on visibility
+    fuzzy_lat: Optional[float] = None  # Fuzzy coordinates for privacy
+    fuzzy_lng: Optional[float] = None  # Fuzzy coordinates for privacy
     name: Optional[str]
+    address: Optional[str]  # Human-readable address
     joined_at: datetime
 
     class Config:

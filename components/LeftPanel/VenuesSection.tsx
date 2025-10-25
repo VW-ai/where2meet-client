@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, List, Heart } from 'lucide-react';
+import { Search, List, Heart, ChevronUp, ChevronDown, Store } from 'lucide-react';
 import { Candidate, SortMode } from '@/types';
 import SearchSubView from './SearchSubView';
 import VenueListSubView from './VenueListSubView';
@@ -52,6 +52,7 @@ export default function VenuesSection({
   candidateColors,
 }: VenuesSectionProps) {
   const [activeTab, setActiveTab] = useState<'search' | 'list'>('search');
+  const [isExpanded, setIsExpanded] = useState(true); // Default expanded
 
   // Split candidates into search results and saved venues (saved = has votes)
   const savedVenues = candidates.filter(c => (c.voteCount ?? 0) > 0);
@@ -59,8 +60,29 @@ export default function VenuesSection({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Tab Headers - High contrast black/white */}
-      <div className="flex border-b-2 border-black">
+      {/* Section Header with Collapse Toggle */}
+      <div className="px-4 py-2 flex items-center justify-between bg-white">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+        >
+          {isExpanded ? (
+            <ChevronUp className="w-3 h-3 text-black" />
+          ) : (
+            <ChevronDown className="w-3 h-3 text-black" />
+          )}
+          <Store className="w-4 h-4 text-black" />
+          <h3 className="text-xs font-bold text-black uppercase">
+            Venues ({candidates.length})
+          </h3>
+        </button>
+      </div>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <>
+          {/* Tab Headers - High contrast black/white */}
+          <div className="flex border-b-2 border-black">
         <button
           onClick={() => setActiveTab('search')}
           className={`flex-1 px-3 py-2 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-r border-black ${
@@ -132,6 +154,8 @@ export default function VenuesSection({
           />
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -559,3 +559,38 @@ async def get_candidate_photo(
         db.commit()
 
     return {"photo_reference": photo_reference}
+
+
+@router.get("/events/{event_id}/candidates/{candidate_id}/details")
+async def get_candidate_details(
+    event_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch detailed information about a candidate including editorial summary.
+    """
+    candidate = db.query(Candidate).filter(
+        Candidate.id == candidate_id,
+        Candidate.event_id == event_id
+    ).first()
+
+    if not candidate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Candidate not found"
+        )
+
+    # Fetch full place details from Google Places API
+    place_details = await google_maps_service.get_place_details(candidate.place_id)
+
+    if not place_details:
+        return {
+            "editorial_summary": None,
+            "opening_hours": candidate.opening_hours
+        }
+
+    return {
+        "editorial_summary": place_details.get("editorial_summary"),
+        "opening_hours": place_details.get("opening_hours")
+    }

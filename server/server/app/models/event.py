@@ -15,7 +15,7 @@ class Event(Base):
     title = Column(String(255), nullable=False)
     category = Column(String(100), nullable=False)
     deadline = Column(DateTime(timezone=True), nullable=True)
-    visibility = Column(String(20), default="blur")  # blur, show
+    visibility = Column(String(20), default="show")  # blur, show - default to "show", participants control their own privacy
     allow_vote = Column(Boolean, default=True)
     final_decision = Column(Text, nullable=True)
     custom_center_lat = Column(Float, nullable=True)  # Custom center point (dragged by host)
@@ -51,6 +51,7 @@ class Participant(Base):
     fuzzy_lat = Column(Float, nullable=True)  # Blurred coordinate for privacy
     fuzzy_lng = Column(Float, nullable=True)  # Blurred coordinate for privacy
     name = Column(String(100), nullable=True)  # Optional display name
+    address = Column(Text, nullable=True)  # Human-readable address
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

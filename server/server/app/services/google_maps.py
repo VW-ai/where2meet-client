@@ -189,7 +189,7 @@ class GoogleMapsService:
         url = f"{self.base_url}/place/details/json"
         params = {
             "place_id": place_id,
-            "fields": "place_id,name,formatted_address,geometry,rating,user_ratings_total,opening_hours",
+            "fields": "place_id,name,formatted_address,geometry,rating,user_ratings_total,opening_hours,editorial_summary",
             "key": self.api_key
         }
 
@@ -202,6 +202,12 @@ class GoogleMapsService:
                 return None
 
             result = data.get("result", {})
+
+            # Extract editorial summary if available
+            editorial_summary = None
+            if "editorial_summary" in result:
+                editorial_summary = result["editorial_summary"].get("overview")
+
             return {
                 "place_id": result.get("place_id"),
                 "name": result.get("name", ""),
@@ -211,6 +217,7 @@ class GoogleMapsService:
                 "rating": result.get("rating"),
                 "user_ratings_total": result.get("user_ratings_total", 0),
                 "opening_hours": result.get("opening_hours"),
+                "editorial_summary": editorial_summary,
             }
 
     async def reverse_geocode(self, lat: float, lng: float) -> Optional[Dict[str, Any]]:

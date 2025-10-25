@@ -12,6 +12,7 @@ interface TopViewProps {
   selectedCandidate?: { name: string } | null;
   finalDecision?: string | null;
   onPublishDecision?: () => void;
+  onUnpublishDecision?: () => void;
 }
 
 export default function TopView({
@@ -21,7 +22,8 @@ export default function TopView({
   isHost,
   selectedCandidate,
   finalDecision,
-  onPublishDecision
+  onPublishDecision,
+  onUnpublishDecision
 }: TopViewProps) {
   const { language, setLanguage, t } = useLanguage();
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -105,15 +107,31 @@ export default function TopView({
             </div>
           )}
 
-          {/* Publish Decision Button (Host only) */}
-          {isHost && selectedCandidate && !finalDecision && onPublishDecision && (
-            <button
-              onClick={onPublishDecision}
-              className="px-3 py-2 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all font-bold text-xs uppercase"
-              title={t.publishDecision}
-            >
-              {t.publishDecision}
-            </button>
+          {/* Publish/Unpublish Decision Button (Host only) */}
+          {isHost && (
+            <>
+              {/* Publish button - show when no decision and venue selected */}
+              {selectedCandidate && !finalDecision && onPublishDecision && (
+                <button
+                  onClick={onPublishDecision}
+                  className="px-3 py-2 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all font-bold text-xs uppercase"
+                  title={t.publishDecision}
+                >
+                  {t.publishDecision}
+                </button>
+              )}
+
+              {/* Unpublish button - show when decision is published */}
+              {finalDecision && onUnpublishDecision && (
+                <button
+                  onClick={onUnpublishDecision}
+                  className="px-3 py-2 border-2 border-white bg-black text-white hover:bg-white hover:text-black transition-all font-bold text-xs uppercase"
+                  title="Unpublish Decision"
+                >
+                  Unpublish
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -17,7 +17,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-afacad-flux), sans-serif;
 }
 
 @layer utilities {
@@ -39,5 +39,50 @@ body {
 
 /* Ensure directions renderer doesn't create visible elements */
 .gm-style-pbc {
+  display: none !important;
+}
+
+/* Google Places Autocomplete Dropdown Styles */
+.pac-container {
+  z-index: 9999 !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1) !important;
+  font-family: var(--font-afacad-flux), sans-serif !important;
+  margin-top: 2px !important;
+}
+
+.pac-item {
+  border-top: 1px solid #e5e5e5 !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  font-size: 20px !important;
+  color: #000 !important;
+}
+
+.pac-item:first-child {
+  border-top: none !important;
+}
+
+.pac-item:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.pac-item-selected {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.pac-item-query {
+  font-size: 20px !important;
+  font-weight: bold !important;
+  color: inherit !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
+
+.pac-logo:after {
   display: none !important;
 }

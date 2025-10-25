@@ -15,14 +15,14 @@ interface LeftPanelProps {
   token?: string;
   finalDecision?: string | null;
   onPublishDecision?: () => void;
+  onUnpublishDecision?: () => void;
 
   // Input Section Props
   isJoined: boolean;
   onJoinEvent: (data: { name: string; lat: number; lng: number; blur: boolean }) => Promise<void>;
-  onEditLocation: (data: { name?: string; lat?: number; lng?: number }) => Promise<void>;
+  onEditLocation: (data: { name?: string; lat?: number; lng?: number; blur?: boolean }) => Promise<void>;
   onRemoveOwnLocation: () => Promise<void>;
-  currentUserName?: string;
-  currentUserLocation?: string;
+  currentParticipant?: Participant;
   isHost: boolean;
 
   // Venues Section Props
@@ -63,14 +63,14 @@ export default function LeftPanel({
   token,
   finalDecision,
   onPublishDecision,
+  onUnpublishDecision,
 
   // Input
   isJoined,
   onJoinEvent,
   onEditLocation,
   onRemoveOwnLocation,
-  currentUserName,
-  currentUserLocation,
+  currentParticipant,
   isHost,
 
   // Venues
@@ -115,6 +115,7 @@ export default function LeftPanel({
         selectedCandidate={selectedCandidate}
         finalDecision={finalDecision}
         onPublishDecision={onPublishDecision}
+        onUnpublishDecision={onUnpublishDecision}
       />
 
 
@@ -125,8 +126,7 @@ export default function LeftPanel({
           onJoinEvent={onJoinEvent}
           onEditLocation={onEditLocation}
           onRemoveOwnLocation={onRemoveOwnLocation}
-          currentUserName={currentUserName}
-          currentUserLocation={currentUserLocation}
+          currentParticipant={currentParticipant}
           isHost={isHost}
         />
         {isJoined && <div className="h-0.5 bg-black" />}

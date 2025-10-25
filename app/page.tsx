@@ -19,7 +19,6 @@ export default function Home() {
   // Event creation form state
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('restaurant');
-  const [visibility, setVisibility] = useState<'blur' | 'show'>('blur');
   const [allowVote, setAllowVote] = useState(true);
 
   const handleCreateEvent = async () => {
@@ -35,7 +34,6 @@ export default function Home() {
       const request: CreateEventRequest = {
         title: title.trim(),
         category,
-        visibility,
         allow_vote: allowVote,
       };
 

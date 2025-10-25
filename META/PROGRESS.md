@@ -1926,6 +1926,165 @@ types/index.ts                               # (no changes needed - uses existin
 
 ---
 
+## 2025-10-24: Typography & UX Improvements - Afacad Flux Font & Location Modal ✅
+
+### Overview
+Major typography overhaul with Afacad Flux variable font and enhanced readability through significantly increased font sizes. Also implemented custom location selection modal with intelligent address snapping to valid buildings.
+
+### ✅ 16. Afacad Flux Font Implementation
+**Status:** Complete ✅
+
+**Changes Made:**
+- Replaced Arial with Afacad Flux across entire application
+- Imported via Next.js font optimization for performance
+- All weights available (100-900) for design flexibility
+- CSS variable `--font-afacad-flux` for consistent usage
+
+**Files Modified:**
+- `app/layout.tsx` - Added font import and configuration
+- `app/globals.css` - Updated body and autocomplete font family
+- `tailwind.config.ts` - Extended Tailwind font family
+
+---
+
+### ✅ 17. Global Font Size Increase
+**Status:** Complete ✅
+
+**Font Size Changes (All Increased Significantly):**
+- `text-xs`: 12px → **16px** (+4px)
+- `text-sm`: 14px → **18px** (+4px)
+- `text-base`: 16px → **20px** (+4px, default body text)
+- `text-lg`: 18px → **24px** (+6px)
+- `text-xl`: 20px → **28px** (+8px)
+- `text-2xl`: 24px → **32px** (+8px)
+- `text-3xl`: 30px → **40px** (+10px)
+- All larger sizes scaled proportionally
+
+**Additional Updates:**
+- Toast notifications: 14px → **20px**
+- Google Places autocomplete: 14px → **20px**
+- Increased padding for better spacing
+
+**Files Modified:**
+- `tailwind.config.ts` - Completely replaced fontSize scale
+- `app/event/page.tsx` - Updated toast notification size
+- `app/globals.css` - Updated autocomplete dropdown size
+
+**Impact:**
+✅ Dramatically improved readability across all screens
+✅ Afacad Flux renders beautifully at larger sizes
+✅ Better accessibility for users
+✅ Maintains brutalist aesthetic with bold, clear typography
+✅ Consistent scaling across all text sizes
+
+---
+
+### ✅ 18. Custom Location Selection Modal with Address Snapping
+**Status:** Complete ✅
+
+**Features:**
+- Replaced browser's default `confirm()` dialog with custom brutalist-styled modal
+- Automatic address snapping to nearest valid building/address
+- Shows human-readable address instead of raw coordinates when available
+- Consistent design with existing modals (publish confirmation)
+
+**Backend Implementation:**
+- Enhanced reverse geocoding endpoint to snap to nearest valid address
+- Uses `find_nearest_land_point()` to locate nearest establishment within 5km
+- Checks if location is water/unaddressable via `is_water_location()`
+- Returns snapped coordinates and address for better UX
+- Falls back to raw coordinates if no valid address found
+
+**Frontend Implementation:**
+- Custom modal with black header bar and white content area
+- 4px borders with 8px shadow (brutalist design)
+- Two-button layout: Cancel (white) and Confirm (black)
+- Shows address prominently when available, coordinates as fallback
+- Clicking map triggers geocoding API call before showing modal
+- Modal state managed with `showLocationConfirm` and `clickedLocation`
+
+**Technical Details:**
+- Modal appears on map click (when user has no participant ID yet)
+- Backend snaps coordinates if clicking on water or non-addressable location
+- Frontend receives updated lat/lng from backend if snapping occurred
+- Address displayed in modal for user confirmation
+- Console logging for debugging snap operations
+
+**Files Modified:**
+- `app/event/page.tsx:112-113` - Added modal state variables
+- `app/event/page.tsx:560-607` - Updated handleMapClick with geocoding
+- `app/event/page.tsx:610-643` - Added confirmLocationSelection callback
+- `app/event/page.tsx:1611-1654` - Location confirmation modal UI
+- `server/app/api/v1/participants.py:246-301` - Enhanced reverse geocoding with snapping
+
+**Benefits:**
+✅ Consistent brutalist design across all modals
+✅ Better UX with real addresses instead of coordinates
+✅ Prevents users from setting location in water
+✅ Snaps to nearest valid building automatically
+✅ Clear confirmation UI before adding location
+
+---
+
+### ✅ Additional October 24 Features
+
+#### Per-Participant Visibility Control
+**Status:** Frontend Complete (Backend Integration Pending)
+
+- Added `visibility` field to `Participant` interface and `AddParticipantRequest`
+- Deprecated event-level visibility - each participant controls their own privacy
+- Two modes: `'blur'` (fuzzy ~500m) or `'show'` (exact location)
+
+#### Manual Participant Addition (Host Feature)
+- Host can add other participants manually (not just update their own)
+- Toggle UI to switch between "Update Myself" and "Add Others" modes
+- Form auto-clears after successfully adding a participant
+- Dynamic button text (ADD/UPDATE/JOIN) based on mode
+
+#### Animated Route Icons
+- Smooth animated icons moving along routes (car, bike, walk, transit)
+- SVG icons with detailed paths for each travel mode
+- Icons move at constant speed (0.1% per frame)
+- Blue-grey route line (#4B5563) for better icon visibility
+
+#### Collapsible Travel Chart
+- Travel Analysis section in venue detail card is now collapsible
+- ChevronUp/ChevronDown icons indicate expand/collapse state
+- Default state: expanded
+
+#### Custom Publish Confirmation Modal
+- Replaced browser's default `confirm()` with custom brutalist-styled modal
+- Black/white high contrast brutalist theme
+- 4px borders with 8px shadow offset
+
+#### Voting UI on Venue Detail Card
+- Heart icon voting button in venue detail card
+- Inline with rating and distance
+- Vote count displayed next to heart icon
+
+#### Venue Editorial Summary (About Section)
+- Displays Google Places editorial summary
+- Collapsible "About" section with icons
+- Auto-fetches when venue is selected
+
+#### Google Map Button Redesign
+- Changed text from "Open in Google Maps" to "GOOGLE MAP"
+- Added map pin icon on the left side
+
+#### Opening Hours Display
+- Opening hours displayed in collapsible section
+- Shows `weekday_text` array (e.g., "Monday: 9:00 AM – 5:00 PM")
+- Clock icon added for visual identification
+
+#### UI/UX Improvements
+- Address input shows human-readable addresses instead of coordinates
+- Participant list two-line layout with address filtering
+- Consistent section headers across all panels
+- Auto-collapse & overflow prevention
+- Circle recalculation system with debounce
+
+---
+
 ## 2025-10-09: Project Initialization
 - Created repository structure
 - Wrote META documentation (PRODUCT.md, DESIGN.md, TODO.md)

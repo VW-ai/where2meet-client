@@ -17,7 +17,7 @@ export interface Event {
   id: string;
   title: string;
   category: string;
-  visibility: 'blur' | 'show';
+  visibility: 'blur' | 'show';  // DEPRECATED: Use per-participant visibility instead
   allow_vote: boolean;
   deadline?: string;
   final_decision?: string;
@@ -35,6 +35,8 @@ export interface Participant {
   fuzzy_lat?: number;
   fuzzy_lng?: number;
   name?: string;
+  address?: string;  // Human-readable address
+  visibility?: 'blur' | 'show';  // Per-participant visibility preference
   joined_at: string;
 }
 
@@ -65,7 +67,7 @@ export interface Vote {
 export interface CreateEventRequest {
   title: string;
   category: string;
-  visibility?: 'blur' | 'show';
+  visibility?: 'blur' | 'show';  // DEPRECATED: Use per-participant visibility instead
   allow_vote?: boolean;
   deadline?: string;
 }
@@ -80,6 +82,8 @@ export interface AddParticipantRequest {
   lat: number;
   lng: number;
   name?: string;
+  address?: string;  // Human-readable address
+  visibility?: 'blur' | 'show';  // Participant's visibility preference
 }
 
 export interface SearchCandidatesRequest {
@@ -230,6 +234,12 @@ export class Where2MeetAPI {
     });
   }
 
+  async unpublishEvent(eventId: string): Promise<Event> {
+    return this.request<Event>(`/api/v1/events/${eventId}/unpublish`, {
+      method: 'POST',
+    });
+  }
+
   async deleteEvent(eventId: string, hardDelete: boolean = false): Promise<{ message: string }> {
     return this.request<{ message: string }>(
       `/api/v1/events/${eventId}?hard_delete=${hardDelete}`,
@@ -282,6 +292,13 @@ export class Where2MeetAPI {
     return this.request<{ message: string }>(
       `/api/v1/events/${eventId}/participants/${participantId}`,
       { method: 'DELETE' }
+    );
+  }
+
+  async reverseGeocode(lat: number, lng: number): Promise<{ address: string | null; lat: number; lng: number; error?: string }> {
+    return this.request<{ address: string | null; lat: number; lng: number; error?: string }>(
+      `/api/v1/geocode/reverse?lat=${lat}&lng=${lng}`,
+      { method: 'POST' }
     );
   }
 
@@ -351,6 +368,12 @@ export class Where2MeetAPI {
   async getCandidatePhoto(eventId: string, candidateId: string): Promise<{ photo_reference: string | null }> {
     return this.request<{ photo_reference: string | null }>(
       `/api/v1/events/${eventId}/candidates/${candidateId}/photo`
+    );
+  }
+
+  async getCandidateDetails(eventId: string, candidateId: string): Promise<{ editorial_summary: string | null; opening_hours: any }> {
+    return this.request<{ editorial_summary: string | null; opening_hours: any }>(
+      `/api/v1/events/${eventId}/candidates/${candidateId}/details`
     );
   }
 

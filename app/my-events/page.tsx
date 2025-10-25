@@ -126,10 +126,6 @@ export default function MyEventsPage() {
                         <span>📍</span>
                         {event.category}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <span>👁️</span>
-                        {event.visibility === 'blur' ? 'Blurred' : 'Exact'} locations
-                      </span>
                       {event.allow_vote && (
                         <span className="flex items-center gap-1">
                           <span>🗳️</span>

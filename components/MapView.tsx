@@ -66,6 +66,9 @@ function MapContent({
   }, [map, onMapReady]);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
+  const animationFrameRef = useRef<number | null>(null);
+  const iconOffsetRef = useRef<number>(0);
+  const animatedPolylineRef = useRef<google.maps.Polyline | null>(null);
 
   // Center map on user location when obtained (only once, only if no locations added yet)
   useEffect(() => {
@@ -88,7 +91,52 @@ function MapContent({
     }
   }, [map, selectedParticipantId, locations]);
 
-  // Initialize directions renderer
+  // Get animated icon for travel mode
+  const getAnimatedIcon = (mode: google.maps.TravelMode) => {
+    // SVG path icons for each travel mode
+    const icons: Record<string, google.maps.Symbol> = {
+      DRIVING: {
+        path: 'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z',
+        scale: 1.5,
+        fillColor: '#000000',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        anchor: new google.maps.Point(12, 12),
+      },
+      BICYCLING: {
+        path: 'M15.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM5 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5zm5.8-10l2.4-2.4.8.8c1.3 1.3 3 2.1 5.1 2.1V9c-1.5 0-2.7-.6-3.6-1.5l-1.9-1.9c-.5-.4-1-.6-1.6-.6s-1.1.2-1.4.6L7.8 8.4c-.4.4-.6.9-.6 1.4 0 .6.2 1.1.6 1.4L11 14v5h2v-6.2l-2.2-2.3zM19 12c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z',
+        scale: 1.2,
+        fillColor: '#000000',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        anchor: new google.maps.Point(12, 12),
+      },
+      WALKING: {
+        path: 'M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7',
+        scale: 1.5,
+        fillColor: '#000000',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        anchor: new google.maps.Point(12, 12),
+      },
+      TRANSIT: {
+        path: 'M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2l2-2h4l2 2h2v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm5.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-5V6h5v4z',
+        scale: 1.5,
+        fillColor: '#000000',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 1,
+        anchor: new google.maps.Point(12, 12),
+      },
+    };
+
+    return icons[mode.toString()] || icons.DRIVING;
+  };
+
+  // Initialize directions renderer (without icons initially)
   useEffect(() => {
     if (!map) return;
 
@@ -96,8 +144,9 @@ function MapContent({
     const hiddenPanel = document.createElement('div');
     hiddenPanel.style.display = 'none';
 
-    // Use grey color when in chart route mode, otherwise black
-    const routeColor = chartRouteMode ? '#808080' : '#000000';
+    // Use lighter grey for better contrast with black icons
+    // Chart mode: medium grey, normal mode: blue-grey for better visibility
+    const routeColor = chartRouteMode ? '#9CA3AF' : '#4B5563';
 
     const renderer = new google.maps.DirectionsRenderer({
       map: map,
@@ -105,9 +154,9 @@ function MapContent({
       suppressInfoWindows: true, // Suppress the default info windows
       panel: hiddenPanel, // Use hidden div to capture any panel output
       polylineOptions: {
-        strokeColor: routeColor, // Grey for chart mode, black otherwise
-        strokeWeight: 6, // Thicker line (increased from 4)
-        strokeOpacity: 1.0, // Fully opaque (increased from 0.8)
+        strokeColor: routeColor,
+        strokeWeight: 6,
+        strokeOpacity: 1.0,
       },
     });
 
@@ -121,6 +170,49 @@ function MapContent({
     };
   }, [map, chartRouteMode]);
 
+  // Animate icons along the route - update the separate polyline's offset every frame
+  useEffect(() => {
+    if (!animatedPolylineRef.current || !selectedCandidate) {
+      // Stop animation if no route
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      iconOffsetRef.current = 0;
+      return;
+    }
+
+    // Animation loop - increment offset and update polyline directly
+    const animate = () => {
+      if (!animatedPolylineRef.current) return;
+
+      // Increment offset by 0.1% each frame (slower, smoother animation at 60fps)
+      iconOffsetRef.current = (iconOffsetRef.current + 0.1) % 100;
+
+      // Get current icons and update offset
+      const icons = animatedPolylineRef.current.get('icons') || [];
+      if (icons.length > 0) {
+        icons[0].offset = `${iconOffsetRef.current}%`;
+        // Set the updated icons back to the polyline
+        animatedPolylineRef.current.set('icons', icons);
+      }
+
+      // Continue animation loop
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    // Start animation
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [animatedPolylineRef.current, selectedCandidate]);
+
   // Calculate and display route when candidate is selected
   useEffect(() => {
     // Use routeFromParticipantId if provided (for hosts), otherwise use myParticipantId
@@ -130,6 +222,11 @@ function MapContent({
       // Clear route if no candidate selected
       if (directionsRenderer) {
         directionsRenderer.setDirections({ routes: [] } as any);
+      }
+      // Clear animated polyline
+      if (animatedPolylineRef.current) {
+        animatedPolylineRef.current.setMap(null);
+        animatedPolylineRef.current = null;
       }
       onRouteInfoChange?.(null);
       return;
@@ -161,10 +258,41 @@ function MapContent({
             distance: route.legs[0].distance?.text || '',
             duration: route.legs[0].duration?.text || '',
           });
+
+          // Create animated polyline for icon animation
+          // Clear old polyline if it exists
+          if (animatedPolylineRef.current) {
+            animatedPolylineRef.current.setMap(null);
+          }
+
+          // Get the route path from overview_path
+          const path = route.overview_path;
+          if (path && path.length > 0) {
+            const icon = getAnimatedIcon(travelMode || google.maps.TravelMode.DRIVING);
+
+            // Create a new polyline with invisible stroke (just for the animated icons)
+            const animatedPolyline = new google.maps.Polyline({
+              map: map,
+              path: path,
+              strokeOpacity: 0, // Invisible line (we only want the icons)
+              icons: [{
+                icon: icon,
+                offset: '0%',
+                repeat: '150px', // Icon every 150px along the route
+              }],
+            });
+
+            animatedPolylineRef.current = animatedPolyline;
+          }
         }
       } else {
         console.error('Directions request failed:', status);
         onRouteInfoChange?.(null);
+        // Clear animated polyline if route fails
+        if (animatedPolylineRef.current) {
+          animatedPolylineRef.current.setMap(null);
+          animatedPolylineRef.current = null;
+        }
       }
     });
   }, [map, directionsRenderer, selectedCandidate, myParticipantId, routeFromParticipantId, locations, travelMode, onRouteInfoChange]);

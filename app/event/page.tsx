@@ -13,6 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import Logo from '@/components/Logo';
 import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
 import TravelChart from '@/components/TravelChart';
+import { ChevronUp, ChevronDown, Heart } from 'lucide-react';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -102,6 +103,14 @@ function EventPageContent() {
   const [chartTravelMode, setChartTravelMode] = useState<any>('DRIVING'); // Travel mode for chart in location detail view
   const [participantTravelData, setParticipantTravelData] = useState<Map<string, { distance: number; duration: number }>>(new Map()); // Travel data for chart
   const [candidatePhotoCache, setCandidatePhotoCache] = useState<Map<string, string | null>>(new Map()); // Cache for candidate photos
+  const [showTravelChart, setShowTravelChart] = useState(false); // Show/hide travel chart as separate view
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false); // Custom publish confirmation modal
+  const [candidateEditorialSummary, setCandidateEditorialSummary] = useState<string | null>(null); // Editorial summary for selected candidate
+  const [candidateOpeningHours, setCandidateOpeningHours] = useState<any>(null); // Opening hours for selected candidate
+  const [isAboutExpanded, setIsAboutExpanded] = useState(true); // Collapsible About section
+  const [isHoursExpanded, setIsHoursExpanded] = useState(true); // Collapsible Hours section
+  const [showLocationConfirm, setShowLocationConfirm] = useState(false); // Custom location confirmation modal
+  const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number; address: string | null } | null>(null); // Temporary clicked location
 
   // Create participant colors map
   const participantColors = useMemo(() => {
@@ -207,14 +216,17 @@ function EventPageContent() {
       const participantData = await api.getParticipants(id);
       setParticipants(participantData);
 
-      // Convert participants to locations for map display
+      // Convert participants to locations
+      // Use ACTUAL coordinates (not fuzzy) for circle calculation
+      // The circle represents the optimal meeting area based on real distances
       const locs: Location[] = participantData.map((p) => ({
         id: p.id,
-        lat: p.fuzzy_lat || p.lat,
-        lng: p.fuzzy_lng || p.lng,
+        lat: p.lat,  // Use actual lat for circle calculation
+        lng: p.lng,  // Use actual lng for circle calculation
         address: p.name || `Participant ${p.id.slice(0, 8)}`,
         name: p.name,
       }));
+      console.log('📍 loadEventData: Setting locations from participants', locs);
       setLocations(locs);
 
       // Load candidates if any
@@ -389,8 +401,36 @@ function EventPageContent() {
     fetchPhoto();
   }, [selectedCandidate?.id, eventId]);
 
-  // Recompute centroid and circle
+  // Fetch editorial summary and opening hours when a candidate is selected
   useEffect(() => {
+    if (!selectedCandidate || !eventId) {
+      setCandidateEditorialSummary(null);
+      setCandidateOpeningHours(null);
+      setShowTravelChart(false); // Close travel chart when changing venues
+      return;
+    }
+
+    const fetchDetails = async () => {
+      try {
+        console.log('📝 Fetching details for', selectedCandidate.name);
+        const response = await api.getCandidateDetails(eventId, selectedCandidate.id);
+        setCandidateEditorialSummary(response.editorial_summary);
+        setCandidateOpeningHours(response.opening_hours);
+        console.log('📝 Details loaded - Summary:', response.editorial_summary ? 'Yes' : 'No', '| Hours:', response.opening_hours ? 'Yes' : 'No');
+      } catch (error) {
+        console.error('❌ Failed to fetch candidate details:', error);
+        setCandidateEditorialSummary(null);
+        setCandidateOpeningHours(null);
+      }
+    };
+
+    fetchDetails();
+  }, [selectedCandidate?.id, eventId]);
+
+  // Recompute centroid and circle with 2-second debounce
+  useEffect(() => {
+    console.log('🔵 Circle effect triggered - locations:', locations.length, 'customCentroid:', customCentroid, 'authCircle:', authoritativeCircle);
+
     if (locations.length === 0) {
       console.log('🔵 Circle effect: No locations, clearing circle');
       setCentroid(null);
@@ -398,40 +438,52 @@ function EventPageContent() {
       return;
     }
 
-    // Use custom centroid if available, otherwise compute automatically
-    const effectiveCentroid = customCentroid || computeCentroid(locations);
-    setCentroid(effectiveCentroid);
-    console.log('🔵 Circle effect: Centroid set to', effectiveCentroid);
+    // Debounce: Wait 2 seconds before recalculating circle
+    console.log('⏱️ Circle recalculation scheduled in 2 seconds...');
+    const timeoutId = setTimeout(() => {
+      console.log('🔵 Circle recalculation starting now (after 2s delay)');
 
-    // Compute MEC to get the baseline radius
-    const mec = computeMinimumEnclosingCircle(locations);
-    if (!mec) {
-      console.log('🔵 Circle effect: MEC computation failed, clearing circle');
-      setCircle(null);
-      return;
-    }
+      // Use custom centroid if available, otherwise compute automatically
+      const effectiveCentroid = customCentroid || computeCentroid(locations);
+      setCentroid(effectiveCentroid);
+      console.log('🔵 Circle effect: Centroid set to', effectiveCentroid, 'from locations:', locations.map(l => ({ lat: l.lat, lng: l.lng })));
 
-    console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
+      // Compute MEC to get the baseline radius
+      const mec = computeMinimumEnclosingCircle(locations);
+      if (!mec) {
+        console.log('🔵 Circle effect: MEC computation failed, clearing circle');
+        setCircle(null);
+        return;
+      }
 
-    // Use custom centroid for circle center if available, otherwise use MEC center
-    const circleCenter = customCentroid || mec.center;
+      console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
 
-    // Use authoritative circle from backend if available (after search)
-    // Otherwise show preview with direct circleRadiusKm
-    if (authoritativeCircle) {
-      console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
-      setCircle(authoritativeCircle);
-    } else {
-      // Use direct circleRadiusKm value (1-20km range) for preview circle
-      const previewRadius = circleRadiusKm * 1000; // Convert km to meters
+      // Use custom centroid for circle center if available, otherwise use MEC center
+      const circleCenter = customCentroid || mec.center;
 
-      const newCircle = {
-        center: circleCenter,
-        radius: previewRadius,
-      };
-      console.log('🔵 Circle effect: Setting preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
-      setCircle(newCircle);
-    }
+      // Use authoritative circle from backend if available (after search)
+      // Otherwise show preview with direct circleRadiusKm
+      if (authoritativeCircle) {
+        console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
+        setCircle(authoritativeCircle);
+      } else {
+        // Use direct circleRadiusKm value (1-20km range) for preview circle
+        const previewRadius = circleRadiusKm * 1000; // Convert km to meters
+
+        const newCircle = {
+          center: circleCenter,
+          radius: previewRadius,
+        };
+        console.log('🔵 Circle effect: Setting preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
+        setCircle(newCircle);
+      }
+    }, 2000); // 2 second delay
+
+    // Cleanup: Cancel pending recalculation if locations change again
+    return () => {
+      console.log('⏱️ Circle recalculation cancelled (locations changed before timeout)');
+      clearTimeout(timeoutId);
+    };
   }, [locations, customCentroid, authoritativeCircle, circleRadiusKm]);
 
   // Add location (for participants)
@@ -529,12 +581,34 @@ function EventPageContent() {
 
     if (!eventId) return;
 
-    // Show confirmation dialog
-    const confirmed = confirm(
-      `Add your location at:\n${lat.toFixed(6)}, ${lng.toFixed(6)}?\n\nClick OK to confirm.`
-    );
+    // Fetch address via reverse geocoding
+    let address: string | null = null;
+    try {
+      const geocodeResult = await api.reverseGeocode(lat, lng);
+      address = geocodeResult.address;
 
-    if (!confirmed) return;
+      // If we got snapped coordinates (nearest building), use those instead of raw click
+      if (geocodeResult.lat !== lat || geocodeResult.lng !== lng) {
+        console.log('📍 Snapped to nearest address:', {
+          original: { lat, lng },
+          snapped: { lat: geocodeResult.lat, lng: geocodeResult.lng },
+          address
+        });
+        lat = geocodeResult.lat;
+        lng = geocodeResult.lng;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch address, using coordinates only:', err);
+    }
+
+    // Set clicked location and show custom modal
+    setClickedLocation({ lat, lng, address });
+    setShowLocationConfirm(true);
+  }, [participantId, role, isDraggingCentroid, eventId, selectedCandidate, selectedParticipantId]);
+
+  // Confirm location selection from modal
+  const confirmLocationSelection = useCallback(async () => {
+    if (!clickedLocation || !eventId) return;
 
     try {
       // Generate unique anonymous name
@@ -543,14 +617,19 @@ function EventPageContent() {
 
       // Add participant with anonymous name
       const participant = await api.addParticipant(eventId, {
-        lat,
-        lng,
+        lat: clickedLocation.lat,
+        lng: clickedLocation.lng,
         name: anonymousName,
+        address: clickedLocation.address || undefined,
       });
 
       // Store participant ID
       sessionStorage.setItem('participantId', participant.id);
       setParticipantId(participant.id);
+
+      // Close modal
+      setShowLocationConfirm(false);
+      setClickedLocation(null);
 
       // Show success toast with generated name
       toast.success(`Added as ${anonymousName}`);
@@ -561,7 +640,7 @@ function EventPageContent() {
       console.error('Failed to add location:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to add location');
     }
-  }, [participantId, role, isDraggingCentroid, eventId, participants, selectedCandidate, selectedParticipantId]);
+  }, [clickedLocation, eventId, participants]);
 
   // Search candidates via API
   const searchPlaces = useCallback(async () => {
@@ -731,26 +810,43 @@ function EventPageContent() {
     }
   }, [eventId, participantId, event, myVotedCandidateIds, myVotes]);
 
-  // Publish final decision (host only)
-  const handlePublish = useCallback(async () => {
+  // Show publish confirmation modal
+  const handlePublish = useCallback(() => {
     if (!eventId || role !== 'host' || !selectedCandidate) {
       toast.info(t.pleaseSelectVenue);
       return;
     }
+    setShowPublishConfirm(true);
+  }, [eventId, role, selectedCandidate, t]);
 
-    if (!confirm('Publish this as the final decision? This will notify all participants.')) {
-      return;
-    }
+  // Confirm and publish final decision
+  const confirmPublish = useCallback(async () => {
+    if (!eventId || !selectedCandidate) return;
 
     try {
       await api.publishEvent(eventId, selectedCandidate.name);
       await loadEventData(eventId);
+      setShowPublishConfirm(false);
       toast.success(t.finalDecisionPublished);
     } catch (err) {
       console.error('Failed to publish:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to publish');
     }
-  }, [eventId, role, selectedCandidate, t]);
+  }, [eventId, selectedCandidate, t, loadEventData]);
+
+  // Unpublish final decision
+  const handleUnpublish = useCallback(async () => {
+    if (!eventId || role !== 'host') return;
+
+    try {
+      await api.unpublishEvent(eventId);
+      await loadEventData(eventId);
+      toast.success('Decision unpublished successfully');
+    } catch (err) {
+      console.error('Failed to unpublish:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to unpublish');
+    }
+  }, [eventId, role, loadEventData]);
 
   // Add venue manually (for both host and participants)
   const handleAddVenueManually = useCallback(async (place: {
@@ -866,15 +962,33 @@ function EventPageContent() {
     if (!eventId) return;
 
     try {
+      // Fetch address via reverse geocoding if privacy mode is OFF
+      let address: string | undefined;
+      if (!data.blur) {
+        try {
+          const geocodeResult = await api.reverseGeocode(data.lat, data.lng);
+          if (geocodeResult.address) {
+            address = geocodeResult.address;
+          }
+        } catch (geocodeErr) {
+          console.warn('Failed to fetch address, continuing without it:', geocodeErr);
+        }
+      }
+
       const participant = await api.addParticipant(eventId, {
         lat: data.lat,
         lng: data.lng,
         name: data.name,
+        address: address,
+        visibility: data.blur ? 'blur' : 'show',  // Per-participant visibility
       });
 
       // Store participant ID
       sessionStorage.setItem('participantId', participant.id);
       setParticipantId(participant.id);
+
+      // Clear authoritative circle when new participant joins
+      setAuthoritativeCircle(null);
 
       toast.success(`Joined as ${data.name}`);
 
@@ -887,11 +1001,36 @@ function EventPageContent() {
     }
   }, [eventId]);
 
-  const handleEditOwnLocation = useCallback(async (data: { name?: string; lat?: number; lng?: number }) => {
+  const handleEditOwnLocation = useCallback(async (data: { name?: string; lat?: number; lng?: number; blur?: boolean }) => {
     if (!eventId || !participantId) return;
 
     try {
-      await api.updateParticipant(eventId, participantId, data);
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.lat !== undefined) updateData.lat = data.lat;
+      if (data.lng !== undefined) updateData.lng = data.lng;
+      if (data.blur !== undefined) {
+        updateData.visibility = data.blur ? 'blur' : 'show';
+      }
+
+      // Fetch address via reverse geocoding if coordinates changed and privacy mode is OFF
+      if (data.lat !== undefined && data.lng !== undefined && !data.blur) {
+        try {
+          const geocodeResult = await api.reverseGeocode(data.lat, data.lng);
+          if (geocodeResult.address) {
+            updateData.address = geocodeResult.address;
+          }
+        } catch (geocodeErr) {
+          console.warn('Failed to fetch address, continuing without it:', geocodeErr);
+        }
+      }
+
+      await api.updateParticipant(eventId, participantId, updateData);
+
+      // Clear authoritative circle when participant location changes
+      // This forces recalculation based on new participant positions
+      setAuthoritativeCircle(null);
+
       await loadEventData(eventId);
       toast.success('Location updated');
     } catch (err) {
@@ -908,6 +1047,10 @@ function EventPageContent() {
       await api.removeParticipant(eventId, participantId);
       sessionStorage.removeItem('participantId');
       setParticipantId(null);
+
+      // Clear authoritative circle when participant is removed
+      setAuthoritativeCircle(null);
+
       await loadEventData(eventId);
       toast.success('Location removed');
     } catch (err) {
@@ -1021,10 +1164,18 @@ function EventPageContent() {
         />
       </div>
 
-      {/* Final Decision Banner */}
+      {/* Final Decision Banner - Brutalist/Techno Style */}
       {event.final_decision && (
-        <div className="absolute top-20 left-0 right-0 bg-green-500 text-white text-center py-3 px-4 shadow-lg z-10">
-          <p className="font-bold text-lg">{t.finalDecision}: {event.final_decision}</p>
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50 max-w-2xl">
+          <div className="bg-black text-white px-6 py-2 border-b-4 border-black flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="font-bold text-xs uppercase tracking-wider">{t.finalDecision}</p>
+          </div>
+          <div className="px-6 py-4">
+            <p className="font-bold text-xl text-black uppercase text-center">{event.final_decision}</p>
+          </div>
         </div>
       )}
 
@@ -1037,17 +1188,14 @@ function EventPageContent() {
           token={joinToken || undefined}
           finalDecision={event?.final_decision}
           onPublishDecision={handlePublish}
+          onUnpublishDecision={handleUnpublish}
 
           // Input Section
           isJoined={!!participantId && participants.some(p => p.id === participantId)}
           onJoinEvent={handleJoinEvent}
           onEditLocation={handleEditOwnLocation}
           onRemoveOwnLocation={handleRemoveOwnLocation}
-          currentUserName={participants.find(p => p.id === participantId)?.name}
-          currentUserLocation={participants.find(p => p.id === participantId) ?
-            `${participants.find(p => p.id === participantId)?.lat.toFixed(4)}, ${participants.find(p => p.id === participantId)?.lng.toFixed(4)}` :
-            undefined
-          }
+          currentParticipant={participants.find(p => p.id === participantId)}
           isHost={role === 'host'}
 
           // Venues Section
@@ -1122,9 +1270,10 @@ function EventPageContent() {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            {/* Rating and Distance */}
-            {(selectedCandidate.rating || selectedCandidate.distanceFromCenter) && (
-              <div className="flex items-center gap-3 mb-3 text-xs text-black">
+            {/* Rating, Distance, and Vote */}
+            <div className="flex items-center justify-between mb-3 text-xs text-black">
+              {/* Left side: Rating and Distance */}
+              <div className="flex items-center gap-3">
                 {selectedCandidate.rating && (
                   <div className="flex items-center gap-1">
                     <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
@@ -1146,7 +1295,42 @@ function EventPageContent() {
                   </div>
                 )}
               </div>
-            )}
+
+              {/* Right side: Chart Button and Vote Button */}
+              <div className="flex items-center gap-2">
+                {/* Chart Button */}
+                {participants.length > 0 && (
+                  <button
+                    onClick={() => setShowTravelChart(!showTravelChart)}
+                    className={`p-1.5 border-2 border-black transition-all ${
+                      showTravelChart ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                    }`}
+                    title="Travel Analysis"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Vote Button */}
+                {participantId && (
+                  <button
+                    onClick={() => handleVote(selectedCandidate.id)}
+                    className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                  >
+                    <Heart className={`w-5 h-5 ${
+                      myVotedCandidateIds.has(selectedCandidate.id)
+                        ? 'fill-black text-black'
+                        : 'text-neutral-400'
+                    }`} />
+                    <span className="font-bold text-sm text-black">
+                      {selectedCandidate.voteCount || 0}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Address */}
             {selectedCandidate.vicinity && (
@@ -1155,70 +1339,137 @@ function EventPageContent() {
               </div>
             )}
 
+            {/* About / Editorial Summary Section */}
+            {candidateEditorialSummary && (
+              <div className="border-t-2 border-black pt-3 mb-3">
+                <button
+                  onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                  className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                >
+                  {isAboutExpanded ? (
+                    <ChevronUp className="w-3 h-3 text-black" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 text-black" />
+                  )}
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4 className="text-xs font-bold uppercase text-black">About</h4>
+                </button>
+                {isAboutExpanded && (
+                  <div className="text-xs text-black leading-relaxed">
+                    {candidateEditorialSummary}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Opening Hours */}
+            {candidateOpeningHours && (
+              <div className="border-t-2 border-black pt-3 mb-3">
+                <button
+                  onClick={() => setIsHoursExpanded(!isHoursExpanded)}
+                  className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                >
+                  {isHoursExpanded ? (
+                    <ChevronUp className="w-3 h-3 text-black" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 text-black" />
+                  )}
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4 className="text-xs font-bold uppercase text-black">Hours</h4>
+                </button>
+                {isHoursExpanded && candidateOpeningHours.weekday_text && (
+                  <div className="text-xs text-black space-y-1">
+                    {candidateOpeningHours.weekday_text.map((day: string, index: number) => (
+                      <div key={index} className="leading-relaxed">{day}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Google Maps Link */}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${selectedCandidate.lat},${selectedCandidate.lng}&query_place_id=${selectedCandidate.placeId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full px-4 py-2 bg-black text-white text-center text-xs font-bold uppercase border-2 border-black hover:bg-white hover:text-black transition-all mb-3"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-black text-white text-xs font-bold uppercase border-2 border-black hover:bg-white hover:text-black transition-all"
             >
-              Open in Google Maps
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              Google Map
             </a>
+          </div>
+        </div>
+      )}
 
-            {/* Participant Travel Chart */}
-            {participants.length > 0 && (
-              <div className="border-t-2 border-black pt-3">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold uppercase text-black">Travel Analysis</h4>
+      {/* Travel Analysis View - Separate view below detail card */}
+      {showTravelChart && selectedCandidate && participants.length > 0 && (
+        <div className="absolute top-16 right-6 w-96 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-30 max-h-[calc(100vh-5rem)] flex flex-col">
+          {/* Header */}
+          <div className="bg-black text-white px-4 py-3 border-b-4 border-black flex items-center justify-between">
+            <h3 className="text-sm font-bold uppercase">Travel Analysis</h3>
+            <button
+              onClick={() => setShowTravelChart(false)}
+              className="text-white hover:text-gray-300 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
-                  {/* Transportation Mode Selector */}
-                  <div className="flex gap-1">
-                    {(['DRIVING', 'TRANSIT', 'WALKING', 'BICYCLING'] as const).map((mode) => {
-                      const icons = {
-                        DRIVING: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M3 7h18M5 7v10l2-1 2 1 2-1 2 1 2-1 2 1V7',
-                        TRANSIT: 'M5 13v6M5 5v6M5 11h14M19 5v14M12 8v5M8 8v5M16 8v5',
-                        WALKING: 'M16 7a2 2 0 11-4 0 2 2 0 014 0zM12 14l-2 6M12 14l2 6M12 14V9M10 9l2-2 2 2',
-                        BICYCLING: 'M5 19a3 3 0 100-6 3 3 0 000 6zM19 19a3 3 0 100-6 3 3 0 000 6zM7 8l4 8M11 8h4l-1 4',
-                      };
-                      const isActive = chartTravelMode === mode ||
-                        (typeof chartTravelMode === 'object' && chartTravelMode?.toString() === mode);
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Transportation Mode Selector */}
+            <div className="flex gap-1 mb-4 justify-center">
+              {(['DRIVING', 'TRANSIT', 'WALKING', 'BICYCLING'] as const).map((mode) => {
+                const icons = {
+                  DRIVING: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M3 7h18M5 7v10l2-1 2 1 2-1 2 1 2-1 2 1V7',
+                  TRANSIT: 'M5 13v6M5 5v6M5 11h14M19 5v14M12 8v5M8 8v5M16 8v5',
+                  WALKING: 'M16 7a2 2 0 11-4 0 2 2 0 014 0zM12 14l-2 6M12 14l2 6M12 14V9M10 9l2-2 2 2',
+                  BICYCLING: 'M5 19a3 3 0 100-6 3 3 0 000 6zM19 19a3 3 0 100-6 3 3 0 000 6zM7 8l4 8M11 8h4l-1 4',
+                };
+                const isActive = chartTravelMode === mode ||
+                  (typeof chartTravelMode === 'object' && chartTravelMode?.toString() === mode);
 
-                      return (
-                        <button
-                          key={mode}
-                          onClick={() => {
-                            if (typeof window !== 'undefined' && window.google?.maps?.TravelMode) {
-                              setChartTravelMode((google.maps.TravelMode as any)[mode]);
-                            } else {
-                              setChartTravelMode(mode);
-                            }
-                          }}
-                          className={`p-1.5 border-2 border-black transition-all ${
-                            isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-                          }`}
-                          title={mode}
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d={icons[mode]} />
-                          </svg>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && window.google?.maps?.TravelMode) {
+                        setChartTravelMode((google.maps.TravelMode as any)[mode]);
+                      } else {
+                        setChartTravelMode(mode);
+                      }
+                    }}
+                    className={`p-1.5 border-2 border-black transition-all ${
+                      isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                    }`}
+                    title={mode}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={icons[mode]} />
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
 
-                {/* Travel Time vs Distance Chart */}
-                <TravelChart
-                  participants={participants}
-                  selectedCandidate={selectedCandidate}
-                  participantColors={participantColors}
-                  travelMode={chartTravelMode}
-                  apiKey={apiKey}
-                  selectedParticipantId={selectedParticipantId}
-                  onParticipantClick={handleParticipantClick}
-                />
-              </div>
-            )}
+            {/* Travel Chart */}
+            <TravelChart
+              participants={participants}
+              selectedCandidate={selectedCandidate}
+              participantColors={participantColors}
+              travelMode={chartTravelMode}
+              apiKey={apiKey}
+              selectedParticipantId={selectedParticipantId}
+              onParticipantClick={handleParticipantClick}
+            />
           </div>
         </div>
       )}
@@ -1301,21 +1552,106 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Toast Notifications - Techno black/white style */}
+      {/* Toast Notifications - Brutalist/Techno style */}
       <Toaster
         position="top-center"
         toastOptions={{
           style: {
-            background: 'black',
-            color: 'white',
-            border: '2px solid black',
-            fontFamily: 'monospace',
+            background: 'white',
+            color: 'black',
+            border: '4px solid black',
+            boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)',
             fontWeight: 'bold',
-            fontSize: '14px',
+            fontSize: '20px',
+            textTransform: 'uppercase',
+            padding: '18px 24px',
           },
-          className: 'toast-techno',
+          className: 'toast-brutalist',
         }}
       />
+
+      {/* Publish Confirmation Modal */}
+      {showPublishConfirm && selectedCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-lg font-bold uppercase">Publish Final Decision</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-black mb-4 font-medium">
+                You are about to publish <span className="font-bold">{selectedCandidate.name}</span> as the final meeting location.
+              </p>
+              <p className="text-black text-sm mb-6">
+                All participants will be notified of this decision. This action cannot be undone.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPublishConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPublish}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Publish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Location Confirmation Modal */}
+      {showLocationConfirm && clickedLocation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-lg font-bold uppercase">Add Your Location</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-black mb-3 font-bold text-sm uppercase">Location:</p>
+              {clickedLocation.address ? (
+                <p className="text-black mb-6 font-medium">
+                  {clickedLocation.address}
+                </p>
+              ) : (
+                <p className="text-black mb-6 font-mono text-sm">
+                  {clickedLocation.lat.toFixed(6)}, {clickedLocation.lng.toFixed(6)}
+                </p>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowLocationConfirm(false);
+                    setClickedLocation(null);
+                  }}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmLocationSelection}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Instructions & Help */}
       <Instructions

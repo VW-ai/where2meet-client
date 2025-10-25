@@ -180,6 +180,41 @@ async def publish_event(
     return event
 
 
+@router.post("/events/{event_id}/unpublish", response_model=EventResponse)
+async def unpublish_event(
+    event_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Unpublish final decision and unlock event.
+    Allows host to change the decision if needed.
+    """
+    event = db.query(Event).filter(
+        Event.id == event_id,
+        Event.deleted_at.is_(None)
+    ).first()
+
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found"
+        )
+
+    # Clear final decision
+    event.final_decision = None
+    event.allow_vote = True  # Re-enable voting
+
+    db.commit()
+    db.refresh(event)
+
+    # Broadcast unpublish event
+    await sse_manager.broadcast(event_id, "event_unpublished", {
+        "event_id": event_id
+    })
+
+    return event
+
+
 @router.delete("/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: str,
