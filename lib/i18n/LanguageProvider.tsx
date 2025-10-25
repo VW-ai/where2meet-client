@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, translations, detectBrowserLanguage } from './translations';
+import { Language, translations } from './translations';
 
 interface LanguageContextType {
   language: Language;
@@ -11,26 +11,18 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Initialize language immediately to avoid hydration mismatch
-function getInitialLanguage(): Language {
-  if (typeof window === 'undefined') return 'en';
-
-  // Check localStorage first (user preference)
-  const stored = localStorage.getItem('where2meet-language');
-  if (stored === 'en' || stored === 'zh') {
-    return stored;
-  }
-
-  // Default to English (not auto-detect)
-  return 'en';
-}
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  // Always start with 'en' to match server-side render
+  const [language, setLanguage] = useState<Language>('en');
   const [mounted, setMounted] = useState(false);
 
+  // Load saved language preference after mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+    const stored = localStorage.getItem('where2meet-language');
+    if (stored === 'en' || stored === 'zh') {
+      setLanguage(stored);
+    }
   }, []);
 
   // Save language preference to localStorage whenever it changes

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
+import { Afacad_Flux } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-import { Afacad_Flux } from 'next/font/google';
 
 const afacadFlux = Afacad_Flux({
   subsets: ['latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   variable: '--font-afacad-flux',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
