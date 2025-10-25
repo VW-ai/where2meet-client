@@ -401,6 +401,18 @@ function EventPageContent() {
     fetchPhoto();
   }, [selectedCandidate?.id, eventId]);
 
+  // Sync selectedCandidate with candidates array when candidates update (e.g., after voting)
+  useEffect(() => {
+    if (!selectedCandidate) return;
+
+    // Find the updated version of the selected candidate
+    const updatedCandidate = candidates.find(c => c.id === selectedCandidate.id);
+    if (updatedCandidate && updatedCandidate.voteCount !== selectedCandidate.voteCount) {
+      console.log('🔄 Updating selectedCandidate vote count:', selectedCandidate.voteCount, '->', updatedCandidate.voteCount);
+      setSelectedCandidate(updatedCandidate);
+    }
+  }, [candidates, selectedCandidate]);
+
   // Fetch editorial summary and opening hours when a candidate is selected
   useEffect(() => {
     if (!selectedCandidate || !eventId) {
@@ -933,7 +945,9 @@ function EventPageContent() {
   const handleResetCentroid = useCallback(async () => {
     if (!eventId) return;
 
+    // Clear both custom centroid and authoritative circle to force recalculation
     setCustomCentroid(null);
+    setAuthoritativeCircle(null);
 
     // Save null to backend
     try {
@@ -987,8 +1001,10 @@ function EventPageContent() {
       sessionStorage.setItem('participantId', participant.id);
       setParticipantId(participant.id);
 
-      // Clear authoritative circle when new participant joins
+      // Clear authoritative circle and custom centroid when new participant joins
+      // This forces recalculation based on all participant locations
       setAuthoritativeCircle(null);
+      setCustomCentroid(null);
 
       toast.success(`Joined as ${data.name}`);
 
@@ -1027,9 +1043,10 @@ function EventPageContent() {
 
       await api.updateParticipant(eventId, participantId, updateData);
 
-      // Clear authoritative circle when participant location changes
+      // Clear authoritative circle and custom centroid when participant location changes
       // This forces recalculation based on new participant positions
       setAuthoritativeCircle(null);
+      setCustomCentroid(null);
 
       await loadEventData(eventId);
       toast.success('Location updated');
@@ -1048,8 +1065,9 @@ function EventPageContent() {
       sessionStorage.removeItem('participantId');
       setParticipantId(null);
 
-      // Clear authoritative circle when participant is removed
+      // Clear authoritative circle and custom centroid when participant is removed
       setAuthoritativeCircle(null);
+      setCustomCentroid(null);
 
       await loadEventData(eventId);
       toast.success('Location removed');
@@ -1518,6 +1536,16 @@ function EventPageContent() {
               >
                 +
               </button>
+              {/* Reset Circle Position Button - Only show if circle has been manually moved */}
+              {(customCentroid || authoritativeCircle) && role === 'host' && (
+                <button
+                  onClick={handleResetCentroid}
+                  className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+                  title="Reset circle to auto-calculated position based on participants"
+                >
+                  Reset
+                </button>
+              )}
             </div>
           </div>
         </div>

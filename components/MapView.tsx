@@ -326,15 +326,27 @@ function MapContent({
       strokeWeight: 3, // Thicker border
       fillColor: '#1a1a1a', // Very dark grey-black
       fillOpacity: 0.08, // Very transparent
+      draggable: isHost, // Allow hosts to drag the entire circle
+      editable: false, // Don't allow resizing
     });
 
-    console.log('🟣 MapView: Circle overlay created successfully');
+    // Handle circle drag event for hosts
+    if (isHost && onCentroidDrag) {
+      google.maps.event.addListener(circleOverlay, 'dragend', () => {
+        const newCenter = circleOverlay.getCenter();
+        if (newCenter) {
+          onCentroidDrag(newCenter.lat(), newCenter.lng());
+        }
+      });
+    }
+
+    console.log('🟣 MapView: Circle overlay created successfully', isHost ? '(draggable)' : '(static)');
 
     return () => {
       console.log('🟣 MapView: Cleaning up circle overlay');
       circleOverlay.setMap(null);
     };
-  }, [map, circle]);
+  }, [map, circle, isHost, onCentroidDrag]);
 
   // Fit bounds to show all markers
   useEffect(() => {
@@ -428,23 +440,7 @@ function MapContent({
         );
       })}
 
-      {/* Centroid marker (black) - Draggable for hosts */}
-      {centroid && (
-        <AdvancedMarker
-          position={centroid}
-          title={isHost ? "Center Point (Drag to adjust)" : "Center Point"}
-          draggable={isHost}
-          onDragEnd={(e: google.maps.MapMouseEvent) => {
-            if (e.latLng && onCentroidDrag) {
-              onCentroidDrag(e.latLng.lat(), e.latLng.lng());
-            }
-          }}
-        >
-          <div className={`w-8 h-8 bg-black rounded-full border-2 border-white shadow-lg flex items-center justify-center ${isHost ? 'cursor-move hover:scale-110 transition-transform' : ''}`}>
-            <div className="w-2 h-2 bg-white rounded-full" />
-          </div>
-        </AdvancedMarker>
-      )}
+      {/* Centroid marker removed - circle itself is now draggable */}
 
       {/* Candidate markers - Hearts for saved (voted), Circles for search results */}
       {candidates.map((candidate) => {
