@@ -153,6 +153,12 @@ async def update_user_profile(
     if update_data.name is not None:
         current_user.name = update_data.name
 
+    if update_data.bio is not None:
+        current_user.bio = update_data.bio
+
+    if update_data.avatar is not None:
+        current_user.avatar = update_data.avatar
+
     if update_data.password is not None:
         current_user.hashed_password = hash_password(update_data.password)
 

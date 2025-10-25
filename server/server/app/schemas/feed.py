@@ -15,7 +15,7 @@ class FeedEventCreate(BaseModel):
     location_coords_lat: Optional[float] = Field(None, ge=-90, le=90)
     location_coords_lng: Optional[float] = Field(None, ge=-180, le=180)
     category: Optional[str] = Field(None, max_length=100)
-    participant_limit: Optional[int] = Field(None, ge=2, le=1000)
+    participant_limit: int = Field(..., ge=2, le=100)
     visibility: str = Field(default="public", pattern="^(public|link_only)$")
     allow_vote: bool = True
     location_type: str = Field(..., pattern="^(fixed|collaborative)$")
@@ -23,6 +23,7 @@ class FeedEventCreate(BaseModel):
     fixed_venue_address: Optional[str] = None
     fixed_venue_lat: Optional[float] = Field(None, ge=-90, le=90)
     fixed_venue_lng: Optional[float] = Field(None, ge=-180, le=180)
+    contact_number: Optional[str] = Field(None, max_length=20)
     background_image: Optional[str] = Field(None, max_length=500)
 
 
@@ -43,6 +44,7 @@ class FeedEventUpdate(BaseModel):
 class FeedParticipantResponse(BaseModel):
     """Schema for Event Feed participant response."""
     id: str
+    user_id: Optional[str]
     name: str
     email: Optional[str]
     avatar: Optional[str]
@@ -69,6 +71,7 @@ class FeedVenueResponse(BaseModel):
     photo_reference: Optional[str]
     added_by: str
     vote_count: int = 0
+    user_voted: bool = False
 
     class Config:
         from_attributes = True
@@ -83,6 +86,8 @@ class FeedEventResponse(BaseModel):
     # Host & Participants
     host_id: Optional[str]
     host_name: str
+    host_bio: Optional[str]
+    host_contact_number: Optional[str]
     participant_count: int = 0
     participant_limit: Optional[int]
     participant_avatars: List[str] = []
@@ -131,7 +136,8 @@ class FeedEventDetailResponse(BaseModel):
     event: FeedEventResponse
     participants: List[FeedParticipantResponse]
     venues: List[FeedVenueResponse]
-    user_role: str  # 'host', 'participant', 'guest'
+    is_host: bool  # Is current user the host
+    is_participant: bool  # Is current user a participant (joined the event)
 
 
 class FeedEventsListResponse(BaseModel):

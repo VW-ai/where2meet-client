@@ -42,15 +42,13 @@ export default function Home() {
   const [showPostEventModal, setShowPostEventModal] = useState(false);
   const [joinedEventIds, setJoinedEventIds] = useState<string[]>([]);
   const [hostedEventIds, setHostedEventIds] = useState<string[]>([]);
+  const [mobileTab, setMobileTab] = useState<'meeting' | 'events' | 'lists'>('events');
+  const [isEventFeedFullscreen, setIsEventFeedFullscreen] = useState(false);
 
-  // Subcategories for each main category
+  // Subcategories for each main category (only sports and entertainment)
   const subCategories: Record<string, string[]> = {
-    food: ['Coffee', 'Brunch', 'Lunch', 'Dinner', 'Dessert', 'Bar'],
-    sports: ['Basketball', 'Soccer', 'Tennis', 'Running', 'Gym', 'Cycling'],
-    entertainment: ['Movies', 'Theater', 'Concerts', 'Museums', 'Gaming', 'Comedy'],
-    work: ['Coworking', 'Networking', 'Workshop', 'Conference', 'Meetup', 'Hackathon'],
-    music: ['Concert', 'Festival', 'Karaoke', 'Jazz', 'Rock', 'EDM'],
-    outdoors: ['Hiking', 'Beach', 'Park', 'Camping', 'Picnic', 'Adventure'],
+    sports: ['Basketball', 'Soccer', 'Tennis', 'Running', 'Gym', 'Cycling', 'Volleyball', 'Badminton'],
+    entertainment: ['Movies', 'Theater', 'Concerts', 'Museums', 'Gaming', 'Comedy', 'Karaoke', 'Festival'],
   };
 
   // Generate next 14 days for date selector (scrollable)
@@ -88,9 +86,20 @@ export default function Home() {
 
       // Apply filters
       if (selectedDate) {
-        params.append('date', selectedDate.toISOString().split('T')[0]);
+        // Format date in local timezone (YYYY-MM-DD) instead of UTC
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        params.append('date', `${year}-${month}-${day}`);
+
+        // Send timezone offset in minutes (e.g., -480 for PST which is UTC-8)
+        const timezoneOffset = selectedDate.getTimezoneOffset();
+        params.append('timezone_offset', timezoneOffset.toString());
       }
-      if (selectedCategory) {
+      // If subcategory is selected, send it; otherwise send parent category
+      if (selectedSubCategory) {
+        params.append('category', selectedSubCategory);
+      } else if (selectedCategory) {
         params.append('category', selectedCategory);
       }
       if (nearMeFilter && userLocation) {
@@ -182,26 +191,46 @@ export default function Home() {
     description?: string;
     meeting_time: string;
     location_area: string;
+    location_coords?: { lat: number; lng: number };
     category?: any;
     participant_limit?: number;
     visibility: 'public' | 'link_only';
     location_type?: 'fixed' | 'collaborative';
     fixed_venue_name?: string;
     fixed_venue_address?: string;
+    fixed_venue_lat?: number;
+    fixed_venue_lng?: number;
     background_image?: string;
   }) => {
+    if (!token) {
+      alert('Please log in to create an event.');
+      router.push('/login');
+      return;
+    }
+
     try {
+      // Convert location_coords object to flat fields for backend
+      const backendData: any = {
+        ...data,
+        location_coords_lat: data.location_coords?.lat,
+        location_coords_lng: data.location_coords?.lng,
+        allow_vote: true,
+      };
+      delete backendData.location_coords;
+
       // Call backend API to create event
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(backendData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create event');
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to create event' }));
+        throw new Error(errorData.detail || 'Failed to create event');
       }
 
       const newEvent = await response.json();
@@ -213,7 +242,7 @@ export default function Home() {
       alert('✅ Event posted successfully!');
     } catch (err) {
       console.error('Failed to create event:', err);
-      alert('❌ Failed to post event. Please try again.');
+      alert(`❌ Failed to post event: ${err instanceof Error ? err.message : 'Please try again.'}`);
       throw err;
     }
   };
@@ -225,20 +254,28 @@ export default function Home() {
       return;
     }
 
+    if (!token) {
+      alert('Please log in to join events.');
+      return;
+    }
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: user.name || user.email,
           email: user.email,
+          avatar: user.avatar,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to join event');
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to join event' }));
+        throw new Error(errorData.detail || 'Failed to join event');
       }
 
       setJoinedEventIds((prev) => [...prev, eventId]);
@@ -253,19 +290,28 @@ export default function Home() {
       );
     } catch (err) {
       console.error('Failed to join event:', err);
-      alert('Failed to join event. Please try again.');
+      alert(err instanceof Error ? err.message : 'Failed to join event. Please try again.');
     }
   };
 
   // Handle leave event
   const handleLeaveEvent = async (eventId: string) => {
+    if (!token) {
+      alert('Please log in to leave events.');
+      return;
+    }
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/leave`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to leave event');
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to leave event' }));
+        throw new Error(errorData.detail || 'Failed to leave event');
       }
 
       setJoinedEventIds((prev) => prev.filter((id) => id !== eventId));
@@ -280,7 +326,7 @@ export default function Home() {
       );
     } catch (err) {
       console.error('Failed to leave event:', err);
-      alert('Failed to leave event. Please try again.');
+      alert(err instanceof Error ? err.message : 'Failed to leave event. Please try again.');
     }
   };
 
@@ -376,45 +422,396 @@ export default function Home() {
       {/* Navigation Bar */}
       <Header user={user} onLogout={logout} />
 
-      {/* Mobile Hero Cards - Only visible on mobile */}
-      <div className="block lg:hidden p-4 pt-8">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo size="lg" showText={true} className="text-5xl" />
-          </div>
-          <p className="text-lg text-gray-600" suppressHydrationWarning>{t.tagline}</p>
-        </div>
-        <MagicBento />
-      </div>
+      {/* Mobile Layout - Only visible on mobile/tablet */}
+      <div className="block lg:hidden pb-20">
+        {/* Mobile Tab Content */}
+        <div className="min-h-[calc(100vh-140px)]">
+          {/* Find Meeting Point Tab */}
+          {mobileTab === 'meeting' && (
+            <div className="p-4 sm:p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-black mb-6">📍 Find Meeting Point</h2>
 
-      {/* Desktop Layout - Only visible on desktop */}
-      <div className="hidden lg:block">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="grid grid-cols-[65%_35%]">
-            {/* Left Column (65%) */}
-            <div className="border-r border-black">
-              {/* Top Left: Find Meeting Point */}
-              <div className="border-b border-black" style={{ minHeight: '50vh' }}>
-                {/* Navigation Bar */}
-                <div className="border-b border-gray-300 px-8 py-4 flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-black">
-                    📍 Find Meeting Point
-                  </h2>
-                  <div className="flex gap-2">
+              {/* Meeting Point Form */}
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-base sm:text-lg font-medium text-black mb-2">
+                    Meeting Name
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Team Lunch, Coffee Catch-up"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base sm:text-lg text-black border border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base sm:text-lg font-medium text-black mb-2">
+                    Meeting Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={meetingTime}
+                    onChange={(e) => setMeetingTime(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base sm:text-lg text-black border border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                  />
+                </div>
+
+                <label className="flex items-center gap-3 cursor-pointer text-base sm:text-lg text-black">
+                  <input
+                    type="checkbox"
+                    checked={allowVote}
+                    onChange={(e) => setAllowVote(e.target.checked)}
+                    className="w-5 h-5 border-2 border-gray-300 rounded"
+                    style={{ accentColor: '#000000' }}
+                  />
+                  <span suppressHydrationWarning>{t.allowVoting}</span>
+                </label>
+              </div>
+
+              {error && (
+                <div className="mt-5 p-3 sm:p-4 border border-red-500 rounded-lg text-red-700 text-base sm:text-lg">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-3 mt-6">
+                <button
+                  onClick={handleCreateEvent}
+                  disabled={isCreating || !title.trim()}
+                  className="w-full py-3 text-base sm:text-lg bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? 'Finding...' : 'Find Meeting Point'}
+                </button>
+
+                <button
+                  onClick={handleJoinWithLink}
+                  className="w-full py-3 text-base sm:text-lg border-2 border-black text-black font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  suppressHydrationWarning
+                >
+                  {t.joinExistingEvent}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Events Feed Tab */}
+          {mobileTab === 'events' && (
+            <div>
+              {/* Header */}
+              <div className="sticky top-0 bg-white z-30 border-b border-gray-300">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-black">📅 Events Feed</h2>
+                  <button
+                    onClick={() => setShowPostEventModal(true)}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white hover:bg-gray-800 transition-colors font-medium text-sm sm:text-base rounded-lg"
+                  >
+                    + Post
+                  </button>
+                </div>
+
+                {/* Date Selector */}
+                <div className="px-4 sm:px-6 py-3 overflow-x-auto scrollbar-hide">
+                  <div className="flex gap-2 min-w-max">
+                    {weekDays.map((day, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleDateSelect(day.fullDate)}
+                        className={`py-1 px-2 transition-colors whitespace-nowrap min-w-[50px] rounded ${
+                          selectedDate && selectedDate.toDateString() === day.fullDate.toDateString()
+                            ? 'bg-black text-white'
+                            : day.isToday
+                            ? 'border-2 border-blue-500 text-gray-700'
+                            : 'border border-gray-300 text-gray-700'
+                        }`}
+                      >
+                        <div className="text-xs font-medium mb-1">{day.dayName}</div>
+                        <div className="text-base font-bold">{day.date}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category Filters */}
+                <div className="px-4 sm:px-6 py-3 border-t border-gray-200">
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     <button
-                      onClick={() => router.push('/my-events')}
-                      className="px-4 py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm"
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        setNearMeFilter(false);
+                      }}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                        !selectedCategory && !nearMeFilter ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      }`}
                     >
-                      My Events
+                      All
+                    </button>
+                    <button
+                      onClick={handleNearMeToggle}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                        nearMeFilter ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      📍 Near Me
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCategory('sports');
+                        setSelectedSubCategory(null);
+                        setNearMeFilter(false);
+                      }}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                        selectedCategory === 'sports' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      🏀 Sports
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCategory('entertainment');
+                        setSelectedSubCategory(null);
+                        setNearMeFilter(false);
+                      }}
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                        selectedCategory === 'entertainment' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      🎬 Entertainment
                     </button>
                   </div>
                 </div>
 
-                <div className="p-8">
+                {/* Subcategory Filters - Only shown when a category is selected (Mobile/Tablet) */}
+                {selectedCategory && subCategories[selectedCategory] && (
+                  <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-200">
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                      <button
+                        onClick={() => setSelectedSubCategory(null)}
+                        className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded ${
+                          !selectedSubCategory
+                            ? 'bg-black text-white'
+                            : 'border border-gray-300 bg-white text-gray-700'
+                        }`}
+                      >
+                        All {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                      </button>
+                      {subCategories[selectedCategory].map((subCat) => (
+                        <button
+                          key={subCat}
+                          onClick={() => setSelectedSubCategory(subCat)}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded ${
+                            selectedSubCategory === subCat
+                              ? 'bg-black text-white'
+                              : 'border border-gray-300 bg-white text-gray-700'
+                          }`}
+                        >
+                          {subCat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Event Cards */}
+              <div className="p-4 sm:p-6 space-y-6">
+                {eventsLoading && events.length === 0 && (
+                  <>
+                    {[...Array(2)].map((_, i) => (
+                      <EventCardSkeleton key={i} />
+                    ))}
+                  </>
+                )}
+
+                {eventsError && !eventsLoading && (
+                  <div className="py-8 text-center px-4">
+                    <p className="text-red-600 mb-3 text-base">{eventsError}</p>
+                    <button
+                      onClick={() => fetchEvents(1, false)}
+                      className="px-5 py-2 text-base border border-black text-black rounded-lg"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {!eventsLoading && !eventsError && events.length === 0 && (
+                  <div className="py-8 text-center px-4">
+                    <div className="text-5xl mb-3">📅</div>
+                    <h3 className="text-xl font-bold text-black mb-2">No events found</h3>
+                    <p className="text-base text-gray-600 mb-4">
+                      {selectedDate ? 'No events on this day' : 'Be the first to post!'}
+                    </p>
+                    <button
+                      onClick={() => setShowPostEventModal(true)}
+                      className="px-5 py-2.5 text-base bg-black text-white rounded-lg"
+                    >
+                      Post Event
+                    </button>
+                  </div>
+                )}
+
+                {!eventsLoading && !eventsError && events.map((event) => {
+                  const isHost = user && event.host_id === user.id;
+                  const isParticipant = user && joinedEventIds.includes(event.id) && !isHost;
+                  const userRole = isHost ? 'host' : isParticipant ? 'participant' : 'guest';
+
+                  return (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      userRole={userRole}
+                      onView={handleViewEvent}
+                      onJoin={handleJoinEvent}
+                      onLeave={handleLeaveEvent}
+                    />
+                  );
+                })}
+
+                {!eventsLoading && !eventsError && events.length > 0 && hasMoreEvents && (
+                  <div className="text-center pt-4">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={eventsLoading}
+                      className="px-5 py-2 text-base text-gray-600 font-medium"
+                    >
+                      {eventsLoading ? 'Loading...' : 'Load More'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Other People's Lists Tab */}
+          {mobileTab === 'lists' && (
+            <div className="p-4 sm:p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-black mb-6">⭐ Other People's Lists</h2>
+
+              {/* Categories */}
+              <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
+                <button className="px-3 py-1.5 text-sm bg-black text-white rounded flex-shrink-0">All</button>
+                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Food</button>
+                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Sports</button>
+                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Culture</button>
+              </div>
+
+              {/* Lists Grid - 1 column on mobile, 2 on tablet */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Placeholder list cards */}
+                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
+                  <h3 className="font-semibold text-base text-black mb-2">🍜 Best Ramen in Tokyo</h3>
+                  <p className="text-sm text-gray-600 mb-2">by @foodie_explorer</p>
+                  <p className="text-sm text-gray-600 mb-3">📍 12 venues · ❤️ 234</p>
+                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                    View List
+                  </button>
+                </div>
+
+                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
+                  <h3 className="font-semibold text-base text-black mb-2">☕ Best Coffee - NYC</h3>
+                  <p className="text-sm text-gray-600 mb-2">by @coffee_addict</p>
+                  <p className="text-sm text-gray-600 mb-3">📍 18 venues · ❤️ 567</p>
+                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                    View List
+                  </button>
+                </div>
+
+                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
+                  <h3 className="font-semibold text-base text-black mb-2">🏋️ Best Gyms for CrossFit</h3>
+                  <p className="text-sm text-gray-600 mb-2">by @fitness_freak</p>
+                  <p className="text-sm text-gray-600 mb-3">📍 8 venues · ❤️ 123</p>
+                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                    View List
+                  </button>
+                </div>
+
+                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
+                  <h3 className="font-semibold text-base text-black mb-2">🍕 NYC Pizza Joints</h3>
+                  <p className="text-sm text-gray-600 mb-2">by @pizza_lover</p>
+                  <p className="text-sm text-gray-600 mb-3">📍 15 venues · ❤️ 445</p>
+                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                    View List
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button className="text-gray-600 hover:text-black font-medium text-base">
+                  View All Lists →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Navigation - Fixed at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black z-50">
+          <div className="flex justify-around items-center h-16">
+            <button
+              onClick={() => setMobileTab('meeting')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'meeting' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl mb-1">📍</span>
+              <span className="text-xs font-medium">Find Meeting</span>
+            </button>
+
+            <button
+              onClick={() => setMobileTab('events')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'events' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl mb-1">📅</span>
+              <span className="text-xs font-medium">Events Feed</span>
+            </button>
+
+            <button
+              onClick={() => setMobileTab('lists')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'lists' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl mb-1">⭐</span>
+              <span className="text-xs font-medium">Lists</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Only visible on desktop */}
+      <div className="hidden lg:block">
+        <div className={`transition-all duration-300 ${isEventFeedFullscreen ? 'max-w-full' : 'max-w-[1400px]'} mx-auto`}>
+          <div className={`grid transition-all duration-300 ${isEventFeedFullscreen ? 'grid-cols-1' : 'grid-cols-[65%_35%]'}`}>
+            {/* Left Column (65%) */}
+            <div className={`border-r border-black transition-all duration-300 ${isEventFeedFullscreen ? 'hidden' : 'block'}`}>
+              {/* Top Left: Find Meeting Point */}
+              <div className="border-b border-black" style={{ minHeight: '50vh' }}>
+                {/* Navigation Bar */}
+                <div className="border-b border-gray-300 px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center">
+                  <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
+                    📍 Find Meeting Point
+                  </h2>
+                  {user && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => router.push('/my-events')}
+                        className="px-3 lg:px-4 py-1.5 lg:py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm lg:text-base"
+                      >
+                        My Events
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-6 lg:p-8">
                 {/* Meeting Point Form */}
-                <div className="space-y-6 mb-8 max-w-xl">
+                <div className="space-y-5 lg:space-y-6 mb-6 lg:mb-8 max-w-xl">
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">
+                    <label className="block text-base lg:text-lg font-medium text-black mb-2">
                       Meeting Name
                     </label>
                     <input
@@ -422,23 +819,23 @@ export default function Home() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g. Team Lunch, Coffee Catch-up"
-                      className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                      className="w-full px-3 lg:px-4 py-2.5 lg:py-3 text-base lg:text-lg text-black border border-gray-300 focus:border-black focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">
+                    <label className="block text-base lg:text-lg font-medium text-black mb-2">
                       Meeting Time
                     </label>
                     <input
                       type="datetime-local"
                       value={meetingTime}
                       onChange={(e) => setMeetingTime(e.target.value)}
-                      className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                      className="w-full px-3 lg:px-4 py-2.5 lg:py-3 text-base lg:text-lg text-black border border-gray-300 focus:border-black focus:outline-none"
                     />
                   </div>
 
-                  <label className="flex items-center gap-3 cursor-pointer text-sm text-black">
+                  <label className="flex items-center gap-3 cursor-pointer text-base lg:text-lg text-black">
                     <input
                       type="checkbox"
                       checked={allowVote}
@@ -451,23 +848,23 @@ export default function Home() {
                 </div>
 
                 {error && (
-                  <div className="mb-6 p-4 border border-red-500 text-red-700 text-sm">
+                  <div className="mb-5 lg:mb-6 p-3 lg:p-4 border border-red-500 text-red-700 text-base lg:text-lg">
                     {error}
                   </div>
                 )}
 
-                <div className="space-y-4 max-w-xl">
+                <div className="space-y-3 lg:space-y-4 max-w-xl">
                   <button
                     onClick={handleCreateEvent}
                     disabled={isCreating || !title.trim()}
-                    className="w-full py-3 bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-2.5 lg:py-3 text-base lg:text-lg bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCreating ? 'Finding...' : 'Find Meeting Point'}
                   </button>
 
                   <button
                     onClick={handleJoinWithLink}
-                    className="w-full py-3 border border-black text-black font-medium hover:bg-gray-50 transition-colors"
+                    className="w-full py-2.5 lg:py-3 text-base lg:text-lg border border-black text-black font-medium hover:bg-gray-50 transition-colors"
                     suppressHydrationWarning
                   >
                     {t.joinExistingEvent}
@@ -479,21 +876,21 @@ export default function Home() {
               {/* Bottom Left: Other People's Lists */}
               <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>
                 {/* Navigation Bar */}
-                <div className="border-b border-gray-300 px-8 py-4 flex justify-between items-center sticky top-0 bg-white">
-                  <h2 className="text-xl font-bold text-black">
+                <div className="border-b border-gray-300 px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center sticky top-0 bg-white">
+                  <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
                     ⭐ Other People's Lists
                   </h2>
                   <div className="flex gap-2">
-                    <button className="px-3 py-1 text-sm bg-black text-white">
+                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base bg-black text-white">
                       All
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-700 hover:text-black">
+                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
                       Food
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-700 hover:text-black">
+                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
                       Sports
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-700 hover:text-black">
+                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
                       Culture
                     </button>
                   </div>
@@ -667,27 +1064,40 @@ export default function Home() {
             </div>
 
             {/* Right Panel (35%): Events Feed */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 73px)' }}>
+            <div className={`overflow-y-auto transition-all duration-300 ${isEventFeedFullscreen ? 'w-full' : ''}`} style={{ maxHeight: '115vh' }}>
               {/* Unified Sticky Header - Events Feed + Calendar + Filters */}
               <div className="sticky top-0 bg-white z-30 border-b border-gray-300">
                 {/* Navigation Bar */}
-                <div className="px-8 py-4 flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-black">
-                    📅 Events Feed
-                  </h2>
+                <div className="px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center">
+                  <div className="flex gap-3 items-center">
+                    <button
+                      onClick={() => setIsEventFeedFullscreen(!isEventFeedFullscreen)}
+                      className="px-2 py-1 border border-gray-300 text-black hover:border-black transition-colors text-xs"
+                      title={isEventFeedFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    >
+                      {isEventFeedFullscreen ? '⊗' : '⛶'}
+                    </button>
+                    <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
+                      📅 Events Feed
+                    </h2>
+                  </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => router.push('/my-posts')}
-                      className="px-4 py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm"
-                    >
-                      My Posts
-                    </button>
-                    <button
-                      onClick={() => setShowPostEventModal(true)}
-                      className="px-4 py-2 bg-black text-white hover:bg-gray-800 transition-colors font-medium text-sm"
-                    >
-                      + Post
-                    </button>
+                    {user && (
+                      <>
+                        <button
+                          onClick={() => router.push('/my-posts')}
+                          className="px-3 lg:px-4 py-1.5 lg:py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm lg:text-base"
+                        >
+                          My Posts
+                        </button>
+                        <button
+                          onClick={() => setShowPostEventModal(true)}
+                          className="px-3 lg:px-4 py-1.5 lg:py-2 bg-black text-white hover:bg-gray-800 transition-colors font-medium text-sm lg:text-base"
+                        >
+                          + Post
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -745,20 +1155,6 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => {
-                        setSelectedCategory('food');
-                        setSelectedSubCategory(null);
-                        setNearMeFilter(false);
-                      }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                        selectedCategory === 'food'
-                          ? 'bg-black text-white'
-                          : 'border border-gray-300 text-gray-700 hover:border-black'
-                      }`}
-                    >
-                      ☕ Food
-                    </button>
-                    <button
-                      onClick={() => {
                         setSelectedCategory('sports');
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
@@ -784,48 +1180,6 @@ export default function Home() {
                       }`}
                     >
                       🎬 Entertainment
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('work');
-                        setSelectedSubCategory(null);
-                        setNearMeFilter(false);
-                      }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                        selectedCategory === 'work'
-                          ? 'bg-black text-white'
-                          : 'border border-gray-300 text-gray-700 hover:border-black'
-                      }`}
-                    >
-                      💼 Work
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('music');
-                        setSelectedSubCategory(null);
-                        setNearMeFilter(false);
-                      }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                        selectedCategory === 'music'
-                          ? 'bg-black text-white'
-                          : 'border border-gray-300 text-gray-700 hover:border-black'
-                      }`}
-                    >
-                      🎵 Music
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('outdoors');
-                        setSelectedSubCategory(null);
-                        setNearMeFilter(false);
-                      }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-                        selectedCategory === 'outdoors'
-                          ? 'bg-black text-white'
-                          : 'border border-gray-300 text-gray-700 hover:border-black'
-                      }`}
-                    >
-                      🌳 Outdoors
                     </button>
                   </div>
                 </div>
@@ -864,7 +1218,7 @@ export default function Home() {
               </div>
 
               {/* Event Cards */}
-              <div className="p-8 space-y-6">
+              <div className={`p-8 transition-all duration-300 ${isEventFeedFullscreen ? 'grid grid-cols-3 gap-6' : 'space-y-6'}`} style={{ minHeight: 'calc(100vh - 400px)' }}>
                 {/* Loading State */}
                 {eventsLoading && events.length === 0 && (
                   <>
@@ -876,11 +1230,11 @@ export default function Home() {
 
                 {/* Error State */}
                 {eventsError && !eventsLoading && (
-                  <div className="py-12 text-center">
-                    <p className="text-red-600 mb-4">{eventsError}</p>
+                  <div className={`py-8 lg:py-12 text-center px-4 ${isEventFeedFullscreen ? 'col-span-full' : ''}`}>
+                    <p className="text-red-600 mb-3 lg:mb-4 text-base lg:text-lg">{eventsError}</p>
                     <button
                       onClick={() => fetchEvents(1, false)}
-                      className="px-6 py-2 border border-black text-black hover:bg-gray-50 transition-colors"
+                      className="px-5 lg:px-6 py-2 lg:py-2.5 text-base lg:text-lg border border-black text-black hover:bg-gray-50 transition-colors"
                     >
                       Retry
                     </button>
@@ -889,10 +1243,10 @@ export default function Home() {
 
                 {/* Empty State */}
                 {!eventsLoading && !eventsError && events.length === 0 && (
-                  <div className="py-12 text-center">
-                    <div className="text-6xl mb-4">📅</div>
-                    <h3 className="text-xl font-bold text-black mb-2">No events found</h3>
-                    <p className="text-gray-600 mb-6">
+                  <div className={`py-8 lg:py-12 text-center px-4 ${isEventFeedFullscreen ? 'col-span-full' : ''}`}>
+                    <div className="text-5xl lg:text-6xl mb-3 lg:mb-4">📅</div>
+                    <h3 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black mb-2">No events found</h3>
+                    <p className="text-base lg:text-lg text-gray-600 mb-4 lg:mb-6">
                       {selectedDate
                         ? 'No events on this day. Try a different date or'
                         : nearMeFilter
@@ -901,7 +1255,7 @@ export default function Home() {
                     </p>
                     <button
                       onClick={() => setShowPostEventModal(true)}
-                      className="px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
+                      className="px-5 lg:px-6 py-2.5 lg:py-3 text-base lg:text-lg bg-black text-white hover:bg-gray-800 transition-colors font-medium"
                     >
                       Post Event
                     </button>
@@ -910,8 +1264,9 @@ export default function Home() {
 
                 {/* Event Cards */}
                 {!eventsLoading && !eventsError && events.map((event) => {
-                  const isHost = user && hostedEventIds.includes(event.id);
-                  const isParticipant = user && joinedEventIds.includes(event.id);
+                  // Check if current user is the host by comparing user ID with event host_id
+                  const isHost = user && event.host_id === user.id;
+                  const isParticipant = user && joinedEventIds.includes(event.id) && !isHost;
                   const userRole = isHost ? 'host' : isParticipant ? 'participant' : 'guest';
 
                   return (
@@ -929,17 +1284,17 @@ export default function Home() {
 
               {/* Load More */}
               {!eventsLoading && !eventsError && events.length > 0 && (
-                <div className="mt-8 pt-6 text-center border-t border-gray-300">
+                <div className="mt-6 lg:mt-8 pt-5 lg:pt-6 text-center border-t border-gray-300">
                   {hasMoreEvents ? (
                     <button
                       onClick={handleLoadMore}
                       disabled={eventsLoading}
-                      className="px-6 py-2 text-gray-600 hover:text-black font-medium disabled:opacity-50"
+                      className="px-5 lg:px-6 py-2 text-base lg:text-lg text-gray-600 hover:text-black font-medium disabled:opacity-50"
                     >
                       {eventsLoading ? 'Loading...' : 'Load More'}
                     </button>
                   ) : (
-                    <p className="text-gray-500 text-sm">No more events to load</p>
+                    <p className="text-gray-500 text-sm lg:text-base">No more events to load</p>
                   )}
                 </div>
               )}

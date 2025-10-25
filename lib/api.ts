@@ -127,6 +127,8 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  bio?: string;
+  avatar?: string;
   created_at: string;
   last_login: string;
 }
@@ -139,6 +141,8 @@ export interface TokenResponse {
 
 export interface UserUpdate {
   name?: string;
+  bio?: string;
+  avatar?: string;
   password?: string;
 }
 

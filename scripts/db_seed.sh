@@ -48,25 +48,28 @@ db = SessionLocal()
 try:
     print("🌱 Seeding users...")
 
-    # Create test users (simple version - passwords can be added later)
+    # Create test users with avatars
     users = [
         User(
             id=f"user_{uuid4().hex[:12]}",
             email="alice@example.com",
             hashed_password="hashed_password_placeholder",  # Placeholder
-            name="Alice Johnson"
+            name="Alice Johnson",
+            avatar="https://ui-avatars.com/api/?name=Alice+Johnson&background=4F46E5&color=fff"
         ),
         User(
             id=f"user_{uuid4().hex[:12]}",
             email="bob@example.com",
             hashed_password="hashed_password_placeholder",  # Placeholder
-            name="Bob Smith"
+            name="Bob Smith",
+            avatar="https://ui-avatars.com/api/?name=Bob+Smith&background=DC2626&color=fff"
         ),
         User(
             id=f"user_{uuid4().hex[:12]}",
             email="charlie@example.com",
             hashed_password="hashed_password_placeholder",  # Placeholder
-            name="Charlie Davis"
+            name="Charlie Davis",
+            avatar="https://ui-avatars.com/api/?name=Charlie+Davis&background=059669&color=fff"
         ),
     ]
 
@@ -152,27 +155,31 @@ try:
     print("\n🌱 Seeding event feed participants...")
 
     # Add participants to events
+    # Using UI Avatars as placeholder avatars
     feed_participants = [
         FeedParticipant(
             id=f"part_{uuid4().hex[:16]}",
             event_id=feed_events[0].id,
             user_id=users[1].id,
             name=users[1].name,
-            email=users[1].email
+            email=users[1].email,
+            avatar=f"https://ui-avatars.com/api/?name={users[1].name.replace(' ', '+')}&background=random"
         ),
         FeedParticipant(
             id=f"part_{uuid4().hex[:16]}",
             event_id=feed_events[0].id,
             user_id=users[2].id,
             name=users[2].name,
-            email=users[2].email
+            email=users[2].email,
+            avatar=f"https://ui-avatars.com/api/?name={users[2].name.replace(' ', '+')}&background=random"
         ),
         FeedParticipant(
             id=f"part_{uuid4().hex[:16]}",
             event_id=feed_events[1].id,
             user_id=users[0].id,
             name=users[0].name,
-            email=users[0].email
+            email=users[0].email,
+            avatar=f"https://ui-avatars.com/api/?name={users[0].name.replace(' ', '+')}&background=random"
         ),
     ]
 

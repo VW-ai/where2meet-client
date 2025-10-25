@@ -3,9 +3,11 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import EventHeroImage from '@/components/EventHeroImage';
 import EventHeader from '@/components/EventHeader';
 import EventAbout from '@/components/EventAbout';
+import EventHost from '@/components/EventHost';
 import EventParticipants from '@/components/EventParticipants';
 import EventVenues from '@/components/EventVenues';
 import EventHostSettings from '@/components/EventHostSettings';
@@ -15,22 +17,25 @@ import MeetingLocationCard from '@/components/MeetingLocationCard';
 import Header from '@/components/Header';
 import JoinEventDialog from '@/components/JoinEventDialog';
 import LeaveEventDialog from '@/components/LeaveEventDialog';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { api } from '@/lib/api';
 import { Event, Candidate } from '@/types';
 
 function EventDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, token, logout } = useAuth();
 
   // Event state
   const [eventId, setEventId] = useState<string | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
-  const [role, setRole] = useState<'host' | 'participant' | 'guest'>('guest');
+  const [isHost, setIsHost] = useState(false);
+  const [isParticipant, setIsParticipant] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [joinToken, setJoinToken] = useState<string | null>(null);
 
   // Data state
-  const [participants, setParticipants] = useState<Array<{ id: string; name: string; email?: string }>>([]);
+  const [participants, setParticipants] = useState<Array<{ id: string; user_id?: string; name: string; email?: string; avatar?: string }>>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
@@ -41,6 +46,11 @@ function EventDetailContent() {
   const [showManageModal, setShowManageModal] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [participantToRemove, setParticipantToRemove] = useState<string | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'planning'>('details');
@@ -59,12 +69,9 @@ function EventDetailContent() {
       console.log('🔍 Initializing event:', id);
       setEventId(id);
 
-      // Check if user is host or participant
-      const storedRole = sessionStorage.getItem('role');
       const storedToken = sessionStorage.getItem('joinToken') || token;
       const storedParticipantId = sessionStorage.getItem('participantId');
 
-      setRole((storedRole as 'host' | 'participant') || 'guest');
       setJoinToken(storedToken);
       if (storedParticipantId) {
         setParticipantId(storedParticipantId);
@@ -78,11 +85,18 @@ function EventDetailContent() {
     initializeApp();
   }, [searchParams, router]);
 
+  // Reload event data when user changes (for role detection)
+  useEffect(() => {
+    if (eventId && user) {
+      loadEventData(eventId);
+    }
+  }, [user]);
+
   // Load event data from API
   const loadEventData = async (id: string) => {
     try {
-      console.log('📡 Loading event from API:', id);
-      const response = await api.getEventFeedDetail(id);
+      console.log('📡 Loading event from API:', id, 'with token:', token ? 'YES' : 'NO');
+      const response = await api.getEventFeedDetail(id, token || undefined);
 
       setEvent(response.event);
       setParticipants(response.participants);
@@ -104,15 +118,40 @@ function EventDetailContent() {
         photoReference: v.photo_reference,
         voteCount: v.vote_count || 0,
         addedBy: v.added_by,
+        userVoted: v.user_voted || false,
       }));
       setCandidates(convertedVenues);
 
-      // Update role based on backend response
-      if (response.user_role && response.user_role !== 'guest') {
-        setRole(response.user_role);
+      // Determine if current user is host and/or participant
+      console.log('🔍 Response from backend:', {
+        is_host: response.is_host,
+        is_participant: response.is_participant,
+        event_host_id: response.event.host_id,
+        current_user_id: user?.id
+      });
+
+      const userIsHost = response.is_host !== undefined
+        ? response.is_host
+        : (user && response.event.host_id === user.id) || false;
+
+      const userIsParticipant = response.is_participant !== undefined
+        ? response.is_participant
+        : (user && response.participants.some((p: any) => p.user_id === user.id)) || false;
+
+      // Find and set participant ID if user is a participant
+      if (userIsParticipant && user) {
+        const userParticipant = response.participants.find((p: any) => p.user_id === user.id);
+        if (userParticipant) {
+          setParticipantId(userParticipant.id);
+          console.log('👤 Found participant ID:', userParticipant.id);
+        }
+      } else {
+        setParticipantId(null);
       }
 
-      console.log('✅ Event loaded successfully');
+      setIsHost(userIsHost);
+      setIsParticipant(userIsParticipant);
+      console.log('✅ Event loaded successfully. Is host:', userIsHost, 'Is participant:', userIsParticipant);
     } catch (err) {
       console.error('❌ Failed to load event from API:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to load event');
@@ -130,12 +169,41 @@ function EventDetailContent() {
   const handleJoinConfirm = async () => {
     if (!eventId) return;
 
+    if (!user || !token) {
+      toast.error('Please log in to join events');
+      router.push('/login');
+      return;
+    }
+
     setIsJoining(true);
     try {
-      // Implement join logic here
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: user.name || user.email,
+          email: user.email,
+          avatar: user.avatar,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to join event' }));
+        throw new Error(errorData.detail || 'Failed to join event');
+      }
+
+      const result = await response.json();
+      setParticipantId(result.id);
+
       toast.success('Successfully joined the event!');
-      setRole('participant');
+      setIsParticipant(true);
       setShowJoinDialog(false);
+
+      // Reload event data to get updated participant count
+      await loadEventData(eventId);
     } catch (err) {
       console.error('Failed to join event:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to join event');
@@ -151,15 +219,34 @@ function EventDetailContent() {
 
   // Confirm leave event
   const handleLeaveConfirm = async () => {
-    if (!eventId || !participantId) return;
+    if (!eventId) return;
+
+    if (!token) {
+      toast.error('Please log in to leave events');
+      return;
+    }
 
     setIsLeaving(true);
     try {
-      // Implement leave logic here
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/leave`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to leave event' }));
+        throw new Error(errorData.detail || 'Failed to leave event');
+      }
+
       toast.success('Successfully left the event');
-      setRole('guest');
+      setIsParticipant(false);
       setParticipantId(null);
       setShowLeaveDialog(false);
+
+      // Reload event data to get updated participant count
+      await loadEventData(eventId);
     } catch (err) {
       console.error('Failed to leave event:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to leave event');
@@ -185,17 +272,128 @@ function EventDetailContent() {
     toast.success('Link copied to clipboard!');
   };
 
-  // Vote on candidate
-  const handleVote = async (candidateId: string) => {
-    if (!eventId || !participantId || !event?.allow_vote) return;
+  // Add venue (participants only)
+  const handleAddVenue = async (venueData: {
+    place_id: string;
+    name: string;
+    address?: string;
+    lat: number;
+    lng: number;
+    rating?: number;
+  }) => {
+    if (!eventId || !token) {
+      toast.error('Please log in to add venues');
+      return;
+    }
 
     try {
-      await api.castVote(eventId, participantId, candidateId);
+      const payload = {
+        place_id: venueData.place_id,
+        name: venueData.name,
+        vicinity: venueData.address ?? null,
+        lat: venueData.lat,
+        lng: venueData.lng,
+        rating: venueData.rating ?? null,
+        user_ratings_total: 0,
+        distance_from_center: null,
+        in_circle: true,
+        open_now: null,
+        types: null,
+        photo_reference: null,
+      };
+
+      console.log('Sending venue data to backend:', JSON.stringify(payload, null, 2));
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/venues`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to add venue' }));
+
+        console.error('Full error response:', JSON.stringify(errorData, null, 2));
+
+        // Handle validation errors (array) or simple error messages
+        let errorMessage = 'Failed to add venue';
+        if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else if (Array.isArray(errorData.detail)) {
+          // Format validation errors - FastAPI format
+          errorMessage = errorData.detail.map((err: any) => {
+            const field = err.loc ? err.loc.join('.') : 'unknown';
+            const msg = err.msg || 'validation error';
+            return `${field}: ${msg}`;
+          }).join(', ');
+        }
+
+        console.error('Formatted error:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      toast.success('Venue added successfully!');
+
+      // Reload event data to show new venue
       await loadEventData(eventId);
-      toast.success('Vote cast successfully!');
+    } catch (err) {
+      console.error('Failed to add venue:', err);
+      throw err; // Re-throw to let modal handle it
+    }
+  };
+
+  // Vote or unvote on candidate
+  const handleVote = async (venueId: string, currentlyVoted: boolean = false) => {
+    console.log('🗳️ Attempting to vote/unvote:', {
+      eventId,
+      venueId,
+      currentlyVoted,
+      allowVote: event?.allow_vote,
+      hasToken: !!token,
+      isParticipant,
+      participantId,
+      userId: user?.id,
+    });
+
+    if (!eventId || !event?.allow_vote || !token) {
+      console.error('❌ Vote blocked - missing requirements');
+      toast.error('Cannot vote: missing requirements');
+      return;
+    }
+
+    try {
+      const url = currentlyVoted
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/votes/${venueId}`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/votes`;
+
+      const response = await fetch(url, {
+        method: currentlyVoted ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: currentlyVoted ? undefined : JSON.stringify({ venue_id: venueId }),
+      });
+
+      console.log('📊 Vote response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: currentlyVoted ? 'Failed to unvote' : 'Failed to vote' }));
+        console.error('❌ Vote failed:', errorData);
+        throw new Error(errorData.detail || (currentlyVoted ? 'Failed to unvote' : 'Failed to vote'));
+      }
+
+      await loadEventData(eventId);
+      toast.success(currentlyVoted ? 'Vote removed successfully!' : 'Vote cast successfully!');
     } catch (err) {
       console.error('Failed to vote:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to vote');
+      toast.error(err instanceof Error ? err.message : (currentlyVoted ? 'Failed to unvote' : 'Failed to vote'));
     }
   };
 
@@ -207,28 +405,33 @@ function EventDetailContent() {
     participant_limit?: number;
     status: any;
   }) => {
-    if (!eventId) return;
+    if (!eventId || !token) return;
 
     try {
-      // Implement edit event API call here
-      // await api.updateEvent(eventId, data);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
 
-      // Update local state
-      setEvent((prev) =>
-        prev
-          ? {
-              ...prev,
-              title: data.title,
-              description: data.description,
-              meeting_time: data.meeting_time,
-              participant_limit: data.participant_limit,
-              status: data.status,
-            }
-          : null
-      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to update event' }));
+        throw new Error(errorData.detail || 'Failed to update event');
+      }
+
+      const updatedEvent = await response.json();
+
+      // Update local state with the response from backend
+      setEvent(updatedEvent);
 
       toast.success('Event updated successfully!');
       setShowEditModal(false);
+
+      // Reload event data to ensure consistency
+      await loadEventData(eventId);
     } catch (err) {
       console.error('Failed to update event:', err);
       throw err; // Let modal handle the error
@@ -241,57 +444,110 @@ function EventDetailContent() {
   };
 
   // Remove participant (host only)
-  const handleRemoveParticipant = async (participantId: string) => {
-    if (!eventId) return;
+  const handleRemoveParticipant = (participantId: string) => {
+    console.log('handleRemoveParticipant called with participantId:', participantId);
+    setParticipantToRemove(participantId);
+    setShowRemoveConfirm(true);
+  };
+
+  const confirmRemoveParticipant = async () => {
+    if (!eventId || !token || !participantToRemove) {
+      toast.error('Please log in to remove participants');
+      return;
+    }
+
+    console.log('Removing participant:', participantToRemove, 'from event:', eventId);
+    setIsRemoving(true);
 
     try {
-      // Implement remove participant API call here
-      // await api.removeParticipant(eventId, participantId);
+      // Call backend API to remove participant from event feed
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/participants/${participantToRemove}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to remove participant' }));
+        throw new Error(errorData.detail || 'Failed to remove participant');
+      }
 
       // Update local state
-      setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+      setParticipants((prev) => prev.filter((p) => p.id !== participantToRemove));
 
       toast.success('Participant removed successfully');
+      console.log('Participant removed successfully');
+
+      // Close dialog
+      setShowRemoveConfirm(false);
+      setParticipantToRemove(null);
     } catch (err) {
       console.error('Failed to remove participant:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to remove participant');
-      throw err; // Let modal handle the error
+    } finally {
+      setIsRemoving(false);
     }
   };
 
   // Close event (host only)
   const handleCloseEvent = () => {
-    if (!eventId || !event) return;
+    setShowCloseConfirm(true);
+  };
 
-    if (
-      !confirm(
-        `Close "${event.title}"? This will stop accepting new participants. You can reopen it later from the event settings.`
-      )
-    ) {
+  const confirmCloseEvent = async () => {
+    if (!eventId || !token) {
+      toast.error('Please log in to close event');
       return;
     }
 
+    setIsClosing(true);
+
     try {
-      // Implement close event API call here
-      // await api.updateEvent(eventId, { status: 'closed' });
+      // Call backend API to close event
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}/close`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to close event' }));
+        throw new Error(errorData.detail || 'Failed to close event');
+      }
 
       // Update local state
       setEvent((prev) => (prev ? { ...prev, status: 'closed' } : null));
 
       toast.success('Event closed successfully');
+
+      // Close dialog
+      setShowCloseConfirm(false);
+
+      // Reload event data
+      await loadEventData(eventId);
     } catch (err) {
       console.error('Failed to close event:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to close event');
+    } finally {
+      setIsClosing(false);
     }
   };
 
   // Delete event (host only)
-  const handleDeleteEvent = () => {
-    if (!eventId || !event) return;
+  const handleDeleteEvent = async () => {
+    if (!eventId || !event || !token) return;
 
     if (
       !confirm(
-        `⚠️ DELETE "${event.title}"?\n\nThis action CANNOT be undone. All participant data, votes, and venue suggestions will be permanently removed.\n\nType "DELETE" to confirm.`
+        `⚠️ DELETE "${event.title}"?\n\nThis action CANNOT be undone. All participant data, votes, and venue suggestions will be permanently removed.`
       )
     ) {
       return;
@@ -308,8 +564,17 @@ function EventDetailContent() {
     }
 
     try {
-      // Implement delete event API call here
-      // await api.deleteEvent(eventId);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to delete event' }));
+        throw new Error(errorData.detail || 'Failed to delete event');
+      }
 
       toast.success('Event deleted successfully');
 
@@ -320,6 +585,46 @@ function EventDetailContent() {
     } catch (err) {
       console.error('Failed to delete event:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to delete event');
+    }
+  };
+
+  // Export participants (host only)
+  const handleExportParticipants = () => {
+    if (!event || participants.length === 0) {
+      toast.error('No participants to export');
+      return;
+    }
+
+    try {
+      // Create CSV content
+      const csvHeader = 'Name,Email,Joined At,Role\n';
+      const csvRows = participants.map((p) => {
+        const name = p.name || 'Unnamed';
+        const email = p.email || 'N/A';
+        const joinedAt = new Date().toISOString(); // You might want to add joined_at to the participant data
+        const role = p.user_id === event.host_id ? 'Host' : 'Participant';
+        return `"${name}","${email}","${joinedAt}","${role}"`;
+      }).join('\n');
+
+      const csvContent = csvHeader + csvRows;
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${event.title.replace(/[^a-z0-9]/gi, '_')}_participants.csv`);
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Exported ${participants.length} participants`);
+    } catch (err) {
+      console.error('Failed to export participants:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to export participants');
     }
   };
 
@@ -339,23 +644,25 @@ function EventDetailContent() {
   const formattedParticipants = participants.map((p) => ({
     id: p.id,
     name: p.name || 'Unnamed',
-    avatar: undefined, // Add avatar URL from API if available
-    isHost: p.id === event.host_id,
+    avatar: p.avatar, // Use avatar from API
+    isHost: p.user_id === event.host_id, // Check user_id instead of participant id
   }));
 
   // Get participant avatars for header
   const participantAvatars = participants.slice(0, 4).map(p =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name || 'User')}&background=random`
+    p.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name || 'User')}&background=random`
   );
+
+  // Get host avatar from participants list if host has joined
+  const hostParticipant = participants.find(p => p.user_id === event.host_id);
+  const hostAvatar = hostParticipant?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(event.host_name || 'Host')}&background=4F46E5&color=fff`;
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <Header
-        user={role === 'host' || role === 'participant' ? { name: 'User', email: '' } : null}
-        onLogin={() => router.push('/login')}
-        onLogout={() => {}}
-        onSignup={() => router.push('/signup')}
+        user={user}
+        onLogout={logout}
       />
 
       {/* Tab Navigation */}
@@ -392,12 +699,35 @@ function EventDetailContent() {
       {/* Tab Content */}
       {activeTab === 'details' ? (
         <div>
-          {/* Hero Image */}
-          <EventHeroImage
-            imageUrl={event.background_image}
-            category={event.category}
-            status={role}
-          />
+          {/* Hero Image with Host Settings Overlay */}
+          <div className="relative">
+            <EventHeroImage
+              imageUrl={event.background_image}
+              category={event.category}
+              status={isHost ? 'host' : isParticipant ? 'participant' : 'guest'}
+            />
+
+            {/* Event Settings (Host Only) - Positioned top right below hero image */}
+            {isHost && (
+              <div className="absolute top-4 right-4 z-10">
+                <EventHostSettings
+                  visibility={event.visibility}
+                  status={event.status}
+                  participantLimit={event.participant_limit}
+                  allowVote={event.allow_vote}
+                  onEdit={() => setShowEditModal(true)}
+                  onExportParticipants={handleExportParticipants}
+                  onClose={handleCloseEvent}
+                  onDelete={() => {
+                    // TODO: Implement delete event
+                    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                      alert('Delete event functionality coming soon');
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Event Header */}
           <EventHeader
@@ -406,13 +736,18 @@ function EventDetailContent() {
             hostName={event.host_name || 'Unknown'}
             meetingTime={event.meeting_time}
             locationArea={event.location_area || 'Location TBD'}
+            venueName={event.location_type === 'fixed' ? event.fixed_venue_name : undefined}
+            venueAddress={event.location_type === 'fixed' ? event.fixed_venue_address : undefined}
             participantCount={participants.length}
             participantLimit={event.participant_limit}
             participantAvatars={participantAvatars}
             onShare={handleShare}
-            onJoin={role === 'guest' ? handleJoinClick : undefined}
-            onLeave={role === 'participant' ? handleLeaveClick : undefined}
-            userRole={role}
+            onJoin={!isParticipant ? handleJoinClick : undefined}
+            onLeave={isParticipant ? handleLeaveClick : undefined}
+            onEdit={isHost ? () => setShowEditModal(true) : undefined}
+            userRole={isHost ? 'host' : isParticipant ? 'participant' : 'guest'}
+            isHost={isHost}
+            isParticipant={isParticipant}
             isJoining={isJoining}
             isLeaving={isLeaving}
           />
@@ -420,13 +755,21 @@ function EventDetailContent() {
           {/* About Section */}
           <EventAbout description={event.description} />
 
+          {/* Host Section */}
+          <EventHost
+            hostName={event.host_name || 'Unknown Host'}
+            hostAvatar={hostAvatar}
+            hostBio={event.host_bio}
+            contactNumber={event.host_contact_number}
+          />
+
           {/* Participants Section */}
           <EventParticipants
             participants={formattedParticipants}
             participantCount={participants.length}
             participantLimit={event.participant_limit}
-            isHost={role === 'host'}
-            onManage={role === 'host' ? handleManageParticipants : undefined}
+            isHost={isHost}
+            onManage={isHost ? handleManageParticipants : undefined}
           />
 
           {/* Meeting Location Section - Different for fixed vs collaborative events */}
@@ -448,21 +791,10 @@ function EventDetailContent() {
               selectedCandidate={selectedCandidate}
               onCandidateClick={setSelectedCandidate}
               onVote={handleVote}
+              onAddVenue={handleAddVenue}
               participantId={participantId || undefined}
               allowVote={event.allow_vote}
-            />
-          )}
-
-          {/* Host Settings Section (Host Only) */}
-          {role === 'host' && (
-            <EventHostSettings
-              visibility={event.visibility}
-              status={event.status}
-              participantLimit={event.participant_limit}
-              allowVote={event.allow_vote}
-              onEdit={() => setShowEditModal(true)}
-              onClose={handleCloseEvent}
-              onDelete={handleDeleteEvent}
+              isParticipant={isParticipant}
             />
           )}
         </div>
@@ -634,6 +966,37 @@ function EventDetailContent() {
         onClose={() => setShowManageModal(false)}
         participants={formattedParticipants}
         onRemoveParticipant={handleRemoveParticipant}
+      />
+
+      {/* Remove Participant Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showRemoveConfirm}
+        onClose={() => {
+          setShowRemoveConfirm(false);
+          setParticipantToRemove(null);
+        }}
+        onConfirm={confirmRemoveParticipant}
+        title="Remove Participant?"
+        message="This will remove this participant from the event. They will no longer have access to event details."
+        confirmText="Remove Participant"
+        cancelText="Keep Participant"
+        confirmVariant="danger"
+        isLoading={isRemoving}
+      />
+
+      {/* Close Event Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showCloseConfirm}
+        onClose={() => {
+          setShowCloseConfirm(false);
+        }}
+        onConfirm={confirmCloseEvent}
+        title="Close Event?"
+        message="This will mark the event as closed. The event will still appear in your My Posts, but will no longer appear in the public Events Feed. Participants will still be able to view event details."
+        confirmText="Close Event"
+        cancelText="Keep Open"
+        confirmVariant="default"
+        isLoading={isClosing}
       />
 
       {/* Toast Notifications */}

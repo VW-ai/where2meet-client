@@ -2,32 +2,43 @@
 
 import { useState } from 'react';
 import { Candidate } from '@/types';
+import AddVenueModal from './AddVenueModal';
+import VenuesMapView from './VenuesMapView';
 
 interface EventVenuesProps {
   candidates: Candidate[];
   selectedCandidate: Candidate | null;
   onCandidateClick: (candidate: Candidate) => void;
-  onVote?: (candidateId: string) => void;
+  onVote?: (candidateId: string, currentlyVoted: boolean) => void;
+  onAddVenue?: (venueData: {
+    place_id: string;
+    name: string;
+    address?: string;
+    lat: number;
+    lng: number;
+    rating?: number;
+  }) => Promise<void>;
   participantId?: string;
   allowVote?: boolean;
+  isParticipant?: boolean;
 }
 
-type VenueTab = 'all' | 'top-voted' | 'map';
+type VenueTab = 'all' | 'map';
 
 export default function EventVenues({
   candidates,
   selectedCandidate,
   onCandidateClick,
   onVote,
+  onAddVenue,
   participantId,
   allowVote,
+  isParticipant,
 }: EventVenuesProps) {
   const [activeTab, setActiveTab] = useState<VenueTab>('all');
+  const [showAddVenueModal, setShowAddVenueModal] = useState(false);
 
-  // Sort candidates by votes for top-voted tab
-  const sortedByVotes = [...candidates].sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0));
-
-  const displayCandidates = activeTab === 'top-voted' ? sortedByVotes : candidates;
+  const displayCandidates = candidates;
 
   return (
     <div className="bg-white border-b border-gray-300">
@@ -36,9 +47,14 @@ export default function EventVenues({
         <h2 className="text-xl font-bold text-black">
           📍 Suggested Venues ({candidates.length})
         </h2>
-        <button className="px-4 py-2 bg-black text-white font-medium rounded hover:bg-gray-800 transition-colors">
-          + Add Venue
-        </button>
+        {isParticipant && onAddVenue && (
+          <button
+            onClick={() => setShowAddVenueModal(true)}
+            className="px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
+          >
+            + Add Venue
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -53,16 +69,6 @@ export default function EventVenues({
             }`}
           >
             All Venues
-          </button>
-          <button
-            onClick={() => setActiveTab('top-voted')}
-            className={`px-6 py-3 font-medium transition-colors relative ${
-              activeTab === 'top-voted'
-                ? 'text-black border-b-2 border-black'
-                : 'text-gray-500 hover:text-black'
-            }`}
-          >
-            Top Voted
           </button>
           <button
             onClick={() => setActiveTab('map')}
@@ -80,13 +86,24 @@ export default function EventVenues({
       {/* Content */}
       <div className="px-8 py-6">
         {activeTab === 'map' ? (
-          // Map view placeholder
-          <div className="bg-gray-100 rounded-lg h-[500px] flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-500 text-lg font-medium mb-2">🗺️ Map View</p>
-              <p className="text-gray-400 text-sm">Coming soon - Interactive map with venue markers</p>
+          // Map view
+          candidates.length === 0 ? (
+            <div className="bg-gray-100 rounded-lg h-[500px] flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-gray-500 text-lg font-medium mb-2">🗺️ No Venues Yet</p>
+                <p className="text-gray-400 text-sm">Add venues to see them on the map</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <VenuesMapView
+              venues={candidates}
+              selectedVenue={selectedCandidate}
+              onVenueClick={onCandidateClick}
+              onVote={onVote}
+              allowVote={allowVote}
+              participantId={participantId}
+            />
+          )
         ) : (
           // List view
           <div className="space-y-4">
@@ -108,9 +125,6 @@ export default function EventVenues({
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        {candidate.voteCount && candidate.voteCount > 0 && activeTab === 'top-voted' && candidate === sortedByVotes[0] && (
-                          <span className="text-xl">🏆</span>
-                        )}
                         <h3 className="font-bold text-lg text-black">{candidate.name}</h3>
                       </div>
 
@@ -133,17 +147,31 @@ export default function EventVenues({
                       )}
 
                       <div className="flex items-center gap-2">
-                        {allowVote && participantId && onVote && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onVote(candidate.id);
-                            }}
-                            className="px-4 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition-colors"
-                          >
-                            🤍 Vote
-                          </button>
-                        )}
+                        {allowVote && onVote ? (
+                          participantId ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onVote(candidate.id, candidate.userVoted || false);
+                              }}
+                              className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                                candidate.userVoted
+                                  ? 'bg-red-600 text-white hover:bg-red-700'
+                                  : 'bg-black text-white hover:bg-gray-800'
+                              }`}
+                            >
+                              {candidate.userVoted ? '💔 Unvote' : '🤍 Vote'}
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded cursor-not-allowed"
+                              title="Join the event to vote"
+                            >
+                              🤍 Vote (Join to vote)
+                            </button>
+                          )
+                        ) : null}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -171,6 +199,18 @@ export default function EventVenues({
           </div>
         )}
       </div>
+
+      {/* Add Venue Modal */}
+      <AddVenueModal
+        isOpen={showAddVenueModal}
+        onClose={() => setShowAddVenueModal(false)}
+        onSubmit={async (venueData) => {
+          if (onAddVenue) {
+            await onAddVenue(venueData);
+            setShowAddVenueModal(false);
+          }
+        }}
+      />
     </div>
   );
 }

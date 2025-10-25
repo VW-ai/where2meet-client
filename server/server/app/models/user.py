@@ -15,6 +15,8 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     name = Column(String(100), nullable=True)
+    bio = Column(String(500), nullable=True)  # User bio/description
+    avatar = Column(String(500), nullable=True)  # Avatar URL
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True)

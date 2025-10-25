@@ -18,6 +18,7 @@ class FeedEvent(Base):
     # Host & Participants
     host_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     host_name = Column(String(100), nullable=False)
+    host_contact_number = Column(String(20), nullable=True)  # Optional contact number for host
     participant_limit = Column(Integer, nullable=True)
 
     # Time & Location

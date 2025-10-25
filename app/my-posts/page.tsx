@@ -6,14 +6,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
-import { Event as EventFeedType } from '@/types';
+import PostEventModal from '@/components/PostEventModal';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import { Event as EventFeedType, CreateEventFeedRequest } from '@/types';
+import { api } from '@/lib/api';
 
 export default function MyPostsPage() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [posts, setPosts] = useState<EventFeedType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPostEventModal, setShowPostEventModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch user's posts
   useEffect(() => {
@@ -21,51 +28,168 @@ export default function MyPostsPage() {
       setLoading(true);
       setError(null);
 
-      try {
-        // For now, return empty array since backend requires auth token
-        // TODO: Implement proper authentication and pass token
-        console.log('ℹ️ My Posts requires authentication - showing empty state');
+      if (!token) {
+        setError('Please log in to view your posts.');
         setPosts([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/my-posts`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Please log in to view your posts.');
+          }
+          throw new Error('Failed to fetch posts');
+        }
+
+        const data = await response.json();
+        setPosts(data.events || []);
         setLoading(false);
       } catch (err) {
         console.error('Failed to fetch posts:', err);
-        setError('Failed to load your posts. Please try again.');
+        setError(err instanceof Error ? err.message : 'Failed to load your posts. Please try again.');
         setPosts([]);
         setLoading(false);
       }
     };
 
-    if (user) {
+    if (user && token) {
       fetchMyPosts();
     } else {
       // Show empty state if not authenticated
       setPosts([]);
       setLoading(false);
     }
-  }, [user, router]);
+  }, [user, token, router]);
 
   const handleViewEvent = (eventId: string) => {
     router.push(`/event-detail?id=${eventId}`);
   };
 
-  const handleDeletePost = async (eventId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) {
+  const handleCreateEvent = async (data: any) => {
+    if (!token) {
+      alert('Please log in to create an event.');
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${eventId}`, {
-        method: 'DELETE',
+      const eventData: CreateEventFeedRequest = {
+        title: data.title,
+        description: data.description,
+        meeting_time: data.meeting_time,
+        location_area: data.location_area,
+        location_coords: data.location_coords,
+        location_type: data.location_type || 'collaborative',
+        fixed_venue_name: data.fixed_venue_name,
+        fixed_venue_address: data.fixed_venue_address,
+        fixed_venue_lat: data.fixed_venue_lat,
+        fixed_venue_lng: data.fixed_venue_lng,
+        category: data.category,
+        participant_limit: data.participant_limit,
+        visibility: data.visibility,
+        allow_vote: data.allow_vote !== undefined ? data.allow_vote : true,
+        contact_number: data.contact_number,
+        background_image: data.background_image,
+      };
+
+      // Convert location_coords object to flat fields for backend
+      const backendData: any = {
+        ...eventData,
+        location_coords_lat: eventData.location_coords?.lat,
+        location_coords_lng: eventData.location_coords?.lng,
+      };
+      delete backendData.location_coords;
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(backendData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete post');
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to create event' }));
+        throw new Error(errorData.detail || 'Failed to create event');
       }
 
-      setPosts(prev => prev.filter(post => post.id !== eventId));
+      const result = await response.json();
+
+      // Close modal and refresh posts
+      setShowPostEventModal(false);
+
+      // Refresh the posts list
+      const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/my-posts`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (postsResponse.ok) {
+        const postsData = await postsResponse.json();
+        setPosts(postsData.events || []);
+      }
+
+      alert('Event created successfully!');
+    } catch (err) {
+      console.error('Failed to create event:', err);
+      throw err; // Let modal handle the error
+    }
+  };
+
+  const handleDeletePost = (eventId: string) => {
+    console.log('handleDeletePost called with eventId:', eventId);
+    setPostToDelete(eventId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!postToDelete || !token) {
+      alert('Please log in to delete posts.');
+      return;
+    }
+
+    console.log('Sending DELETE request for event:', postToDelete);
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/v1/feed/events/${postToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      console.log('Delete response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to delete post' }));
+        throw new Error(errorData.detail || 'Failed to delete post');
+      }
+
+      // Remove from local state
+      setPosts(prev => prev.filter(post => post.id !== postToDelete));
+      console.log('Post deleted successfully');
+
+      // Close dialog
+      setShowDeleteConfirm(false);
+      setPostToDelete(null);
     } catch (err) {
       console.error('Failed to delete post:', err);
-      alert('Failed to delete post. Please try again.');
+      alert(err instanceof Error ? err.message : 'Failed to delete post. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -81,9 +205,20 @@ export default function MyPostsPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">My Posts</h1>
-          <p className="text-gray-600">Events you've created in the Event Feed</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-black mb-2">My Posts</h1>
+            <p className="text-gray-600">Events you've created in the Event Feed</p>
+          </div>
+          {user && (
+            <button
+              onClick={() => setShowPostEventModal(true)}
+              className="px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+            >
+              <span className="text-xl">+</span>
+              Create Post
+            </button>
+          )}
         </div>
 
         {/* Loading State */}
@@ -119,7 +254,7 @@ export default function MyPostsPage() {
                 : "Please log in to see your posts."}
             </p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => user ? setShowPostEventModal(true) : router.push('/')}
               className="px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
             >
               {user ? 'Create Your First Post' : 'Go to Home'}
@@ -131,20 +266,29 @@ export default function MyPostsPage() {
         {!loading && !error && posts.length > 0 && (
           <div className="space-y-6">
             {posts.map((post) => (
-              <div key={post.id} className="relative">
+              <div key={post.id} className="relative" style={{ isolation: 'isolate' }}>
                 <EventCard
                   event={post}
                   userRole="host"
                   onView={handleViewEvent}
+                  showManageButton={true}
                 />
                 {/* Delete Button Overlay */}
-                <button
-                  onClick={() => handleDeletePost(post.id)}
-                  className="absolute top-4 right-4 z-20 p-2 bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium"
-                  title="Delete post"
-                >
-                  Delete
-                </button>
+                <div className="absolute top-4 right-4 z-[9999]" style={{ zIndex: 9999 }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Delete button clicked for post:', post.id);
+                      handleDeletePost(post.id);
+                    }}
+                    className="p-3 bg-red-600 text-white hover:bg-red-700 active:bg-red-800 transition-colors text-sm sm:text-base font-bold rounded-lg shadow-2xl cursor-pointer border-2 border-white"
+                    title="Delete post"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -160,6 +304,29 @@ export default function MyPostsPage() {
           </button>
         </div>
       </div>
+
+      {/* Post Event Modal */}
+      <PostEventModal
+        isOpen={showPostEventModal}
+        onClose={() => setShowPostEventModal(false)}
+        onSubmit={handleCreateEvent}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setPostToDelete(null);
+        }}
+        onConfirm={confirmDeletePost}
+        title="Delete Post?"
+        message="This will permanently delete this event and all its data. This action cannot be undone."
+        confirmText="Delete Post"
+        cancelText="Keep Post"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+      />
     </main>
   );
 }

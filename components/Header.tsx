@@ -17,6 +17,7 @@ interface HeaderProps {
     id: string;
     email: string;
     name?: string;
+    avatar?: string;
   } | null;
   onLogout?: () => void;
 }
@@ -29,14 +30,6 @@ export default function Header({ user, onLogout }: HeaderProps) {
       title: "Home",
       href: "/",
     },
-    ...(user
-      ? [
-          {
-            title: "Profile",
-            href: "/profile",
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -69,9 +62,22 @@ export default function Header({ user, onLogout }: HeaderProps) {
           <div className="flex items-center gap-3 ml-6 border-l border-gray-300 pl-6" suppressHydrationWarning>
             {user ? (
               <>
-                <div className="px-3 py-1.5 border border-gray-300 bg-gray-50">
-                  <span className="text-sm font-medium text-black">{user.name || user.email}</span>
-                </div>
+                <Link href="/profile" className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name || 'User'}
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-base font-bold">
+                        {(user.name || user.email)?.[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-base font-medium text-black">{user.name || user.email.split('@')[0]}</span>
+                </Link>
                 <Button
                   variant="outline"
                   onClick={onLogout}
@@ -126,9 +132,25 @@ export default function Header({ user, onLogout }: HeaderProps) {
             <div className="border-t border-gray-300 pt-4 flex flex-col gap-3" suppressHydrationWarning>
               {user ? (
                 <>
-                  <div className="px-3 py-2 border border-gray-300 bg-gray-50">
-                    <span className="text-sm font-medium text-black">{user.name || user.email}</span>
-                  </div>
+                  <Link href="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 px-3 py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name || 'User'}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white text-base font-bold">
+                          {(user.name || user.email)?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-black">{user.name || user.email.split('@')[0]}</span>
+                      <span className="text-xs text-gray-600">View profile</span>
+                    </div>
+                  </Link>
                   <Button
                     variant="outline"
                     onClick={() => {

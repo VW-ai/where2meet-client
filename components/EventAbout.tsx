@@ -13,8 +13,8 @@ export default function EventAbout({ description }: EventAboutProps) {
   if (!description) {
     return (
       <div className="bg-white border-b border-gray-300 px-8 py-6">
-        <h2 className="text-xl font-bold text-black mb-3">About This Event</h2>
-        <p className="text-gray-500 italic">No description provided</p>
+        <h2 className="text-2xl font-bold text-black mb-4">About This Event</h2>
+        <p className="text-base text-gray-500 italic">No description provided</p>
       </div>
     );
   }
@@ -26,14 +26,14 @@ export default function EventAbout({ description }: EventAboutProps) {
 
   return (
     <div className="bg-white border-b border-gray-300 px-8 py-6">
-      <h2 className="text-xl font-bold text-black mb-3">About This Event</h2>
-      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+      <h2 className="text-2xl font-bold text-black mb-4">About This Event</h2>
+      <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed">
         {displayText}
       </p>
       {needsTruncation && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-2 text-black font-medium hover:underline"
+          className="mt-3 text-base text-black font-medium hover:underline"
         >
           {isExpanded ? 'Read less' : 'Read more'}
         </button>

@@ -22,6 +22,7 @@ export interface Candidate {
   photoReference?: string; // Google Places photo reference
   voteCount?: number;
   addedBy?: string; // 'system' or 'organizer'
+  userVoted?: boolean; // Whether current user has voted for this venue
 }
 
 export interface Circle {
@@ -60,6 +61,8 @@ export interface Event {
   // Host & Participants
   host_id: string;
   host_name: string;
+  host_bio?: string; // Optional bio/description for host
+  host_contact_number?: string; // Optional contact number for host
   participant_ids: string[];
   participant_count: number;
   participant_limit?: number;
@@ -118,19 +121,29 @@ export interface CreateEventFeedRequest {
   meeting_time: string;
   location_area: string;
   location_coords?: { lat: number; lng: number };
+  location_type: LocationType;
+  fixed_venue_name?: string;
+  fixed_venue_address?: string;
+  fixed_venue_lat?: number;
+  fixed_venue_lng?: number;
   category?: EventCategory;
   participant_limit?: number;
   visibility: EventVisibility;
   allow_vote: boolean;
+  contact_number?: string;
+  background_image?: string;
 }
 
 export interface EventDetailResponse {
   event: Event;
   participants: Array<{
     id: string;
+    user_id?: string;
     name: string;
     email?: string;
+    avatar?: string;
   }>;
   venues: Candidate[];
-  user_role: EventUserRole;
+  is_host: boolean;  // Is current user the host
+  is_participant: boolean;  // Is current user a participant (joined the event)
 }

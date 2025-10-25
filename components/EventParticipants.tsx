@@ -28,14 +28,14 @@ export default function EventParticipants({
   return (
     <div className="bg-white border-b border-gray-300 px-8 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-black">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-bold text-black">
           Participants ({participantCount}{participantLimit ? `/${participantLimit}` : ''})
         </h2>
         {isHost && onManage && (
           <button
             onClick={onManage}
-            className="px-4 py-2 border border-black text-black font-medium rounded hover:bg-gray-50 transition-colors"
+            className="px-5 py-2.5 border border-black text-black text-base font-medium rounded hover:bg-gray-50 transition-colors"
           >
             Manage
           </button>
@@ -55,7 +55,7 @@ export default function EventParticipants({
               size="lg"
               className={participant.isHost ? 'ring-2 ring-yellow-500' : ''}
             />
-            <p className="mt-2 text-sm font-medium text-black truncate w-full">
+            <p className="mt-2 text-base font-medium text-black truncate w-full">
               {participant.name}
               {participant.isHost && (
                 <span className="block text-xs text-yellow-600 font-bold">

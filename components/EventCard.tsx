@@ -12,18 +12,56 @@ interface EventCardProps {
   onView: (eventId: string) => void;
   onJoin?: (eventId: string) => void | Promise<void>;
   onLeave?: (eventId: string) => void | Promise<void>;
+  showManageButton?: boolean; // Only show Manage button in My Posts page
 }
 
+// Map subcategories to their parent categories
+const subcategoryToParent: Record<string, string> = {
+  // Sports subcategories
+  'Basketball': 'sports',
+  'Soccer': 'sports',
+  'Tennis': 'sports',
+  'Running': 'sports',
+  'Gym': 'sports',
+  'Cycling': 'sports',
+  'Volleyball': 'sports',
+  'Badminton': 'sports',
+  // Entertainment subcategories
+  'Movies': 'entertainment',
+  'Theater': 'entertainment',
+  'Concerts': 'entertainment',
+  'Museums': 'entertainment',
+  'Gaming': 'entertainment',
+  'Comedy': 'entertainment',
+  'Karaoke': 'entertainment',
+  'Festival': 'entertainment',
+};
+
 const getCategoryEmoji = (category?: string) => {
+  if (!category) return '📅';
+
+  // Check if it's a subcategory first
+  const parentCategory = subcategoryToParent[category];
+
   const emojiMap: Record<string, string> = {
-    food: '☕',
     sports: '🏀',
     entertainment: '🎬',
-    work: '💼',
-    music: '🎵',
-    outdoors: '🌳',
   };
-  return emojiMap[category || 'other'] || '📅';
+
+  return emojiMap[parentCategory || category] || '📅';
+};
+
+const getParentCategory = (category?: string): string | null => {
+  if (!category) return null;
+  const parent = subcategoryToParent[category];
+  if (parent) {
+    return parent.charAt(0).toUpperCase() + parent.slice(1);
+  }
+  // If it's already a parent category
+  if (category === 'sports' || category === 'entertainment') {
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  }
+  return null;
 };
 
 const formatTime = (isoString: string) => {
@@ -52,7 +90,7 @@ const formatTime = (isoString: string) => {
   return `${dateStr} at ${timeStr}`;
 };
 
-export default function EventCard({ event, userRole = 'guest', onView, onJoin, onLeave }: EventCardProps) {
+export default function EventCard({ event, userRole = 'guest', onView, onJoin, onLeave, showManageButton = false }: EventCardProps) {
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -108,15 +146,15 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
       )}
 
       {/* Content - positioned above background */}
-      <div className="relative z-10 p-6">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className={`font-semibold text-lg flex items-center gap-2 ${
+      <div className="relative z-10 p-4 sm:p-5 md:p-6">
+        <div className="flex items-start justify-between mb-3 md:mb-4">
+          <h3 className={`font-semibold text-lg sm:text-xl md:text-2xl flex items-center gap-2 break-words flex-1 ${
             event.background_image ? 'text-white' : 'text-black'
           }`}>
-            <span>{emoji}</span>
-            <span>{event.title}</span>
+            <span className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">{emoji}</span>
+            <span className="break-words">{event.title}</span>
           </h3>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-shrink-0 ml-2">
             {isHost && <EventFeedStatusBadge status="host" />}
             {isParticipant && !isHost && <EventFeedStatusBadge status="joined" />}
             {isFull && <EventFeedStatusBadge status="full" />}
@@ -126,7 +164,7 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
         </div>
 
         {/* Location - Different display for fixed vs collaborative */}
-        <p className={`text-sm mb-2 ${
+        <p className={`text-sm sm:text-base md:text-lg mb-2 md:mb-3 break-words ${
           event.background_image ? 'text-gray-200' : 'text-gray-600'
         }`}>
           {event.location_type === 'fixed' ? (
@@ -146,15 +184,15 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
         </p>
 
         {/* Progress Indicator and Avatars on same row */}
-        <div className="flex items-center gap-4 mb-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-3 md:mb-4">
           {/* Progress Indicator - Always show for active events */}
           {event.status === 'active' && (
-            <div className={`inline-block px-3 py-1.5 rounded ${
+            <div className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded ${
               event.background_image
                 ? 'bg-white/20 backdrop-blur-sm'
                 : 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200'
             }`}>
-              <span className={`text-sm ${
+              <span className={`text-sm sm:text-base ${
                 event.background_image ? 'text-white' : 'text-gray-700'
               }`}>
                 <span className={`font-bold ${
@@ -178,97 +216,35 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
           )}
         </div>
 
-        <p className={`text-sm mb-3 ${
+        <p className={`text-sm sm:text-base md:text-lg mb-2 md:mb-3 break-words ${
           event.background_image ? 'text-gray-200' : 'text-gray-600'
         }`}>
-          {event.average_rating && `⭐ ${event.average_rating.toFixed(1)}`}
-          {event.distance_km && `${event.average_rating ? ' · ' : ''}📍 ${event.distance_km.toFixed(1)} km`}
-          {event.category && ` · ${getCategoryEmoji(event.category)} ${event.category}`}
+          {event.category && (
+            <>
+              {getCategoryEmoji(event.category)} {getParentCategory(event.category)} - {event.category}
+            </>
+          )}
+          {event.average_rating && `${event.category ? ' · ' : ''}⭐ ${event.average_rating.toFixed(1)}`}
+          {event.distance_km && ` · 📍 ${event.distance_km.toFixed(1)} km`}
         </p>
 
-        <p className={`text-sm mb-3 ${
+        <p className={`text-sm sm:text-base md:text-lg mb-3 md:mb-4 break-words ${
           event.background_image ? 'text-gray-200' : 'text-gray-600'
         }`}>
           🕐 {formatTime(event.meeting_time)}
         </p>
 
-        <div className="flex gap-3">
-          {isHost ? (
-            <>
-              <button
-                onClick={() => onView(event.id)}
-                className={`flex-1 py-2 px-4 border font-medium transition-colors ${
-                  event.background_image
-                    ? 'border-white text-white hover:bg-white/20'
-                    : 'border-black text-black hover:bg-gray-50'
-                }`}
-              >
-                View
-              </button>
-              <button
-                onClick={() => onView(event.id)}
-                className={`py-2 px-4 font-medium transition-colors ${
-                  event.background_image
-                    ? 'bg-white text-black hover:bg-gray-200'
-                    : 'bg-black text-white hover:bg-gray-800'
-                }`}
-              >
-                Manage
-              </button>
-            </>
-          ) : isParticipant ? (
-            <>
-              <button
-                onClick={() => onView(event.id)}
-                className={`flex-1 py-2 px-4 font-medium transition-colors ${
-                  event.background_image
-                    ? 'bg-white text-black hover:bg-gray-200'
-                    : 'bg-black text-white hover:bg-gray-800'
-                }`}
-              >
-                View Event
-              </button>
-              {onLeave && (
-                <button
-                  onClick={handleLeave}
-                  disabled={isLeaving}
-                  className={`py-2 px-4 border font-medium transition-colors disabled:opacity-50 ${
-                    event.background_image
-                      ? 'border-white/50 text-gray-200 hover:border-white hover:text-white'
-                      : 'border-gray-300 text-gray-600 hover:border-black hover:text-black'
-                  }`}
-                >
-                  {isLeaving ? '...' : 'Leave'}
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => onView(event.id)}
-                className={`flex-1 py-2 px-4 border font-medium transition-colors ${
-                  event.background_image
-                    ? 'border-white text-white hover:bg-white/20'
-                    : 'border-black text-black hover:bg-gray-50'
-                }`}
-              >
-                View
-              </button>
-              {!isFull && !isClosed && !isPast && onJoin && (
-                <button
-                  onClick={handleJoin}
-                  disabled={isJoining}
-                  className={`py-2 px-4 font-medium transition-colors disabled:opacity-50 ${
-                    event.background_image
-                      ? 'bg-white text-black hover:bg-gray-200'
-                      : 'bg-black text-white hover:bg-gray-800'
-                  }`}
-                >
-                  {isJoining ? '...' : event.location_type === 'collaborative' ? 'Join to Vote' : 'Join'}
-                </button>
-              )}
-            </>
-          )}
+        <div className="flex gap-2 sm:gap-3">
+          <button
+            onClick={() => onView(event.id)}
+            className={`w-full py-2.5 sm:py-3 px-4 sm:px-5 text-sm sm:text-base md:text-lg font-medium transition-colors rounded-lg ${
+              event.background_image
+                ? 'bg-white text-black hover:bg-gray-200'
+                : 'bg-black text-white hover:bg-gray-800'
+            }`}
+          >
+            View
+          </button>
         </div>
       </div>
     </SpotlightCard>

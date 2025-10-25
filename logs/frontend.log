@@ -8,88 +8,81 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1419ms
+ ✓ Ready in 1174ms
  ○ Compiling / ...
- ✓ Compiled / in 2.1s (758 modules)
- GET / 200 in 2456ms
- ✓ Compiled in 63ms (299 modules)
- GET / 200 in 85ms
- ○ Compiling /icon ...
- ✓ Compiled /icon in 790ms (524 modules)
- GET /icon 200 in 949ms
- ✓ Compiled /my-posts in 280ms (739 modules)
- GET /my-posts 200 in 389ms
- GET / 200 in 36ms
- GET / 200 in 258ms
- GET /icon 200 in 149ms
- GET /my-posts 200 in 32ms
- GET /my-posts 200 in 55ms
- GET /icon 200 in 9ms
- ✓ Compiled /login in 242ms (746 modules)
- GET /login 200 in 289ms
- GET / 200 in 20ms
- GET /my-posts 200 in 52ms
- ✓ Compiled in 409ms (760 modules)
- GET /my-posts 200 in 68ms
- ✓ Compiled in 223ms (755 modules)
- ✓ Compiled /_not-found in 240ms (746 modules)
- GET /my-posts 404 in 306ms
- GET /my-posts 200 in 137ms
- GET / 200 in 85ms
- GET / 200 in 123ms
- GET /icon 200 in 214ms
- GET /my-posts 200 in 68ms
- GET /my-posts 200 in 17ms
- GET / 200 in 31ms
- GET / 200 in 100ms
- GET / 200 in 96ms
- ✓ Compiled in 888ms (755 modules)
- GET / 200 in 184ms
- ✓ Compiled in 539ms (757 modules)
- GET / 200 in 162ms
- ✓ Compiled in 997ms (757 modules)
- GET / 200 in 120ms
- ✓ Compiled in 306ms (757 modules)
- GET / 200 in 68ms
- ✓ Compiled in 256ms (757 modules)
- GET / 200 in 72ms
- ✓ Compiled in 43ms (291 modules)
- GET / 200 in 230ms
- GET / 200 in 98ms
- GET /icon 200 in 237ms
+ ✓ Compiled / in 1216ms (745 modules)
+ GET / 200 in 1545ms
+ ✓ Compiled in 246ms (299 modules)
+ ✓ Compiled in 343ms (745 modules)
+ GET / 200 in 271ms
+ ✓ Compiled /icon in 495ms (524 modules)
+ GET /icon 200 in 682ms
  ○ Compiling /event-detail ...
- ✓ Compiled /event-detail in 852ms (811 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 1037ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 18ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 526ms
- GET /icon 200 in 356ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 106ms
- GET /icon 200 in 45ms
- GET / 200 in 63ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 56ms
- ✓ Compiled in 635ms (811 modules)
- ✓ Compiled in 380ms (825 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 78ms
- ✓ Compiled in 246ms (825 modules)
- ✓ Compiled /_not-found in 330ms (816 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 404 in 401ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 166ms
- ✓ Compiled in 410ms (830 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 57ms
- ✓ Compiled in 294ms (830 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 54ms
- ✓ Compiled in 265ms (830 modules)
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 57ms
- GET / 200 in 122ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 44ms
- GET / 200 in 41ms
- GET / 200 in 240ms
- GET /icon 200 in 201ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 35ms
- GET / 200 in 65ms
- GET /event-detail?id=evt_9f1c3ac0250542b5 200 in 92ms
- GET / 200 in 146ms
- GET /my-posts 200 in 50ms
- GET / 200 in 39ms
- GET /my-posts 200 in 36ms
+ ✓ Compiled /event-detail in 719ms (810 modules)
+ GET /event-detail?id=evt_f75f5843ba9c4ffe 200 in 836ms
+ GET / 200 in 49ms
+ GET /event-detail?id=evt_5b837670a5344be4 200 in 31ms
+ ✓ Compiled in 367ms (824 modules)
+ GET /event-detail?id=evt_5b837670a5344be4 200 in 80ms
+ GET / 200 in 34ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 31ms
+ ✓ Compiled in 236ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 104ms
+ ✓ Compiled in 240ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 83ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 271ms
+ GET /icon 200 in 292ms
+ ✓ Compiled in 419ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 115ms
+ GET /icon 200 in 154ms
+ GET /icon 200 in 6ms
+ GET / 200 in 76ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 228ms
+ GET /icon 200 in 15ms
+ ✓ Compiled in 392ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 97ms
+ GET /icon 200 in 198ms
+ GET /icon 200 in 4ms
+ ✓ Compiled in 148ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 52ms
+ GET /icon 200 in 116ms
+ GET /icon 200 in 4ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 236ms
+ GET /icon 200 in 31ms
+ GET / 200 in 74ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 66ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 67ms
+ GET /icon 200 in 17ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 74ms
+ GET /icon 200 in 14ms
+ ✓ Compiled in 441ms (824 modules)
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 92ms
+ GET /icon 200 in 187ms
+ GET /icon 200 in 5ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 157ms
+ GET /icon 200 in 33ms
+ GET / 200 in 76ms
+ GET /event-detail?id=evt_f75f5843ba9c4ffe 200 in 66ms
+ GET / 200 in 34ms
+ ✓ Compiled in 413ms (824 modules)
+ GET / 200 in 84ms
+ ✓ Compiled in 173ms (824 modules)
  GET / 200 in 59ms
+ ✓ Compiled in 234ms (824 modules)
+ GET / 200 in 54ms
+ ✓ Compiled in 140ms (824 modules)
+ GET / 200 in 59ms
+ ✓ Compiled in 335ms (824 modules)
+ GET / 200 in 60ms
+ ✓ Compiled in 135ms (824 modules)
+ GET / 200 in 61ms
+ ✓ Compiled in 246ms (824 modules)
+ GET / 200 in 60ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 106ms
+ GET / 200 in 43ms
+ GET / 200 in 240ms
+ GET /icon 200 in 260ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 29ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 98ms
+ GET /event-detail?id=evt_c4f025d134cd4ced 200 in 72ms
+ GET /icon 200 in 22ms
