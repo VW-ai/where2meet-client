@@ -1120,11 +1120,11 @@ function EventPageContent() {
           {/* Loading text */}
           <Logo size="lg" showText={true} className="mb-4 justify-center" />
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-[#08c605] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-3 h-3 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-white border-2 border-black animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
-          <p className="text-gray-500 font-medium">{t.loadingEvent}</p>
+          <p className="text-sm text-black font-bold uppercase">{t.loadingEvent}</p>
         </div>
       </div>
     );
@@ -1134,12 +1134,12 @@ function EventPageContent() {
   if (!apiKey) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-black/10 max-w-md">
-          <h1 className="text-2xl font-bold text-black mb-4">{t.apiKeyMissing}</h1>
-          <p className="text-gray-500 mb-4">
-            {t.apiKeyMissingMessage} <code className="bg-gray-100 px-2 py-1 rounded text-[#08c605] font-mono">.env.local</code> file:
+        <div className="bg-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md">
+          <h1 className="text-lg sm:text-xl font-bold text-black uppercase mb-4">{t.apiKeyMissing}</h1>
+          <p className="text-sm text-black mb-4">
+            {t.apiKeyMissingMessage} <code className="bg-white border-2 border-black px-2 py-1 text-black font-mono">.env.local</code> file:
           </p>
-          <pre className="bg-black p-4 rounded text-sm overflow-x-auto text-[#08c605] font-mono border border-[#08c605]/30">
+          <pre className="bg-black border-2 border-black p-4 text-sm overflow-x-auto text-white font-mono">
             NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
           </pre>
         </div>
@@ -1185,15 +1185,15 @@ function EventPageContent() {
 
       {/* Final Decision Banner - Brutalist/Techno Style */}
       {event.final_decision && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50 max-w-2xl">
-          <div className="bg-black text-white px-6 py-2 border-b-4 border-black flex items-center gap-2">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 max-w-xl">
+          <div className="bg-black text-white px-4 py-2 border-b-4 border-black flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <p className="font-bold text-xs uppercase tracking-wider">{t.finalDecision}</p>
+            <p className="font-bold text-xs sm:text-sm uppercase tracking-wider">{t.finalDecision}</p>
           </div>
-          <div className="px-6 py-4">
-            <p className="font-bold text-xl text-black uppercase text-center">{event.final_decision}</p>
+          <div className="px-4 py-3">
+            <p className="font-bold text-base sm:text-lg text-black uppercase text-center">{event.final_decision}</p>
           </div>
         </div>
       )}
@@ -1275,7 +1275,7 @@ function EventPageContent() {
 
             {/* Content */}
             <div className="relative flex items-center justify-between w-full">
-              <h3 className="font-bold text-sm uppercase truncate flex-1 text-white drop-shadow-lg">{selectedCandidate.name}</h3>
+              <h3 className="font-bold text-base sm:text-lg uppercase truncate flex-1 text-white drop-shadow-lg">{selectedCandidate.name}</h3>
               <button
                 onClick={() => setSelectedCandidate(null)}
                 className="ml-2 hover:bg-white hover:text-black w-6 h-6 flex items-center justify-center transition-all bg-black/50 backdrop-blur-sm"
@@ -1290,7 +1290,7 @@ function EventPageContent() {
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4">
             {/* Rating, Distance, and Vote */}
-            <div className="flex items-center justify-between mb-3 text-xs text-black">
+            <div className="flex items-center justify-between mb-3 text-sm text-black">
               {/* Left side: Rating and Distance */}
               <div className="flex items-center gap-3">
                 {selectedCandidate.rating && (
@@ -1354,7 +1354,7 @@ function EventPageContent() {
             {/* Address */}
             {selectedCandidate.vicinity && (
               <div className="mb-3">
-                <p className="text-xs text-black">{selectedCandidate.vicinity}</p>
+                <p className="text-sm text-black">{selectedCandidate.vicinity}</p>
               </div>
             )}
 
@@ -1376,7 +1376,7 @@ function EventPageContent() {
                   <h4 className="text-xs font-bold uppercase text-black">About</h4>
                 </button>
                 {isAboutExpanded && (
-                  <div className="text-xs text-black leading-relaxed">
+                  <div className="text-sm text-black leading-relaxed">
                     {candidateEditorialSummary}
                   </div>
                 )}
@@ -1401,7 +1401,7 @@ function EventPageContent() {
                   <h4 className="text-xs font-bold uppercase text-black">Hours</h4>
                 </button>
                 {isHoursExpanded && candidateOpeningHours.weekday_text && (
-                  <div className="text-xs text-black space-y-1">
+                  <div className="text-sm text-black space-y-1">
                     {candidateOpeningHours.weekday_text.map((day: string, index: number) => (
                       <div key={index} className="leading-relaxed">{day}</div>
                     ))}
@@ -1554,34 +1554,37 @@ function EventPageContent() {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border-2 border-[#08c605]" onClick={(e) => e.stopPropagation()}>
-            {/* Welcoming Icon */}
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-[#08c605]/10 rounded-full flex items-center justify-center">
-                <span className="text-4xl">🤝</span>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-base sm:text-lg font-bold uppercase">{t.shareEventLink}</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-sm text-black mb-4 font-medium">
+                Invite participants to join this event
+              </p>
+              <div className="bg-white border-2 border-black p-3 mb-4 break-all text-sm text-black font-mono">
+                {window.location.origin}/event?id={eventId}&token={joinToken}
               </div>
-            </div>
-            <h3 className="text-xl font-bold text-black mb-2 text-center">{t.shareEventLink}</h3>
-            <p className="text-sm text-gray-500 mb-4 text-center">
-              Invite participants to join
-            </p>
-            <div className="bg-black p-3 rounded-lg mb-4 break-all text-sm text-[#08c605] font-mono border border-[#08c605]/30">
-              {window.location.origin}/event?id={eventId}&token={joinToken}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={copyJoinLink}
-                className="flex-1 px-4 py-2 bg-[#08c605] text-black font-bold rounded-lg hover:bg-[#06a004] transition-colors"
-              >
-                {t.copyLink}
-              </button>
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="flex-1 px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-900 transition-colors border border-[#08c605]/30"
-              >
-                {t.close}
-              </button>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={copyJoinLink}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  {t.copyLink}
+                </button>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  {t.close}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1594,12 +1597,12 @@ function EventPageContent() {
           style: {
             background: 'white',
             color: 'black',
-            border: '4px solid black',
-            boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)',
+            border: '3px solid black',
+            boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
             fontWeight: 'bold',
-            fontSize: '20px',
+            fontSize: '14px',
             textTransform: 'uppercase',
-            padding: '18px 24px',
+            padding: '12px 16px',
           },
           className: 'toast-brutalist',
         }}
@@ -1611,15 +1614,15 @@ function EventPageContent() {
           <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
             {/* Header */}
             <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
-              <h3 className="text-lg font-bold uppercase">Publish Final Decision</h3>
+              <h3 className="text-base sm:text-lg font-bold uppercase">Publish Final Decision</h3>
             </div>
 
             {/* Content */}
             <div className="px-6 py-6">
-              <p className="text-black mb-4 font-medium">
+              <p className="text-sm text-black mb-4 font-medium">
                 You are about to publish <span className="font-bold">{selectedCandidate.name}</span> as the final meeting location.
               </p>
-              <p className="text-black text-sm mb-6">
+              <p className="text-sm text-black mb-6">
                 All participants will be notified of this decision. This action cannot be undone.
               </p>
 
@@ -1649,18 +1652,18 @@ function EventPageContent() {
           <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
             {/* Header */}
             <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
-              <h3 className="text-lg font-bold uppercase">Add Your Location</h3>
+              <h3 className="text-base sm:text-lg font-bold uppercase">Add Your Location</h3>
             </div>
 
             {/* Content */}
             <div className="px-6 py-6">
               <p className="text-black mb-3 font-bold text-sm uppercase">Location:</p>
               {clickedLocation.address ? (
-                <p className="text-black mb-6 font-medium">
+                <p className="text-sm text-black mb-6 font-medium">
                   {clickedLocation.address}
                 </p>
               ) : (
-                <p className="text-black mb-6 font-mono text-sm">
+                <p className="text-sm text-black mb-6 font-mono">
                   {clickedLocation.lat.toFixed(6)}, {clickedLocation.lng.toFixed(6)}
                 </p>
               )}

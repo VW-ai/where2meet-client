@@ -2,6 +2,200 @@
 
 ---
 
+## 2025-10-26: Event Detail Page - Complete Techno/Brutalist Refactor ✅
+
+### Overview
+Comprehensive techno/brutalist styling applied to the entire event detail page, including text size alignment with homepage, modal refactoring, and component styling updates.
+
+---
+
+### ✅ Text Size Alignment with Homepage
+
+#### 1. Venue Card (Selected Candidate Popup)
+**File:** `app/event/page.tsx` (lines 1278-1409)
+
+**Changes:**
+- **Title**: `text-sm` → `text-base sm:text-lg` (16px/18px)
+- **Info row (rating/distance)**: `text-xs` → `text-sm` (14px)
+- **Address**: `text-xs` → `text-sm` (14px)
+- **About content**: `text-xs` → `text-sm` (14px)
+- **Hours content**: `text-xs` → `text-sm` (14px)
+- **Section headers**: Kept `text-xs font-bold uppercase` ✓
+
+**Result**: Venue card now matches homepage EventCard text hierarchy
+
+---
+
+### ✅ Modal Refactoring
+
+#### 1. Share Modal (Complete Techno Transformation)
+**File:** `app/event/page.tsx` (lines 1556-1591)
+
+**Removed:**
+- Rounded corners (`rounded-lg`)
+- Green theme colors (`border-[#08c605]`, `bg-[#08c605]`)
+- Emoji icon (🤝)
+- Soft shadows
+
+**Applied:**
+- Container: `border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`
+- Header: Black background with `text-base sm:text-lg font-bold uppercase`
+- Link box: `border-2 border-black` with black/white theme
+- Buttons: `text-sm font-bold uppercase` with proper techno styling
+- Body text: `text-sm`
+
+#### 2. Publish Confirmation Modal
+**File:** `app/event/page.tsx` (lines 1612-1644)
+
+**Updates:**
+- Header: `text-lg` → `text-base sm:text-lg` (responsive)
+- Body paragraphs: Ensured all use `text-sm`
+- Already had techno styling (border-4, shadow, etc.) ✓
+
+#### 3. Location Confirmation Modal
+**File:** `app/event/page.tsx` (lines 1650-1688)
+
+**Updates:**
+- Header: `text-lg` → `text-base sm:text-lg` (responsive)
+- Address text: Added `text-sm`
+- Coordinates: Ensured `text-sm`
+- Already had techno styling ✓
+
+---
+
+### ✅ EventHostSettings Component Refactor
+**File:** `components/EventHostSettings.tsx`
+
+**Complete Transformation:**
+
+**Container:**
+- Removed: `border-2 border-yellow-400 rounded-lg shadow-lg`
+- Applied: `border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]`
+
+**Header:**
+- Title: `text-base sm:text-lg font-bold uppercase`
+- HOST badge: Changed from `bg-yellow-500 rounded` to `bg-black text-white border-2 border-black uppercase`
+
+**Settings Grid:**
+- Removed: `bg-yellow-50 rounded border-yellow-200`
+- Applied: `bg-white border-2 border-black`
+- Labels: `text-xs font-bold uppercase` (was text-gray-600)
+- Values: `text-sm font-semibold`
+
+**Buttons (All Updated):**
+```tsx
+// Edit Event
+bg-black text-white border-2 border-black font-bold uppercase py-3
+
+// Export Participants
+border-2 border-black font-bold uppercase py-3
+
+// Close Event
+border-2 border-black font-bold uppercase py-3
+
+// Delete Event
+border-2 border-red-600 font-bold uppercase py-3
+```
+
+All buttons: Removed rounded corners, increased padding to `py-3`, made text uppercase and bold
+
+---
+
+### ✅ Loading & Error States
+
+#### Loading Spinner
+**File:** `app/event/page.tsx` (lines 1122-1127)
+
+**Changes:**
+- Removed: `bg-[#08c605] rounded-full` (green circles)
+- Applied: `bg-black border-2 border-black` with alternating black/white squares
+- Text: `text-gray-500` → `text-sm text-black font-bold uppercase`
+
+#### API Key Missing Error
+**File:** `app/event/page.tsx` (lines 1134-1148)
+
+**Changes:**
+- Container: `rounded-lg shadow-sm border-black/10` → `border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`
+- Title: `text-2xl` → `text-lg sm:text-xl uppercase`
+- Body: `text-gray-500` → `text-sm text-black`
+- Code inline: `bg-gray-100 rounded text-[#08c605]` → `bg-white border-2 border-black text-black`
+- Code block: `rounded border-[#08c605]/30 text-[#08c605]` → `border-2 border-black text-white`
+
+---
+
+### ✅ Final Decision Banner
+
+**File:** `app/event/page.tsx` (lines 1187-1199)
+
+**Updates:**
+- Border: `border-3` → `border-4` and `border-b-3` → `border-b-4`
+- Icon size: `w-3.5 h-3.5` → `w-4 h-4`
+- Header text: `text-xs` → `text-xs sm:text-sm`
+- Content text: `text-base` → `text-base sm:text-lg`
+
+---
+
+### 📁 Files Modified
+
+1. **app/event/page.tsx**
+   - Updated venue card text sizes (5 instances)
+   - Refactored Share modal to techno style
+   - Updated Publish/Location confirmation modals text sizes
+   - Applied techno styling to loading spinner
+   - Applied techno styling to error state
+   - Updated final decision banner sizing
+
+2. **components/EventHostSettings.tsx**
+   - Complete techno refactor (container, header, grid, buttons)
+   - Removed all rounded corners
+   - Removed all yellow theme colors
+   - Updated all text sizes to match hierarchy
+
+---
+
+### 🎨 Design Consistency Achieved
+
+**All Components Now Have:**
+- `border-2` or `border-4` (no rounded corners)
+- Hard brutalist shadows: `shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]` or `shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`
+- Black/white binary color scheme
+- Uppercase text for headers and buttons
+- Bold font weights throughout
+- Consistent text sizing hierarchy
+
+**Text Hierarchy:**
+- Modal/Page titles: `text-base sm:text-lg font-bold uppercase`
+- Section headers: `text-xs font-bold uppercase`
+- Body/info text: `text-sm`
+- Buttons: `text-sm font-bold uppercase`
+
+---
+
+### ✅ User Experience Improvements
+
+1. **Better Readability**: All text now sized appropriately for desktop and mobile
+2. **Visual Consistency**: Event detail page matches homepage styling
+3. **Cleaner Modals**: All popups follow consistent techno design
+4. **Professional Loading**: Loading state uses geometric shapes instead of colored dots
+5. **Unified Theme**: Removed all green theme remnants, pure black/white brutalism
+
+---
+
+### 🧪 Testing Checklist
+
+- [x] Venue card displays with proper text sizes
+- [x] Share modal uses techno styling
+- [x] All confirmation modals sized correctly
+- [x] EventHostSettings shows techno design
+- [x] Loading spinner uses black/white theme
+- [x] Error states properly styled
+- [x] Final decision banner sized appropriately
+- [x] All rounded corners removed
+- [x] All text uppercased where appropriate
+- [x] Responsive text sizing works on mobile/desktop
+
+---
+
 ## 2025-10-26: Techno Toast Notifications + EventCard Info Display Refactor ✅
 
 ### Overview
