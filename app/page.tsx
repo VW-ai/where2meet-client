@@ -14,7 +14,7 @@ import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
 import { Event as EventFeedType, EventVisibility } from '@/types';
-import { Trophy, Film } from 'lucide-react';
+import { Trophy, Film, Dribbble, CircleDot, Footprints, Dumbbell, Bike, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -50,6 +50,29 @@ export default function Home() {
   const subCategories: Record<string, string[]> = {
     sports: ['Basketball', 'Soccer', 'Tennis', 'Running', 'Gym', 'Cycling', 'Volleyball', 'Badminton'],
     entertainment: ['Movies', 'Theater', 'Concerts', 'Museums', 'Gaming', 'Comedy', 'Karaoke', 'Festival'],
+  };
+
+  // Get icon for subcategory
+  const getSubCategoryIcon = (subCategory: string) => {
+    const iconMap: Record<string, React.ReactElement> = {
+      'Basketball': <Dribbble className="w-3.5 h-3.5" />,
+      'Soccer': <CircleDot className="w-3.5 h-3.5" />,
+      'Tennis': <CircleDot className="w-3.5 h-3.5" />,
+      'Running': <Footprints className="w-3.5 h-3.5" />,
+      'Gym': <Dumbbell className="w-3.5 h-3.5" />,
+      'Cycling': <Bike className="w-3.5 h-3.5" />,
+      'Volleyball': <Volleyball className="w-3.5 h-3.5" />,
+      'Badminton': <CircleDot className="w-3.5 h-3.5" />,
+      'Movies': <Film className="w-3.5 h-3.5" />,
+      'Theater': <Theater className="w-3.5 h-3.5" />,
+      'Concerts': <MusicIcon className="w-3.5 h-3.5" />,
+      'Museums': <Theater className="w-3.5 h-3.5" />,
+      'Gaming': <Gamepad2 className="w-3.5 h-3.5" />,
+      'Comedy': <Laugh className="w-3.5 h-3.5" />,
+      'Karaoke': <Mic2 className="w-3.5 h-3.5" />,
+      'Festival': <PartyPopper className="w-3.5 h-3.5" />,
+    };
+    return iconMap[subCategory];
   };
 
   // Generate next 14 days for date selector (scrollable)
@@ -603,12 +626,13 @@ export default function Home() {
                         <button
                           key={subCat}
                           onClick={() => setSelectedSubCategory(subCat)}
-                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded ${
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
                             selectedSubCategory === subCat
                               ? 'bg-black text-white'
                               : 'border border-gray-300 bg-white text-gray-700'
                           }`}
                         >
+                          {getSubCategoryIcon(subCat)}
                           {subCat}
                         </button>
                       ))}
@@ -1207,12 +1231,13 @@ export default function Home() {
                         <button
                           key={subCat}
                           onClick={() => setSelectedSubCategory(subCat)}
-                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                             selectedSubCategory === subCat
                               ? 'bg-black text-white'
                               : 'border border-gray-300 bg-white text-gray-700 hover:border-black'
                           }`}
                         >
+                          {getSubCategoryIcon(subCat)}
                           {subCat}
                         </button>
                       ))}
