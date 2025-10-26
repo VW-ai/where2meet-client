@@ -14,6 +14,7 @@ import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
 import DateTimePicker from '@/components/DateTimePicker';
+import TechnoToast, { ToastProps } from '@/components/TechnoToast';
 import { Event as EventFeedType, EventVisibility } from '@/types';
 import { Trophy, Film, Dribbble, CircleDot, Footprints, Dumbbell, Bike, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper, MapPin, Calendar, Star, Heart, UtensilsCrossed, Coffee, Dumbbell as GymIcon, Pizza, TreePine, Music2 } from 'lucide-react';
 
@@ -46,6 +47,9 @@ export default function Home() {
   const [hostedEventIds, setHostedEventIds] = useState<string[]>([]);
   const [mobileTab, setMobileTab] = useState<'meeting' | 'events' | 'lists'>('events');
   const [isEventFeedFullscreen, setIsEventFeedFullscreen] = useState(false);
+
+  // Toast notification state
+  const [toast, setToast] = useState<Omit<ToastProps, 'onClose'> | null>(null);
 
   // Subcategories for each main category (only sports and entertainment)
   const subCategories: Record<string, string[]> = {
@@ -190,11 +194,19 @@ export default function Home() {
           },
           (error) => {
             console.error('Geolocation error:', error);
-            alert('Unable to get your location. Please enable location permissions.');
+            setToast({
+              message: 'Unable to get your location. Please enable location permissions.',
+              type: 'error',
+              duration: 5000,
+            });
           }
         );
       } else {
-        alert('Geolocation is not supported by your browser.');
+        setToast({
+          message: 'Geolocation is not supported by your browser.',
+          type: 'error',
+          duration: 5000,
+        });
       }
     } else {
       setNearMeFilter(!nearMeFilter);
@@ -228,7 +240,11 @@ export default function Home() {
     background_image?: string;
   }) => {
     if (!token) {
-      alert('Please log in to create an event.');
+      setToast({
+        message: 'Please log in to create an event.',
+        type: 'info',
+        duration: 4000,
+      });
       router.push('/login');
       return;
     }
@@ -264,10 +280,20 @@ export default function Home() {
       setEvents((prev) => [newEvent, ...prev]);
       setHostedEventIds((prev) => [...prev, newEvent.id]);
 
-      alert('✅ Event posted successfully!');
+      // Show success toast
+      setToast({
+        message: 'Event posted successfully!',
+        type: 'success',
+        duration: 4000,
+      });
     } catch (err) {
       console.error('Failed to create event:', err);
-      alert(`❌ Failed to post event: ${err instanceof Error ? err.message : 'Please try again.'}`);
+      // Show error toast
+      setToast({
+        message: `Failed to post event: ${err instanceof Error ? err.message : 'Please try again.'}`,
+        type: 'error',
+        duration: 5000,
+      });
       throw err;
     }
   };
@@ -280,7 +306,11 @@ export default function Home() {
     }
 
     if (!token) {
-      alert('Please log in to join events.');
+      setToast({
+        message: 'Please log in to join events.',
+        type: 'info',
+        duration: 4000,
+      });
       return;
     }
 
@@ -315,14 +345,22 @@ export default function Home() {
       );
     } catch (err) {
       console.error('Failed to join event:', err);
-      alert(err instanceof Error ? err.message : 'Failed to join event. Please try again.');
+      setToast({
+        message: err instanceof Error ? err.message : 'Failed to join event. Please try again.',
+        type: 'error',
+        duration: 5000,
+      });
     }
   };
 
   // Handle leave event
   const handleLeaveEvent = async (eventId: string) => {
     if (!token) {
-      alert('Please log in to leave events.');
+      setToast({
+        message: 'Please log in to leave events.',
+        type: 'info',
+        duration: 4000,
+      });
       return;
     }
 
@@ -351,7 +389,11 @@ export default function Home() {
       );
     } catch (err) {
       console.error('Failed to leave event:', err);
-      alert(err instanceof Error ? err.message : 'Failed to leave event. Please try again.');
+      setToast({
+        message: err instanceof Error ? err.message : 'Failed to leave event. Please try again.',
+        type: 'error',
+        duration: 5000,
+      });
     }
   };
 
@@ -444,6 +486,16 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* Toast Notification */}
+      {toast && (
+        <TechnoToast
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Navigation Bar */}
       <Header user={user} onLogout={logout} />
 
@@ -894,7 +946,7 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="p-6 lg:p-8">
+                <div className="px-6 lg:px-8 pt-6 lg:pt-8 pb-4 lg:pb-5">
                 {/* Meeting Point Form */}
                 <div className="space-y-4 mb-5 lg:mb-6 max-w-xl">
                   <div>
@@ -948,6 +1000,9 @@ export default function Home() {
                 </div>
                 </div>
               </div>
+
+              {/* Divider */}
+              <div className="border-b-2 border-black"></div>
 
               {/* Bottom Left: Other People's Lists */}
               <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>

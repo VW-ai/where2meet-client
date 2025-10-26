@@ -5,7 +5,7 @@ import { EventCategory, EventVisibility, LocationType } from '@/types';
 import { useGooglePlacesAutocomplete } from '@/hooks/useGooglePlacesAutocomplete';
 import DateTimePicker from './DateTimePicker';
 import CityAutocomplete from './CityAutocomplete';
-import { Trophy, Film } from 'lucide-react';
+import { Trophy, Film, X, MapPin, Map, Info, Check, Sparkles, Search, Shuffle } from 'lucide-react';
 
 interface PostEventModalProps {
   isOpen: boolean;
@@ -171,32 +171,59 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
     e.preventDefault();
     setError(null);
 
-    // Validation
+    // Validation with field ID for scrolling
+    const scrollToField = (fieldId: string, errorMessage: string) => {
+      setError(errorMessage);
+      // Scroll to the field and highlight it
+      setTimeout(() => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Add red border highlight
+          const input = element.tagName === 'INPUT' ? element : element.querySelector('input, div[contenteditable]');
+          if (input) {
+            input.classList.add('!border-red-600');
+            setTimeout(() => {
+              input.classList.remove('!border-red-600');
+            }, 3000);
+            (input as HTMLElement).focus();
+          } else {
+            // For sections without inputs (like category buttons), highlight the container
+            element.classList.add('!border-red-600');
+            setTimeout(() => {
+              element.classList.remove('!border-red-600');
+            }, 3000);
+          }
+        }
+      }, 100);
+    };
+
     if (!title.trim()) {
-      setError('Event title is required');
+      scrollToField('event-title', 'Event title is required');
       return;
     }
     if (!meetingTime) {
-      setError('Meeting time is required');
+      scrollToField('meeting-time', 'Meeting time is required');
       return;
     }
     if (!category) {
-      setError('Please select a category (Sports or Entertainment)');
+      scrollToField('category-section', 'Please select a category (Sports or Entertainment)');
       return;
     }
     if (!subCategory) {
-      setError('Please select a specific activity type');
+      scrollToField('subcategory-section', 'Please select a specific activity type');
       return;
     }
     if (!participantLimit || participantLimit < 2 || participantLimit > 100) {
-      setError('Participant limit is required (2-100 people)');
+      scrollToField('participant-limit', 'Participant limit is required (2-100 people)');
       return;
     }
 
     // Location-specific validation
     if (locationType === 'fixed') {
       if (!venueAddress.trim()) {
-        setError('Address is required for fixed location events');
+        scrollToField('venue-location', 'Address is required for fixed location events');
         return;
       }
       // Auto-extract city from address if not set by autocomplete
@@ -212,7 +239,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
       }
     } else {
       if (!locationArea.trim()) {
-        setError('Location area is required for collaborative events');
+        scrollToField('location-area', 'Location area is required for collaborative events');
         return;
       }
     }
@@ -220,7 +247,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
     // Check if meeting time is in the future
     const meetingDate = new Date(meetingTime);
     if (meetingDate <= new Date()) {
-      setError('Meeting time must be in the future');
+      scrollToField('meeting-time', 'Meeting time must be in the future');
       return;
     }
 
@@ -291,34 +318,51 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         {/* Header */}
-        <div className="border-b border-gray-300 px-6 py-4 flex justify-between items-center sticky top-0 bg-white">
-          <h2 className="text-xl font-bold text-black">Post Event</h2>
+        <div className="bg-black text-white px-6 py-4 flex justify-between items-center sticky top-0 z-20">
+          <h2 className="text-sm font-bold uppercase">Post Event</h2>
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="text-gray-600 hover:text-black text-2xl leading-none disabled:opacity-50"
+            className="text-white hover:text-gray-300 transition-colors disabled:opacity-50"
           >
-            ×
+            <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Error Message - Sticky below header */}
+        {error && (
+          <div className="sticky top-[57px] z-10 bg-red-600 text-white px-6 py-4 border-b-4 border-black flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex-shrink-0 w-6 h-6 bg-white text-red-600 flex items-center justify-center font-bold border-2 border-black">
+              !
+            </div>
+            <span className="font-bold text-sm uppercase flex-1">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="flex-shrink-0 text-white hover:text-gray-200 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-5">
             {/* Event Title */}
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-base font-medium text-black mb-2">
                 Event Title *
               </label>
               <input
+                id="event-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Weekend Brunch Meetup"
                 maxLength={100}
-                className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                className="w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">{title.length}/100</p>
@@ -326,7 +370,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-base font-medium text-black mb-2">
                 Description
               </label>
               <textarea
@@ -335,29 +379,27 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                 placeholder="Tell people what this event is about... (optional)"
                 maxLength={500}
                 rows={4}
-                className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none resize-none"
+                className="w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none resize-none placeholder:text-gray-400"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">{description.length}/500</p>
             </div>
 
             {/* Meeting Time */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-2">
+            <div id="meeting-time">
+              <label className="block text-base font-medium text-black mb-2">
                 Meeting Time *
               </label>
               <DateTimePicker
-                value={meetingTime}
-                onChange={setMeetingTime}
-                endTimeValue={endTime}
-                onEndTimeChange={setEndTime}
+                selected={meetingTime ? new Date(meetingTime) : null}
+                onChange={(date) => setMeetingTime(date ? date.toISOString() : '')}
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Location Type */}
-            <div className="border border-gray-300 p-4 bg-gray-50">
-              <label className="block text-sm font-medium text-black mb-3">
+            <div className="border-2 border-black p-4 bg-white">
+              <label className="block text-base font-medium text-black mb-3">
                 Location Type *
               </label>
               <div className="space-y-3">
@@ -371,10 +413,13 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                     disabled={isSubmitting}
                     style={{ accentColor: '#000000' }}
                   />
-                  <div>
-                    <div className="font-medium text-black">🗺️ Find Location Together</div>
-                    <div className="text-sm text-gray-600">
-                      I have an event idea but need help finding the best venue
+                  <div className="flex items-start gap-2">
+                    <Map className="w-4 h-4 text-black mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium text-black">Find Location Together</div>
+                      <div className="text-sm text-gray-600">
+                        I have an event idea but need help finding the best venue
+                      </div>
                     </div>
                   </div>
                 </label>
@@ -388,10 +433,13 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                     disabled={isSubmitting}
                     style={{ accentColor: '#000000' }}
                   />
-                  <div>
-                    <div className="font-medium text-black">📍 Fixed Location</div>
-                    <div className="text-sm text-gray-600">
-                      I already know exactly where we're meeting
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-black mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium text-black">Fixed Location</div>
+                      <div className="text-sm text-gray-600">
+                        I already know exactly where we're meeting
+                      </div>
                     </div>
                   </div>
                 </label>
@@ -400,8 +448,8 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Conditional Location Fields */}
             {locationType === 'collaborative' ? (
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">
+              <div id="location-area">
+                <label className="block text-base font-medium text-black mb-2">
                   General Area *
                 </label>
                 {/* Custom City Autocomplete */}
@@ -411,40 +459,43 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                   placeholder="Search for a city (e.g., San Francisco, New York)"
                   disabled={isSubmitting}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  ✨ Start typing a city name
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Start typing a city name
                 </p>
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    ℹ️ You and participants will suggest and vote on specific venues in this area
+                <div className="mt-2 p-3 bg-white border-2 border-black flex items-start gap-2">
+                  <Info className="w-4 h-4 text-black flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-black">
+                    You and participants will suggest and vote on specific venues in this area
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">
+                <div id="venue-location">
+                  <label className="block text-base font-medium text-black mb-2">
                     Location *
                   </label>
                   {/* Google Places Autocomplete Container (new API) */}
                   <div ref={venueContainerRef} className="w-full min-h-[44px]" style={{ display: 'block', visibility: 'visible' }} />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     {isGoogleMapsLoaded ? (
-                      <>✨ Start typing to search addresses with Google Maps autocomplete</>
+                      <><Sparkles className="w-3 h-3" /> Start typing to search addresses with Google Maps autocomplete</>
                     ) : (
-                      <>🔍 Loading Google Maps autocomplete...</>
+                      <><Search className="w-3 h-3" /> Loading Google Maps autocomplete...</>
                     )}
                   </p>
                   {venueCity && (
-                    <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded">
-                      <p className="text-xs text-gray-700">
-                        📍 <span className="font-medium">Area:</span> {venueCity}
+                    <div className="mt-2 p-2 bg-white border-2 border-black flex items-center gap-2">
+                      <MapPin className="w-3 h-3 text-black" />
+                      <p className="text-xs text-black">
+                        <span className="font-medium">Area:</span> {venueCity}
                       </p>
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">
+                  <label className="block text-base font-medium text-black mb-2">
                     Additional Details (Optional)
                   </label>
                   <input
@@ -452,24 +503,25 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                     value={venueAdditionalDetails}
                     onChange={(e) => setVenueAdditionalDetails(e.target.value)}
                     placeholder='e.g. "Floor 2, Room 201" or "Building B, Suite 300"'
-                    className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                    className="w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                     disabled={isSubmitting}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Add floor number, room number, or other location details
                   </p>
                 </div>
-                <div className="mt-2 p-3 bg-green-50 border border-green-200">
-                  <p className="text-sm text-green-800">
-                    ✓ Participants will see the exact meeting location when they join
+                <div className="mt-2 p-3 bg-white border-2 border-black flex items-start gap-2">
+                  <Check className="w-4 h-4 text-black flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-black">
+                    Participants will see the exact meeting location when they join
                   </p>
                 </div>
               </div>
             )}
 
             {/* Category */}
-            <div>
-              <label className="block text-sm font-medium text-black mb-2">
+            <div id="category-section">
+              <label className="block text-base font-medium text-black mb-2">
                 Category *
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -481,10 +533,10 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                       setCategory(cat.id);
                       setSubCategory(undefined); // Reset subcategory when changing category
                     }}
-                    className={`px-4 py-3 border text-sm font-medium transition-colors ${
+                    className={`px-4 py-3 border-2 text-sm font-bold uppercase transition-colors ${
                       category === cat.id
                         ? 'bg-black text-white border-black'
-                        : 'bg-white text-black border-gray-300 hover:border-black'
+                        : 'bg-white text-black border-black hover:bg-gray-100'
                     }`}
                     disabled={isSubmitting}
                   >
@@ -497,20 +549,20 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Subcategory - Only shown when a category is selected */}
             {category && subCategoryOptions[category] && (
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">
+              <div id="subcategory-section">
+                <label className="block text-base font-medium text-black mb-2">
                   Type (Select Specific Activity) *
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
                   {subCategoryOptions[category].map((subCat) => (
                     <button
                       key={subCat}
                       type="button"
                       onClick={() => setSubCategory(subCat)}
-                      className={`px-3 py-2 border text-xs font-medium transition-colors ${
+                      className={`px-3 py-2 border-2 text-xs font-bold uppercase transition-colors ${
                         subCategory === subCat
                           ? 'bg-black text-white border-black'
-                          : 'bg-white text-black border-gray-300 hover:border-black'
+                          : 'bg-white text-black border-black hover:bg-gray-100'
                       }`}
                       disabled={isSubmitting}
                     >
@@ -523,17 +575,18 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Participant Limit */}
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-base font-medium text-black mb-2">
                 Participant Limit *
               </label>
               <input
+                id="participant-limit"
                 type="number"
                 value={participantLimit || ''}
                 onChange={(e) => setParticipantLimit(e.target.value ? parseInt(e.target.value) : undefined)}
                 placeholder="e.g. 10"
                 min={2}
                 max={100}
-                className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                className="w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">Required (2-100 people)</p>
@@ -541,7 +594,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Visibility */}
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-base font-medium text-black mb-2">
                 Visibility
               </label>
               <div className="space-y-2">
@@ -580,7 +633,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
 
             {/* Contact Number */}
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-base font-medium text-black mb-2">
                 Contact Number (Optional)
               </label>
               <input
@@ -589,7 +642,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                 onChange={(e) => setContactNumber(e.target.value)}
                 placeholder="e.g. +1 (555) 123-4567"
                 maxLength={20}
-                className="w-full px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                className="w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                 disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -598,8 +651,8 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
             </div>
 
             {/* Background Image */}
-            <div className="border-t border-gray-300 pt-5">
-              <label className="block text-sm font-medium text-black mb-2">
+            <div className="border-t-2 border-black pt-5">
+              <label className="block text-base font-medium text-black mb-2">
                 Background Image (Optional)
               </label>
               <p className="text-xs text-gray-500 mb-3">
@@ -613,16 +666,17 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                     value={backgroundImage}
                     onChange={(e) => setBackgroundImage(e.target.value)}
                     placeholder="Paste image URL (e.g. from Unsplash)"
-                    className="flex-1 px-4 py-3 text-black border border-gray-300 focus:border-black focus:outline-none"
+                    className="flex-1 px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                     disabled={isSubmitting}
                   />
                   <button
                     type="button"
                     onClick={selectRandomImage}
                     disabled={isSubmitting}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:from-purple-700 hover:to-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    className="px-6 py-3 bg-black text-white border-2 border-black font-bold text-sm uppercase hover:bg-gray-900 transition-colors disabled:opacity-50 whitespace-nowrap flex items-center gap-2"
                   >
-                    🎲 Random
+                    <Shuffle className="w-4 h-4" />
+                    Random
                   </button>
                 </div>
 
@@ -631,7 +685,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                   <div className="relative">
                     <div className="text-xs font-medium text-gray-700 mb-2">Preview:</div>
                     <div
-                      className="relative w-full h-40 border border-gray-300 overflow-hidden"
+                      className="relative w-full h-40 border-2 border-black overflow-hidden"
                       style={{
                         backgroundImage: `url(${backgroundImage})`,
                         backgroundSize: 'cover',
@@ -655,22 +709,24 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                       <button
                         type="button"
                         onClick={() => setBackgroundImage('')}
-                        className="absolute top-2 right-2 z-20 p-2 bg-red-600 text-white hover:bg-red-700 transition-colors text-xs font-medium"
+                        className="absolute top-2 right-2 z-20 px-3 py-2 bg-red-600 text-white border-2 border-red-600 hover:bg-red-700 transition-colors text-xs font-bold uppercase"
                         disabled={isSubmitting}
                       >
                         Remove
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      💡 Tip: Use high-quality images (800x600px or larger) for best results
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Tip: Use high-quality images (800x600px or larger) for best results
                     </p>
                   </div>
                 )}
 
                 {!backgroundImage && (
-                  <div className="p-4 bg-gray-50 border border-gray-200">
-                    <p className="text-sm text-gray-600">
-                      ℹ️ Click "Random" to select from our curated collection, or paste your own image URL
+                  <div className="p-4 bg-white border-2 border-black flex items-start gap-2">
+                    <Info className="w-4 h-4 text-black flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-black">
+                      Click "Random" to select from our curated collection, or paste your own image URL
                     </p>
                   </div>
                 )}
@@ -678,20 +734,13 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
             </div>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-6 p-4 border border-red-500 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
           {/* Actions */}
           <div className="mt-8 flex gap-4">
             <button
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium hover:border-black hover:text-black transition-colors disabled:opacity-50"
+              className="flex-1 py-3 border-2 border-black text-black font-bold uppercase bg-white hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -706,7 +755,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                 participantLimit > 100 ||
                 (locationType === 'fixed' ? (!venueAddress.trim() || !venueCity.trim()) : !locationArea.trim())
               }
-              className="flex-1 py-3 bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-3 bg-black text-white border-2 border-black font-bold uppercase hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Posting...' : 'Post Event'}
             </button>

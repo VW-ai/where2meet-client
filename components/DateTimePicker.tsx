@@ -9,10 +9,11 @@ interface DateTimePickerProps {
   onChange: (date: Date | null) => void;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const DateTimePicker = forwardRef<HTMLInputElement, DateTimePickerProps>(
-  ({ selected, onChange, className = '', placeholder = 'Select date and time' }, ref) => {
+  ({ selected, onChange, className = '', placeholder = 'Select date and time', disabled = false }, ref) => {
     return (
       <DatePicker
         selected={selected}
@@ -22,10 +23,12 @@ const DateTimePicker = forwardRef<HTMLInputElement, DateTimePickerProps>(
         timeIntervals={15}
         dateFormat="MM/dd/yyyy, h:mm aa"
         placeholderText={placeholder}
-        className={`w-full px-4 text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400 ${className}`}
+        className={`w-full px-4 py-3 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400 ${className}`}
         calendarClassName="techno-datepicker"
         wrapperClassName="w-full"
         popperClassName="techno-datepicker-popper"
+        disabled={disabled}
+        minDate={new Date()}
         ref={ref}
       />
     );

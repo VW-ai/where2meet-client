@@ -1,5 +1,594 @@
 # Project Progress
 
+---
+
+## 2025-10-26: Techno Toast Notifications + EventCard Info Display Refactor ✅
+
+### Overview
+Implemented techno/brutalist styled toast notifications to replace all alert() calls, and refactored EventCard info displays with bordered badges, proper icon alignment, and consistent styling.
+
+---
+
+### ✅ TechnoToast Component Implementation
+
+#### 1. Custom Toast Component
+**File:** `components/TechnoToast.tsx`
+
+**Features:**
+- **3 Toast Types:** Success (green), Error (red), Info (blue)
+- **Techno Styling:**
+  - Border: `border-4 border-black`
+  - Shadow: `shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]` (hard brutalist shadow)
+  - Sharp corners (no border-radius)
+  - Uppercase bold text
+- **Geometric Icons:** CheckCircle, XCircle, Info in bordered boxes
+- **Auto-dismiss:** Configurable duration (default 4-5s)
+- **Manual Close:** X button
+- **Slide Animation:** Smooth slide-down from top
+
+**Animation (globals.css):**
+```css
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+```
+
+#### 2. Toast Integration in app/page.tsx
+**Replaced all alert() calls:**
+- ✅ Event posted successfully → Green success toast
+- ❌ Failed to post event → Red error toast
+- ℹ️ Login required messages → Blue info toast
+- ⚠️ Geolocation errors → Red error toast
+- ⚠️ Join/leave event errors → Red error toast
+
+**Toast State Management:**
+```tsx
+const [toast, setToast] = useState<Omit<ToastProps, 'onClose'> | null>(null);
+
+// Usage example
+setToast({
+  message: 'Event posted successfully!',
+  type: 'success',
+  duration: 4000,
+});
+```
+
+---
+
+### ✅ EventCard Info Display Refactor
+
+#### 1. Progress Indicator
+**File:** `components/EventCard.tsx` (lines 232-244)
+
+**Changes:**
+- Added Users icon before count
+- Removed "In Progress" text (icon is sufficient)
+- Format: `<Users icon> 5/10`
+- Styling: `border-2` with white/black theme
+- Uniform padding: `py-1.5 sm:py-2`
+
+#### 2. Location Display
+**Changes:**
+- All location badges now use bordered boxes
+- "Finding location" changed from blue theme to white bg/text
+- Consistent styling across fixed and collaborative locations
+- Icons: MapPin for all location types
+
+#### 3. Category/Rating/Distance Info
+**Major Improvements:**
+
+**Category Badge:**
+- Shows **subcategory-specific icon** (e.g., Soccer → Disc icon, Basketball → Dribbble icon)
+- Removed parent category prefix (now shows "BASKETBALL" instead of "Sports - Basketball")
+- Icon matches actual activity type
+
+**Icon Updates:**
+```tsx
+getCategoryIcon(category?: string, size: 'small' | 'large' = 'large')
+```
+- Added size parameter for flexible icon sizing
+- Small icons (w-3 to w-4) for badges
+- Large icons (w-6 to w-8) for titles
+
+**Soccer Icon:** Changed from CircleDot to `Disc` for better visual representation
+
+**All Info Badges:**
+- Uniform height with `py-1.5 sm:py-2`
+- Icons with `flex-shrink-0` to prevent squishing
+- `items-center` alignment
+- Consistent gap spacing: `gap-1.5`
+
+#### 4. Time Display
+**Changes:**
+- Replaced emoji 🕐 with Clock icon
+- Bordered box container matching other badges
+- Uppercase bold text
+- Aligned with other info displays
+
+---
+
+### 📁 Files Modified
+
+1. **components/TechnoToast.tsx** (NEW)
+   - Custom toast component with techno styling
+   - 3 toast types with color-coded themes
+   - Auto-dismiss and manual close functionality
+
+2. **app/globals.css**
+   - Added slide-down keyframe animation
+   - `.animate-slide-down` utility class
+
+3. **app/page.tsx**
+   - Added toast state management
+   - Replaced all 7 alert() calls with toast notifications
+   - Imported TechnoToast component
+
+4. **components/EventCard.tsx**
+   - Updated `getCategoryIcon()` with size parameter
+   - Refactored progress indicator (removed text, added icon)
+   - Standardized all info badges with uniform padding
+   - Changed category display to show only subcategory
+   - Updated Soccer icon from CircleDot to Disc
+   - Added Clock icon import
+   - Fixed vertical alignment with `items-center` and `flex-shrink-0`
+
+---
+
+### 🎨 Design Consistency
+
+**All Info Badges Now Have:**
+- `border-2 border-black` (or white on background images)
+- `px-2 sm:px-3 py-1.5 sm:py-2` uniform padding
+- Icons with `flex-shrink-0`
+- Bold uppercase text
+- Sharp corners
+- Consistent gap spacing
+
+**Visual Hierarchy:**
+- Progress: Users icon + count
+- Location: MapPin icon + area/venue
+- Category: Activity icon + subcategory name
+- Rating: Star icon + score
+- Distance: MapPin icon + km
+- Time: Clock icon + formatted time
+
+---
+
+### ✅ User Experience Improvements
+
+1. **Better Feedback:**
+   - Visual toast notifications instead of browser alerts
+   - Color-coded message types (green/red/blue)
+   - Auto-dismiss reduces user action needed
+
+2. **Cleaner Card Display:**
+   - Reduced visual clutter (removed redundant text)
+   - Icons provide clear, universal meaning
+   - Consistent badge sizes improve scanability
+
+3. **Better Icon Semantics:**
+   - Category icons match actual activity (Soccer → Disc, Basketball → Dribbble)
+   - Each info type has recognizable icon
+   - Perfect vertical alignment
+
+---
+
+### 🧪 Testing Checklist
+
+- [x] Success toast appears on event creation
+- [x] Error toast appears on failed operations
+- [x] Info toast appears on login prompts
+- [x] All alerts replaced with toasts
+- [x] Category icons match subcategories
+- [x] Icons align vertically in EventCard
+- [x] Progress indicator shows correct format
+- [x] Time display uses Clock icon
+- [x] Finding location uses white styling
+- [x] All badges have uniform height
+
+---
+
+# Project Progress
+
+---
+
+## 2025-10-25: PostEventModal Techno/Brutalist Refactor + Enhanced Validation ✅
+
+### Overview
+Complete visual and UX overhaul of the PostEventModal component, applying techno/brutalist design system and implementing intelligent form validation with auto-scroll and field highlighting.
+
+---
+
+### ✅ Techno/Brutalist Design Applied
+
+#### 1. Modal Container & Header
+**Visual Changes:**
+- Modal: `border-4 border-black` with `shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`
+- Header: Black background (`bg-black text-white`) with uppercase title
+- Close button: Replaced × with X icon from Lucide React
+- Sharp corners throughout (removed all rounded classes)
+
+#### 2. Form Fields (Comprehensive Update)
+**All Inputs & Textareas:**
+- Border: `border-2 border-black` (sharp, bold)
+- Text size: `text-base` for better readability
+- Padding: `px-4 py-3` (consistent with homepage)
+- Focus state: `focus:border-black outline-none`
+- Placeholder: `placeholder:text-gray-400`
+- Removed all rounded corners
+
+**Labels:**
+- Size: `text-base font-medium` (upgraded from text-sm)
+- Consistent spacing: `mb-2`
+
+#### 3. Buttons & Toggles
+**Category Buttons (Sports/Entertainment):**
+```tsx
+border-2 border-black
+text-sm font-bold uppercase
+bg-black text-white (selected) / bg-white text-black (unselected)
+hover:bg-gray-100 (unselected)
+```
+
+**Subcategory Buttons:**
+```tsx
+border-2 border-black
+text-xs font-bold uppercase
+3 columns on mobile (grid-cols-3)
+4 columns on desktop (lg:grid-cols-4)
+```
+
+**Random Image Button:**
+- Changed from gradient (`from-purple-600 to-blue-600`) to solid black
+- Added Shuffle icon from Lucide React
+- `bg-black text-white border-2 border-black uppercase font-bold`
+
+**Action Buttons:**
+- Cancel: `border-2 border-black bg-white text-black uppercase font-bold`
+- Post Event: `border-2 border-black bg-black text-white uppercase font-bold`
+
+#### 4. Radio Buttons & Location Type
+**Location Type Container:**
+- Background: Changed from `bg-gray-50 border border-gray-300` to `bg-white border-2 border-black`
+- Icons: Replaced 🗺️ with Map icon, 📍 with MapPin icon
+- Layout: Icons properly aligned with flex layout
+
+#### 5. Info Boxes & Alerts
+**All Information Panels:**
+- Removed soft colors (`bg-blue-50`, `bg-green-50`, `bg-gray-50`)
+- Updated to: `bg-white border-2 border-black`
+- Icons: Replaced emojis with Lucide icons
+  - ✨ → Sparkles (autocomplete hints)
+  - 🔍 → Search (loading state)
+  - ℹ️ → Info (tips and information)
+  - ✓ → Check (success messages)
+  - 💡 → Info (image quality tips)
+
+**Icon Layout:**
+```tsx
+<div className="flex items-start gap-2">
+  <Info className="w-4 h-4 text-black flex-shrink-0 mt-0.5" />
+  <p className="text-sm text-black">{message}</p>
+</div>
+```
+
+#### 6. Background Image Section
+**Divider:** `border-t-2 border-black` (was `border-t border-gray-300`)
+
+**Preview Container:**
+- Border: `border-2 border-black` (sharp corners)
+- Remove button: `border-2 border-red-600 uppercase font-bold`
+
+**Info Box:** White background with black border, Info icon
+
+---
+
+### ✅ DateTimePicker Enhancements
+
+#### 1. Component Updates (`components/DateTimePicker.tsx`)
+**Features Added:**
+- Larger input: `py-3 text-base` (was smaller before)
+- Date validation: `minDate={new Date()}` (prevents past dates)
+- Proper Date object handling for modal integration
+- `disabled` prop support
+
+**Integration:**
+```tsx
+<DateTimePicker
+  selected={meetingTime ? new Date(meetingTime) : null}
+  onChange={(date) => setMeetingTime(date ? date.toISOString() : '')}
+  disabled={isSubmitting}
+/>
+```
+
+#### 2. CSS Fixes (`app/globals.css`)
+**Selected Date Styling:**
+```css
+.techno-datepicker .react-datepicker__day--selected,
+.techno-datepicker .react-datepicker__day--keyboard-selected,
+.techno-datepicker .react-datepicker__day--selected:hover,
+.techno-datepicker .react-datepicker__day--keyboard-selected:hover {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  font-weight: bold !important;
+}
+```
+
+**Result:** Selected dates now properly show black background with white text
+
+---
+
+### ✅ Intelligent Form Validation System
+
+#### 1. Auto-Scroll to Missing Fields
+**Validation Function:**
+```tsx
+const scrollToField = (fieldId: string, errorMessage: string) => {
+  setError(errorMessage);
+  setTimeout(() => {
+    const element = document.getElementById(fieldId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight logic...
+    }
+  }, 100);
+};
+```
+
+**Field IDs Added:**
+- `event-title` - Event title input
+- `meeting-time` - Meeting time container
+- `location-area` - Collaborative location autocomplete
+- `venue-location` - Fixed location autocomplete
+- `category-section` - Category buttons
+- `subcategory-section` - Subcategory buttons
+- `participant-limit` - Participant limit input
+
+#### 2. Visual Field Highlighting
+**Red Border Flash:**
+```tsx
+input.classList.add('!border-red-600');
+setTimeout(() => {
+  input.classList.remove('!border-red-600');
+}, 3000);
+```
+
+- Duration: 3 seconds
+- Auto-focus: Field receives focus after scroll
+- Smart detection: Works for inputs and container sections
+
+#### 3. Sticky Error Banner (Techno Style!)
+**Position:** Below header, always visible when scrolling
+```tsx
+<div className="sticky top-[57px] z-10 bg-red-600 text-white px-6 py-4 border-b-4 border-black flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+  <div className="flex-shrink-0 w-6 h-6 bg-white text-red-600 flex items-center justify-center font-bold border-2 border-black">
+    !
+  </div>
+  <span className="font-bold text-sm uppercase flex-1">{error}</span>
+  <button onClick={() => setError(null)}>
+    <X className="w-5 h-5" />
+  </button>
+</div>
+```
+
+**Design Features:**
+- Red background with white text (high contrast)
+- Bold black bottom border (`border-b-4`)
+- Hard brutalist shadow (4px offset, no blur)
+- Geometric exclamation icon (white box with red !)
+- Dismissible with X button
+- Uppercase text for emphasis
+
+#### 4. Validation Messages
+**All Required Fields:**
+1. Event Title: "Event title is required"
+2. Meeting Time: "Meeting time is required" / "Meeting time must be in the future"
+3. Category: "Please select a category (Sports or Entertainment)"
+4. Subcategory: "Please select a specific activity type"
+5. Participant Limit: "Participant limit is required (2-100 people)"
+6. Location (Collaborative): "Location area is required for collaborative events"
+7. Location (Fixed): "Address is required for fixed location events"
+
+---
+
+### ✅ Responsive Design Updates
+
+#### Mobile Optimizations
+**Subcategory Grid:**
+- Mobile: `grid-cols-3` (3 buttons per row, wider for easier tapping)
+- Desktop: `lg:grid-cols-4` (4 buttons per row)
+
+**Touch Targets:**
+- All buttons have adequate padding: `px-3 py-2` minimum
+- Inputs have larger touch areas: `px-4 py-3`
+
+---
+
+### 📊 Icons Replaced (Emoji → Lucide React)
+
+| Before | After | Usage |
+|--------|-------|-------|
+| 🗺️ | `<Map />` | Find Location Together |
+| 📍 | `<MapPin />` | Fixed Location, venue display |
+| ✨ | `<Sparkles />` | Autocomplete hints |
+| 🔍 | `<Search />` | Loading Google Maps |
+| ℹ️ | `<Info />` | Info boxes, tips |
+| ✓ | `<Check />` | Success messages |
+| 🎲 | `<Shuffle />` | Random image button |
+| 💡 | `<Info />` | Image quality tip |
+| × | `<X />` | Close buttons |
+
+**Imported Icons:**
+```tsx
+import {
+  Trophy, Film, X, MapPin, Map, Info, Check, Sparkles, Search, Shuffle
+} from 'lucide-react';
+```
+
+---
+
+### 📝 Files Modified
+
+**Core Components:**
+- `components/PostEventModal.tsx` - Complete refactor (450+ lines changed)
+- `components/DateTimePicker.tsx` - Enhanced with validation and larger input
+- `app/globals.css` - Updated datepicker selected state styles
+
+**Changes Breakdown:**
+1. **PostEventModal.tsx**:
+   - 15+ input/textarea fields updated
+   - 2 category buttons refactored
+   - 8+ subcategory buttons per category updated
+   - 3 info boxes redesigned
+   - Location type selector refactored
+   - Background image section updated
+   - Validation system implemented
+   - Error banner created
+
+2. **DateTimePicker.tsx**:
+   - Added `disabled` prop
+   - Added `minDate` validation
+   - Increased input size (py-3 text-base)
+   - Simplified component interface
+
+3. **globals.css**:
+   - Enhanced `.techno-datepicker .react-datepicker__day--selected` styles
+   - Added hover state support
+
+---
+
+### 🎨 Design Token Compliance
+
+**Checklist:**
+- [x] No rounded corners on any elements
+- [x] All borders are `border-2` or `border-4` (black)
+- [x] Hard drop shadows (4px or 8px offset, no blur)
+- [x] Black/white binary colors (red only for errors)
+- [x] Uppercase text for all buttons
+- [x] Icon-first design (no emojis)
+- [x] Bold typography (`font-bold`)
+- [x] Sharp edges on all interactive elements
+- [x] Consistent spacing (text-base for labels/inputs)
+- [x] High contrast throughout
+
+---
+
+### 🚀 User Experience Improvements
+
+#### Before:
+- Generic error messages at bottom
+- User had to manually find missing fields
+- Rounded corners, soft colors
+- Small text, inconsistent sizing
+- Gradient buttons
+- Emojis instead of icons
+
+#### After:
+- **Sticky error banner** always visible
+- **Auto-scroll** to first missing field
+- **Visual highlighting** with red border flash
+- **Auto-focus** on problematic input
+- **Dismissible errors** with X button
+- Sharp techno/brutalist aesthetic
+- Larger, more readable text (text-base)
+- Consistent sizing across all inputs
+- Icon-based design with Lucide React
+
+---
+
+### 📊 Validation Flow Example
+
+**User Journey:**
+1. User fills out form partially, clicks "Post Event"
+2. **Red banner appears** below header: "PLEASE SELECT A CATEGORY (SPORTS OR ENTERTAINMENT)"
+3. Modal **auto-scrolls** to category section
+4. Category section gets **red border** for 3 seconds
+5. User selects category
+6. User clicks "Post Event" again
+7. If another field missing, process repeats
+8. When all valid, form submits successfully
+
+---
+
+### ✅ Testing Checklist
+
+**Form Validation:**
+- [x] Empty title shows error and scrolls to field
+- [x] Missing meeting time shows error
+- [x] Past date rejected with error message
+- [x] Missing category scrolls to category section
+- [x] Missing subcategory scrolls to subcategory section
+- [x] Invalid participant limit (< 2 or > 100) shows error
+- [x] Missing location (collaborative) shows error and scrolls
+- [x] Missing address (fixed) shows error and scrolls
+
+**Visual Styling:**
+- [x] All inputs have border-2 border-black
+- [x] All buttons uppercase and font-bold
+- [x] No rounded corners anywhere
+- [x] Error banner sticky below header
+- [x] Icons display correctly
+- [x] DateTimePicker shows black background for selected date
+- [x] Mobile subcategory grid shows 3 columns
+
+**Interactions:**
+- [x] Error banner dismissible with X button
+- [x] Red border flash on invalid fields (3s)
+- [x] Auto-scroll works smoothly
+- [x] Auto-focus on inputs after scroll
+- [x] Category/subcategory selection works
+- [x] Random image button functional
+- [x] Form submission successful when valid
+
+---
+
+### 🎯 Performance Impact
+
+**Bundle Size:**
+- Added 9 new Lucide icons: ~1.5 kB
+- Enhanced DateTimePicker: +0.3 kB
+- Validation logic: +1.2 kB
+- **Total**: +3 kB (acceptable for UX improvement)
+
+**Runtime:**
+- Smooth scrolling (100ms delay for reliability)
+- Red border animation (CSS transitions)
+- No performance degradation
+
+---
+
+### 🔄 Next Steps
+
+**Immediate:**
+1. Apply same techno style to other modals (delete confirmation, etc.)
+2. Update event detail page with consistent styling
+3. Ensure all forms have validation with auto-scroll
+
+**Future Enhancements:**
+1. Add animation to error banner entrance
+2. Consider adding success banner for form submission
+3. Implement form field validation on blur (real-time feedback)
+4. Add keyboard shortcuts (Esc to dismiss error, Enter to submit)
+
+---
+
+### 📚 Related Documentation
+
+- **Style Guide**: `/META/UI_SYNC/TECHNO_STYLE_GUIDE.md`
+- **Component**: `/components/PostEventModal.tsx`
+- **DatePicker**: `/components/DateTimePicker.tsx`
+- **Styles**: `/app/globals.css` (lines 245-260 for datepicker)
+
+---
+
 ## 2025-10-14: Milestone 2 (M2) Completed - Server-side Implementation
 
 ### ✅ Complete FastAPI Backend

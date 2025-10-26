@@ -243,7 +243,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .techno-datepicker .react-datepicker__day--selected,
-.techno-datepicker .react-datepicker__day--keyboard-selected {
+.techno-datepicker .react-datepicker__day--keyboard-selected,
+.techno-datepicker .react-datepicker__day--selected:hover,
+.techno-datepicker .react-datepicker__day--keyboard-selected:hover {
   background-color: #000 !important;
   color: #fff !important;
   border-radius: 0 !important;
@@ -293,6 +295,22 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   background-color: #000 !important;
   color: #fff !important;
   font-weight: bold !important;
+}
+
+/* Techno Toast Animation */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
 }
 
 .techno-datepicker .react-datepicker__time-list-item--disabled {
