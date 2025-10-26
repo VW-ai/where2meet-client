@@ -26,3 +26,37 @@
  GET /event?id=evt_80fa600b0402473d 200 in 170ms
  GET /icon 200 in 475ms
  GET / 200 in 125ms
+ ✓ Compiled in 960ms (365 modules)
+ ✓ Compiled in 250ms (365 modules)
+ ✓ Compiled in 220ms (365 modules)
+ ✓ Compiled in 77ms (365 modules)
+ ✓ Compiled in 488ms (877 modules)
+ ✓ Compiled in 449ms (877 modules)
+ ✓ Compiled in 348ms (877 modules)
+ ✓ Compiled in 339ms (881 modules)
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:4000
+   - Network:      http://10.13.0.99:4000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ⨯ missingSuspenseWithCSRBailout
+
+ ✓ Starting...
+ ✓ Ready in 1040ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:4000
+   - Network:      http://10.13.0.99:4000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1074ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:4000
+   - Network:      http://10.13.0.99:4000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 950ms

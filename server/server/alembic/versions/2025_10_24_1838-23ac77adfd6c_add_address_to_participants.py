@@ -18,7 +18,15 @@ depends_on = None
 
 def upgrade() -> None:
     # Add address column to participants table (nullable, for human-readable location)
-    op.add_column('participants', sa.Column('address', sa.Text(), nullable=True))
+    from sqlalchemy import inspect
+    from alembic import context
+
+    conn = context.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('participants')]
+
+    if 'address' not in columns:
+        op.add_column('participants', sa.Column('address', sa.Text(), nullable=True))
 
 
 def downgrade() -> None:

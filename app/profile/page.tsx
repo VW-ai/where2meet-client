@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || !user) return;
 
     setIsLoading(true);
     setError(null);
