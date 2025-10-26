@@ -13,8 +13,9 @@ import Header from '@/components/Header';
 import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
+import DateTimePicker from '@/components/DateTimePicker';
 import { Event as EventFeedType, EventVisibility } from '@/types';
-import { Trophy, Film, Dribbble, CircleDot, Footprints, Dumbbell, Bike, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper } from 'lucide-react';
+import { Trophy, Film, Dribbble, CircleDot, Footprints, Dumbbell, Bike, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper, MapPin, Calendar, Star, Heart, UtensilsCrossed, Coffee, Dumbbell as GymIcon, Pizza, TreePine, Music2 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function Home() {
   const [title, setTitle] = useState('');
   const [visibility, setVisibility] = useState<'blur' | 'show'>('blur');
   const [allowVote, setAllowVote] = useState(true);
-  const [meetingTime, setMeetingTime] = useState('');
+  const [meetingTime, setMeetingTime] = useState<Date | null>(null);
 
   // Events feed state
   const [events, setEvents] = useState<EventFeedType[]>([]);
@@ -453,12 +454,15 @@ export default function Home() {
           {/* Find Meeting Point Tab */}
           {mobileTab === 'meeting' && (
             <div className="p-4 sm:p-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-black mb-6">📍 Find Meeting Point</h2>
+              <h2 className="text-sm sm:text-base font-bold text-black uppercase mb-4 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-black" />
+                Find Meeting Point
+              </h2>
 
               {/* Meeting Point Form */}
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-base sm:text-lg font-medium text-black mb-2">
+                  <label className="block text-base font-medium text-black mb-2">
                     Meeting Name
                   </label>
                   <input
@@ -466,55 +470,45 @@ export default function Home() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. Team Lunch, Coffee Catch-up"
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base sm:text-lg text-black border border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    className="w-full px-3 py-2.5 text-base text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base sm:text-lg font-medium text-black mb-2">
+                  <label className="block text-base font-medium text-black mb-2">
                     Meeting Time
                   </label>
                   <input
                     type="datetime-local"
-                    value={meetingTime}
-                    onChange={(e) => setMeetingTime(e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-base sm:text-lg text-black border border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    value={meetingTime ? meetingTime.toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setMeetingTime(e.target.value ? new Date(e.target.value) : null)}
+                    step="900"
+                    className="w-full px-3 py-2.5 text-base text-black border-2 border-black focus:border-black outline-none"
                   />
                 </div>
-
-                <label className="flex items-center gap-3 cursor-pointer text-base sm:text-lg text-black">
-                  <input
-                    type="checkbox"
-                    checked={allowVote}
-                    onChange={(e) => setAllowVote(e.target.checked)}
-                    className="w-5 h-5 border-2 border-gray-300 rounded"
-                    style={{ accentColor: '#000000' }}
-                  />
-                  <span suppressHydrationWarning>{t.allowVoting}</span>
-                </label>
               </div>
 
               {error && (
-                <div className="mt-5 p-3 sm:p-4 border border-red-500 rounded-lg text-red-700 text-base sm:text-lg">
+                <div className="mt-4 p-3 border-2 border-red-500 text-red-700 text-sm bg-white">
                   {error}
                 </div>
               )}
 
-              <div className="space-y-3 mt-6">
+              <div className="space-y-3 mt-5">
                 <button
                   onClick={handleCreateEvent}
                   disabled={isCreating || !title.trim()}
-                  className="w-full py-3 text-base sm:text-lg bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 text-xs bg-black text-white font-bold uppercase border-2 border-black hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isCreating ? 'Finding...' : 'Find Meeting Point'}
+                  {isCreating ? 'FINDING...' : 'FIND MEETING POINT'}
                 </button>
 
                 <button
                   onClick={handleJoinWithLink}
-                  className="w-full py-3 text-base sm:text-lg border-2 border-black text-black font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full px-3 py-2 text-xs border-2 border-black text-black font-bold uppercase bg-white hover:bg-gray-100 transition-all"
                   suppressHydrationWarning
                 >
-                  {t.joinExistingEvent}
+                  {t.joinExistingEvent.toUpperCase()}
                 </button>
               </div>
             </div>
@@ -524,12 +518,15 @@ export default function Home() {
           {mobileTab === 'events' && (
             <div>
               {/* Header */}
-              <div className="sticky top-0 bg-white z-30 border-b border-gray-300">
+              <div className="sticky top-0 bg-white z-30 border-b-2 border-black">
                 <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-                  <h2 className="text-xl sm:text-2xl font-bold text-black">📅 Events Feed</h2>
+                  <h2 className="text-xs sm:text-sm font-bold text-black uppercase flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-black" />
+                    Events Feed
+                  </h2>
                   <button
                     onClick={() => setShowPostEventModal(true)}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white hover:bg-gray-800 transition-colors font-medium text-sm sm:text-base rounded-lg"
+                    className="px-3 sm:px-4 py-1.5 bg-black text-white hover:bg-gray-900 transition-colors font-bold text-xs sm:text-sm uppercase border-2 border-black"
                   >
                     + Post
                   </button>
@@ -542,12 +539,12 @@ export default function Home() {
                       <button
                         key={index}
                         onClick={() => handleDateSelect(day.fullDate)}
-                        className={`py-1 px-2 transition-colors whitespace-nowrap min-w-[50px] rounded ${
+                        className={`py-1 px-2 transition-colors whitespace-nowrap min-w-[50px] ${
                           selectedDate && selectedDate.toDateString() === day.fullDate.toDateString()
-                            ? 'bg-black text-white'
+                            ? 'bg-black text-white border-2 border-black'
                             : day.isToday
                             ? 'border-2 border-blue-500 text-gray-700'
-                            : 'border border-gray-300 text-gray-700'
+                            : 'border-2 border-black text-gray-700 bg-white'
                         }`}
                       >
                         <div className="text-xs font-medium mb-1">{day.dayName}</div>
@@ -558,26 +555,26 @@ export default function Home() {
                 </div>
 
                 {/* Category Filters */}
-                <div className="px-4 sm:px-6 py-3 border-t border-gray-200">
+                <div className="px-4 sm:px-6 py-3 border-t-2 border-black">
                   <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     <button
                       onClick={() => {
                         setSelectedCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
-                        !selectedCategory && !nearMeFilter ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      className={`px-3 py-1.5 text-sm font-bold transition-colors whitespace-nowrap uppercase ${
+                        !selectedCategory && !nearMeFilter ? 'bg-black text-white border-2 border-black' : 'border-2 border-black text-black bg-white'
                       }`}
                     >
                       All
                     </button>
                     <button
                       onClick={handleNearMeToggle}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
-                        nearMeFilter ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      className={`px-3 py-1.5 text-sm font-bold transition-colors whitespace-nowrap uppercase ${
+                        nearMeFilter ? 'bg-black text-white border-2 border-black' : 'border-2 border-black text-black bg-white'
                       }`}
                     >
-                      📍 Near Me
+                      <MapPin className="w-3 h-3 inline" /> Near Me
                     </button>
                     <button
                       onClick={() => {
@@ -585,8 +582,8 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
-                        selectedCategory === 'sports' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      className={`px-3 py-1.5 text-sm font-bold transition-colors whitespace-nowrap uppercase flex items-center gap-1.5 ${
+                        selectedCategory === 'sports' ? 'bg-black text-white border-2 border-black' : 'border-2 border-black text-black bg-white'
                       }`}
                     >
                       <Trophy className="w-4 h-4" />
@@ -598,8 +595,8 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
-                        selectedCategory === 'entertainment' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
+                      className={`px-3 py-1.5 text-sm font-bold transition-colors whitespace-nowrap uppercase flex items-center gap-1.5 ${
+                        selectedCategory === 'entertainment' ? 'bg-black text-white border-2 border-black' : 'border-2 border-black text-black bg-white'
                       }`}
                     >
                       <Film className="w-4 h-4" />
@@ -610,14 +607,14 @@ export default function Home() {
 
                 {/* Subcategory Filters - Only shown when a category is selected (Mobile/Tablet) */}
                 {selectedCategory && subCategories[selectedCategory] && (
-                  <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t-2 border-black">
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                       <button
                         onClick={() => setSelectedSubCategory(null)}
-                        className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded ${
+                        className={`px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap uppercase ${
                           !selectedSubCategory
-                            ? 'bg-black text-white'
-                            : 'border border-gray-300 bg-white text-gray-700'
+                            ? 'bg-black text-white border-2 border-black'
+                            : 'border-2 border-black bg-white text-black'
                         }`}
                       >
                         All {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
@@ -626,10 +623,10 @@ export default function Home() {
                         <button
                           key={subCat}
                           onClick={() => setSelectedSubCategory(subCat)}
-                          className={`px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
+                          className={`px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap uppercase flex items-center gap-1.5 ${
                             selectedSubCategory === subCat
-                              ? 'bg-black text-white'
-                              : 'border border-gray-300 bg-white text-gray-700'
+                              ? 'bg-black text-white border-2 border-black'
+                              : 'border-2 border-black bg-white text-black'
                           }`}
                         >
                           {getSubCategoryIcon(subCat)}
@@ -665,7 +662,9 @@ export default function Home() {
 
                 {!eventsLoading && !eventsError && events.length === 0 && (
                   <div className="py-8 text-center px-4">
-                    <div className="text-5xl mb-3">📅</div>
+                    <div className="mb-3">
+                      <Calendar className="w-12 h-12 text-black mx-auto" />
+                    </div>
                     <h3 className="text-xl font-bold text-black mb-2">No events found</h3>
                     <p className="text-base text-gray-600 mb-4">
                       {selectedDate ? 'No events on this day' : 'Be the first to post!'}
@@ -714,51 +713,111 @@ export default function Home() {
           {/* Other People's Lists Tab */}
           {mobileTab === 'lists' && (
             <div className="p-4 sm:p-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-black mb-6">⭐ Other People's Lists</h2>
+              <h2 className="text-sm sm:text-base font-bold text-black uppercase mb-4 flex items-center gap-1.5">
+                <Star className="w-4 h-4 text-black" />
+                Other People's Lists
+              </h2>
 
               {/* Categories */}
               <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
-                <button className="px-3 py-1.5 text-sm bg-black text-white rounded flex-shrink-0">All</button>
-                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Food</button>
-                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Sports</button>
-                <button className="px-3 py-1.5 text-sm text-gray-700 hover:text-black rounded flex-shrink-0">Culture</button>
+                <button className="px-3 py-1.5 text-sm bg-black text-white border-2 border-black font-bold uppercase flex-shrink-0">All</button>
+                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                  <UtensilsCrossed className="w-3.5 h-3.5" />
+                  Food
+                </button>
+                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5" />
+                  Sports
+                </button>
+                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                  <Film className="w-3.5 h-3.5" />
+                  Culture
+                </button>
               </div>
 
               {/* Lists Grid - 1 column on mobile, 2 on tablet */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Placeholder list cards */}
-                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
-                  <h3 className="font-semibold text-base text-black mb-2">🍜 Best Ramen in Tokyo</h3>
+                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
+                  <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                    <UtensilsCrossed className="w-4 h-4" />
+                    Best Ramen in Tokyo
+                  </h3>
                   <p className="text-sm text-gray-600 mb-2">by @foodie_explorer</p>
-                  <p className="text-sm text-gray-600 mb-3">📍 12 venues · ❤️ 234</p>
-                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      12 venues
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" />
+                      234
+                    </span>
+                  </p>
+                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                     View List
                   </button>
                 </div>
 
-                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
-                  <h3 className="font-semibold text-base text-black mb-2">☕ Best Coffee - NYC</h3>
+                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
+                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
+                    <Coffee className="w-4 h-4" />
+                    Best Coffee - NYC
+                  </h3>
                   <p className="text-sm text-gray-600 mb-2">by @coffee_addict</p>
-                  <p className="text-sm text-gray-600 mb-3">📍 18 venues · ❤️ 567</p>
-                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      18 venues
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" />
+                      567
+                    </span>
+                  </p>
+                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                     View List
                   </button>
                 </div>
 
-                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
-                  <h3 className="font-semibold text-base text-black mb-2">🏋️ Best Gyms for CrossFit</h3>
+                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
+                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
+                    <Dumbbell className="w-4 h-4" />
+                    Best Gyms for CrossFit
+                  </h3>
                   <p className="text-sm text-gray-600 mb-2">by @fitness_freak</p>
-                  <p className="text-sm text-gray-600 mb-3">📍 8 venues · ❤️ 123</p>
-                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      8 venues
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" />
+                      123
+                    </span>
+                  </p>
+                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                     View List
                   </button>
                 </div>
 
-                <div className="border border-gray-300 p-4 rounded-lg hover:border-black transition-colors">
-                  <h3 className="font-semibold text-base text-black mb-2">🍕 NYC Pizza Joints</h3>
+                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
+                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
+                    <Pizza className="w-4 h-4" />
+                    NYC Pizza Joints
+                  </h3>
                   <p className="text-sm text-gray-600 mb-2">by @pizza_lover</p>
-                  <p className="text-sm text-gray-600 mb-3">📍 15 venues · ❤️ 445</p>
-                  <button className="w-full py-2 px-3 border border-black text-black text-sm font-medium rounded hover:bg-gray-50">
+                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      15 venues
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" />
+                      445
+                    </span>
+                  </p>
+                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                     View List
                   </button>
                 </div>
@@ -782,7 +841,7 @@ export default function Home() {
                 mobileTab === 'meeting' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <span className="text-xl mb-1">📍</span>
+              <MapPin className="w-5 h-5 mb-1" />
               <span className="text-xs font-medium">Find Meeting</span>
             </button>
 
@@ -792,7 +851,7 @@ export default function Home() {
                 mobileTab === 'events' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <span className="text-xl mb-1">📅</span>
+              <Calendar className="w-5 h-5 mb-1" />
               <span className="text-xs font-medium">Events Feed</span>
             </button>
 
@@ -802,7 +861,7 @@ export default function Home() {
                 mobileTab === 'lists' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <span className="text-xl mb-1">⭐</span>
+              <Star className="w-5 h-5 mb-1" />
               <span className="text-xs font-medium">Lists</span>
             </button>
           </div>
@@ -814,19 +873,20 @@ export default function Home() {
         <div className={`transition-all duration-300 ${isEventFeedFullscreen ? 'max-w-full' : 'max-w-[1400px]'} mx-auto`}>
           <div className={`grid transition-all duration-300 ${isEventFeedFullscreen ? 'grid-cols-1' : 'grid-cols-[65%_35%]'}`}>
             {/* Left Column (65%) */}
-            <div className={`border-r border-black transition-all duration-300 ${isEventFeedFullscreen ? 'hidden' : 'block'}`}>
+            <div className={`border-r-2 border-black transition-all duration-300 ${isEventFeedFullscreen ? 'hidden' : 'block'}`}>
               {/* Top Left: Find Meeting Point */}
-              <div className="border-b border-black" style={{ minHeight: '50vh' }}>
+              <div style={{ minHeight: '50vh' }}>
                 {/* Navigation Bar */}
-                <div className="border-b border-gray-300 px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center">
-                  <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
-                    📍 Find Meeting Point
+                <div className="px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center">
+                  <h2 className="text-lg lg:text-xl font-bold text-black uppercase flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-black" />
+                    Find Meeting Point
                   </h2>
                   {user && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => router.push('/my-events')}
-                        className="px-3 lg:px-4 py-1.5 lg:py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm lg:text-base"
+                        className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase bg-white"
                       >
                         My Events
                       </button>
@@ -836,9 +896,9 @@ export default function Home() {
 
                 <div className="p-6 lg:p-8">
                 {/* Meeting Point Form */}
-                <div className="space-y-5 lg:space-y-6 mb-6 lg:mb-8 max-w-xl">
+                <div className="space-y-4 mb-5 lg:mb-6 max-w-xl">
                   <div>
-                    <label className="block text-base lg:text-lg font-medium text-black mb-2">
+                    <label className="block text-xl font-medium text-black mb-2">
                       Meeting Name
                     </label>
                     <input
@@ -846,55 +906,44 @@ export default function Home() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g. Team Lunch, Coffee Catch-up"
-                      className="w-full px-3 lg:px-4 py-2.5 lg:py-3 text-base lg:text-lg text-black border border-gray-300 focus:border-black focus:outline-none"
+                      className="w-full px-4 py-3 text-xl text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-base lg:text-lg font-medium text-black mb-2">
+                    <label className="block text-xl font-medium text-black mb-2">
                       Meeting Time
                     </label>
-                    <input
-                      type="datetime-local"
-                      value={meetingTime}
-                      onChange={(e) => setMeetingTime(e.target.value)}
-                      className="w-full px-3 lg:px-4 py-2.5 lg:py-3 text-base lg:text-lg text-black border border-gray-300 focus:border-black focus:outline-none"
+                    <DateTimePicker
+                      selected={meetingTime}
+                      onChange={(date) => setMeetingTime(date)}
+                      placeholder="Select date and time"
+                      className="text-xl py-3"
                     />
                   </div>
-
-                  <label className="flex items-center gap-3 cursor-pointer text-base lg:text-lg text-black">
-                    <input
-                      type="checkbox"
-                      checked={allowVote}
-                      onChange={(e) => setAllowVote(e.target.checked)}
-                      className="w-5 h-5 border-2 border-gray-300"
-                      style={{ accentColor: '#000000' }}
-                    />
-                    <span suppressHydrationWarning>{t.allowVoting}</span>
-                  </label>
                 </div>
 
                 {error && (
-                  <div className="mb-5 lg:mb-6 p-3 lg:p-4 border border-red-500 text-red-700 text-base lg:text-lg">
+                  <div className="mb-4 lg:mb-5 p-3 border-2 border-red-500 text-red-700 text-base bg-white">
                     {error}
                   </div>
                 )}
 
-                <div className="space-y-3 lg:space-y-4 max-w-xl">
+                <div className="space-y-3 max-w-xl">
                   <button
                     onClick={handleCreateEvent}
                     disabled={isCreating || !title.trim()}
-                    className="w-full py-2.5 lg:py-3 text-base lg:text-lg bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 text-sm bg-black text-white font-bold uppercase hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-black"
                   >
-                    {isCreating ? 'Finding...' : 'Find Meeting Point'}
+                    {isCreating ? 'FINDING...' : 'FIND MEETING POINT'}
                   </button>
 
                   <button
                     onClick={handleJoinWithLink}
-                    className="w-full py-2.5 lg:py-3 text-base lg:text-lg border border-black text-black font-medium hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 py-2.5 text-sm border-2 border-black text-black font-bold uppercase bg-white hover:bg-gray-100 transition-all"
                     suppressHydrationWarning
                   >
-                    {t.joinExistingEvent}
+                    {t.joinExistingEvent.toUpperCase()}
                   </button>
                 </div>
                 </div>
@@ -903,21 +952,25 @@ export default function Home() {
               {/* Bottom Left: Other People's Lists */}
               <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>
                 {/* Navigation Bar */}
-                <div className="border-b border-gray-300 px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center sticky top-0 bg-white">
-                  <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
-                    ⭐ Other People's Lists
+                <div className="px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center sticky top-0 bg-white">
+                  <h2 className="text-lg lg:text-xl font-bold text-black uppercase flex items-center gap-2">
+                    <Star className="w-5 h-5 text-black" />
+                    Other People's Lists
                   </h2>
                   <div className="flex gap-2">
-                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base bg-black text-white">
+                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black bg-black text-white font-bold text-sm uppercase hover:bg-gray-900 transition-all">
                       All
                     </button>
-                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
+                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                      <UtensilsCrossed className="w-4 h-4" />
                       Food
                     </button>
-                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
+                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                      <Trophy className="w-4 h-4" />
                       Sports
                     </button>
-                    <button className="px-2 lg:px-3 py-1 text-sm lg:text-base text-gray-700 hover:text-black">
+                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                      <Film className="w-4 h-4" />
                       Culture
                     </button>
                   </div>
@@ -927,150 +980,198 @@ export default function Home() {
                 {/* Venue Lists - 3 Column Grid */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   {/* List Card 1 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      🍜 Best Ramen in Tokyo
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <UtensilsCrossed className="w-4 h-4" />
+                      Best Ramen in Tokyo
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @foodie_explorer</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 12 venues · ❤️ 234
+                    <p className="text-sm text-gray-600 mb-2">by @foodie_explorer</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        12 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        234
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. Ichiran ⭐ 4.8</p>
-                      <p>2. Ippudo ⭐ 4.7</p>
-                      <p>3. Afuri ⭐ 4.6</p>
+                      <p className="flex items-center gap-1">1. Ichiran <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
+                      <p className="flex items-center gap-1">2. Ippudo <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
+                      <p className="flex items-center gap-1">3. Afuri <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
                   </div>
 
                   {/* List Card 2 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      ☕ Best Coffee Shops - NYC
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <Coffee className="w-4 h-4" />
+                      Best Coffee Shops - NYC
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @coffee_addict</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 18 venues · ❤️ 567
+                    <p className="text-sm text-gray-600 mb-2">by @coffee_addict</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        18 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        567
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. Blue Bottle ⭐ 4.9</p>
-                      <p>2. La Colombe ⭐ 4.8</p>
-                      <p>3. Stumptown ⭐ 4.7</p>
+                      <p className="flex items-center gap-1">1. Blue Bottle <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
+                      <p className="flex items-center gap-1">2. La Colombe <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
+                      <p className="flex items-center gap-1">3. Stumptown <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
                   </div>
 
                   {/* List Card 3 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      🏋️ Best Gyms for CrossFit
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <Dumbbell className="w-4 h-4" />
+                      Best Gyms for CrossFit
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @fitness_freak</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 8 venues · ❤️ 123
+                    <p className="text-sm text-gray-600 mb-2">by @fitness_freak</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        8 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        123
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. CrossFit Box ⭐ 4.9</p>
-                      <p>2. Iron Paradise ⭐ 4.7</p>
-                      <p>3. The WOD ⭐ 4.6</p>
+                      <p className="flex items-center gap-1">1. CrossFit Box <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
+                      <p className="flex items-center gap-1">2. Iron Paradise <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
+                      <p className="flex items-center gap-1">3. The WOD <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
                   </div>
 
                   {/* List Card 4 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      🍕 NYC Pizza Joints
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <Pizza className="w-4 h-4" />
+                      NYC Pizza Joints
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @pizza_lover</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 15 venues · ❤️ 445
+                    <p className="text-sm text-gray-600 mb-2">by @pizza_lover</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        15 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        445
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. Joe's Pizza ⭐ 4.9</p>
-                      <p>2. Lombardi's ⭐ 4.8</p>
-                      <p>3. Prince St ⭐ 4.7</p>
+                      <p className="flex items-center gap-1">1. Joe's Pizza <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
+                      <p className="flex items-center gap-1">2. Lombardi's <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
+                      <p className="flex items-center gap-1">3. Prince St <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
                   </div>
 
                   {/* List Card 5 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      🌳 Best Parks for Picnics
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <TreePine className="w-4 h-4" />
+                      Best Parks for Picnics
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @outdoors_fan</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 10 venues · ❤️ 189
+                    <p className="text-sm text-gray-600 mb-2">by @outdoors_fan</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        10 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        189
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. Central Park ⭐ 5.0</p>
-                      <p>2. Prospect Park ⭐ 4.8</p>
-                      <p>3. Bryant Park ⭐ 4.6</p>
+                      <p className="flex items-center gap-1">1. Central Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 5.0</p>
+                      <p className="flex items-center gap-1">2. Prospect Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
+                      <p className="flex items-center gap-1">3. Bryant Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
                   </div>
 
                   {/* List Card 6 */}
-                  <div className="border border-gray-300 p-4 hover:border-black transition-colors">
-                    <h3 className="font-semibold text-base text-black mb-2">
-                      🎵 Live Music Venues
+                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
+                      <Music2 className="w-4 h-4" />
+                      Live Music Venues
                     </h3>
-                    <p className="text-xs text-gray-600 mb-2">by @music_nerd</p>
-                    <p className="text-xs text-gray-600 mb-3">
-                      📍 14 venues · ❤️ 356
+                    <p className="text-sm text-gray-600 mb-2">by @music_nerd</p>
+                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        14 venues
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        356
+                      </span>
                     </p>
-                    <div className="text-xs text-gray-700 mb-3 space-y-1">
+                    <div className="text-sm text-gray-700 mb-3 space-y-1">
                       <p className="font-medium">Preview:</p>
-                      <p>1. Blue Note ⭐ 4.9</p>
-                      <p>2. Village Vanguard ⭐ 4.8</p>
-                      <p>3. Bowery Ballroom ⭐ 4.7</p>
+                      <p className="flex items-center gap-1">1. Blue Note <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
+                      <p className="flex items-center gap-1">2. Village Vanguard <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
+                      <p className="flex items-center gap-1">3. Bowery Ballroom <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border border-black text-black text-xs font-medium hover:bg-gray-50 transition-colors">
+                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
                         View
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-xs font-medium">
+                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
                         Save
                       </button>
                     </div>
@@ -1078,8 +1179,8 @@ export default function Home() {
                 </div>
 
                 {/* CTA Buttons */}
-                <div className="space-y-3 pt-6 border-t border-gray-300">
-                  <button className="w-full py-3 bg-black text-white font-semibold hover:bg-gray-800 transition-colors">
+                <div className="space-y-3 pt-6 border-t-2 border-black">
+                  <button className="w-full py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black">
                     Create Your List
                   </button>
                   <button className="w-full py-2 text-gray-600 hover:text-black font-medium">
@@ -1093,19 +1194,20 @@ export default function Home() {
             {/* Right Panel (35%): Events Feed */}
             <div className={`overflow-y-auto transition-all duration-300 ${isEventFeedFullscreen ? 'w-full' : ''}`} style={{ maxHeight: '115vh' }}>
               {/* Unified Sticky Header - Events Feed + Calendar + Filters */}
-              <div className="sticky top-0 bg-white z-30 border-b border-gray-300">
+              <div className="sticky top-0 bg-white z-30">
                 {/* Navigation Bar */}
                 <div className="px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center">
                   <div className="flex gap-3 items-center">
                     <button
                       onClick={() => setIsEventFeedFullscreen(!isEventFeedFullscreen)}
-                      className="px-2 py-1 border border-gray-300 text-black hover:border-black transition-colors text-xs"
+                      className="px-2 py-1 border-2 border-black text-black hover:bg-gray-100 transition-colors text-xs font-bold"
                       title={isEventFeedFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                     >
                       {isEventFeedFullscreen ? '⊗' : '⛶'}
                     </button>
-                    <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black">
-                      📅 Events Feed
+                    <h2 className="text-lg lg:text-xl font-bold text-black uppercase flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-black" />
+                      Events Feed
                     </h2>
                   </div>
                   <div className="flex gap-2">
@@ -1113,13 +1215,13 @@ export default function Home() {
                       <>
                         <button
                           onClick={() => router.push('/my-posts')}
-                          className="px-3 lg:px-4 py-1.5 lg:py-2 border border-gray-300 text-black hover:border-black transition-colors font-medium text-sm lg:text-base"
+                          className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase bg-white"
                         >
                           My Posts
                         </button>
                         <button
                           onClick={() => setShowPostEventModal(true)}
-                          className="px-3 lg:px-4 py-1.5 lg:py-2 bg-black text-white hover:bg-gray-800 transition-colors font-medium text-sm lg:text-base"
+                          className="px-3 lg:px-4 py-1.5 lg:py-2 bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase border-2 border-black"
                         >
                           + Post
                         </button>
@@ -1178,7 +1280,7 @@ export default function Home() {
                           : 'border border-gray-300 text-gray-700 hover:border-black'
                       }`}
                     >
-                      📍 Near Me
+                      <MapPin className="w-3 h-3 inline" /> Near Me
                     </button>
                     <button
                       onClick={() => {
@@ -1215,7 +1317,7 @@ export default function Home() {
 
                 {/* Subcategory Filters - Only shown when a category is selected */}
                 {selectedCategory && subCategories[selectedCategory] && (
-                  <div className="px-8 py-3 border-t border-gray-200 bg-gray-50">
+                  <div className="px-8 py-3 border-t-2 border-black bg-gray-50">
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                       <button
                         onClick={() => setSelectedSubCategory(null)}
@@ -1274,7 +1376,9 @@ export default function Home() {
                 {/* Empty State */}
                 {!eventsLoading && !eventsError && events.length === 0 && (
                   <div className={`py-8 lg:py-12 text-center px-4 ${isEventFeedFullscreen ? 'col-span-full' : ''}`}>
-                    <div className="text-5xl lg:text-6xl mb-3 lg:mb-4">📅</div>
+                    <div className="mb-3 lg:mb-4">
+                      <Calendar className="w-12 h-12 lg:w-16 lg:h-16 text-black mx-auto" />
+                    </div>
                     <h3 className="text-xl lg:text-2xl xl:text-3xl font-bold text-black mb-2">No events found</h3>
                     <p className="text-base lg:text-lg text-gray-600 mb-4 lg:mb-6">
                       {selectedDate
