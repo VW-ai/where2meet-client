@@ -5,7 +5,7 @@ import { EventCategory, EventVisibility, LocationType } from '@/types';
 import { useGooglePlacesAutocomplete } from '@/hooks/useGooglePlacesAutocomplete';
 import DateTimePicker from './DateTimePicker';
 import CityAutocomplete from './CityAutocomplete';
-import { Dribbble, Film } from 'lucide-react';
+import { Trophy, Film } from 'lucide-react';
 
 interface PostEventModalProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ interface PostEventModalProps {
 }
 
 const categoryOptions: { id: EventCategory; icon: React.ReactElement; label: string }[] = [
-  { id: 'sports', icon: <Dribbble className="w-5 h-5" />, label: 'Sports' },
+  { id: 'sports', icon: <Trophy className="w-5 h-5" />, label: 'Sports' },
   { id: 'entertainment', icon: <Film className="w-5 h-5" />, label: 'Entertainment' },
 ];
 

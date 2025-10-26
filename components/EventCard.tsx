@@ -5,7 +5,7 @@ import EventFeedStatusBadge from './EventFeedStatusBadge';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
 import SpotlightCard from './SpotlightCard';
 import { useState } from 'react';
-import { Calendar, MapPin, Film, Dribbble, Star } from 'lucide-react';
+import { Calendar, MapPin, Film, Dribbble, Star, Trophy, Bike, Footprints, Dumbbell, CircleDot, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper } from 'lucide-react';
 
 interface EventCardProps {
   event: Event;
@@ -41,15 +41,34 @@ const subcategoryToParent: Record<string, string> = {
 const getCategoryIcon = (category?: string) => {
   if (!category) return <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
 
-  // Check if it's a subcategory first
-  const parentCategory = subcategoryToParent[category];
-
+  // Icon map for all categories (both parent and subcategories)
   const iconMap: Record<string, React.ReactElement> = {
-    sports: <Dribbble className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    // Parent categories
+    sports: <Trophy className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
     entertainment: <Film className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+
+    // Sports subcategories
+    'Basketball': <Dribbble className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Soccer': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Tennis': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Running': <Footprints className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Gym': <Dumbbell className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Cycling': <Bike className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Volleyball': <Volleyball className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Badminton': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+
+    // Entertainment subcategories
+    'Movies': <Film className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Theater': <Theater className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Concerts': <MusicIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Museums': <Theater className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Gaming': <Gamepad2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Comedy': <Laugh className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Karaoke': <Mic2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Festival': <PartyPopper className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
   };
 
-  return iconMap[parentCategory || category] || <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
+  return iconMap[category] || <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
 };
 
 const getParentCategory = (category?: string): string | null => {

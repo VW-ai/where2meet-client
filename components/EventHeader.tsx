@@ -1,7 +1,7 @@
 'use client';
 
 import { AvatarCircles } from './ui/avatar-circles';
-import { Coffee, Dribbble, Film, Briefcase, Music, TreePine, Calendar, Clock, MapPin } from 'lucide-react';
+import { Coffee, Trophy, Film, Briefcase, Music, TreePine, Calendar, Clock, MapPin } from 'lucide-react';
 
 interface EventHeaderProps {
   title: string;
@@ -28,7 +28,7 @@ interface EventHeaderProps {
 const getCategoryIcon = (category?: string) => {
   const iconMap: Record<string, React.ReactElement> = {
     food: <Coffee className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
-    sports: <Dribbble className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    sports: <Trophy className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
     entertainment: <Film className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
     work: <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
     music: <Music className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
