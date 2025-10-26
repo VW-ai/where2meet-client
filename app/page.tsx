@@ -1005,7 +1005,7 @@ export default function Home() {
               <div className="border-b-2 border-black"></div>
 
               {/* Bottom Left: Other People's Lists */}
-              <div className="overflow-y-auto" style={{ maxHeight: '50vh' }}>
+              <div className="overflow-y-auto" style={{ maxHeight: '65vh' }}>
                 {/* Navigation Bar */}
                 <div className="px-6 lg:px-8 py-3 lg:py-4 flex justify-between items-center sticky top-0 bg-white">
                   <h2 className="text-lg lg:text-xl font-bold text-black uppercase flex items-center gap-2">
