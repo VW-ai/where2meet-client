@@ -14,6 +14,7 @@ import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
 import { Event as EventFeedType, EventVisibility } from '@/types';
+import { Trophy, Film } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -561,11 +562,12 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
                         selectedCategory === 'sports' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
                       }`}
                     >
-                      🏀 Sports
+                      <Trophy className="w-4 h-4" />
+                      Sports
                     </button>
                     <button
                       onClick={() => {
@@ -573,11 +575,12 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded ${
+                      className={`px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap rounded flex items-center gap-1.5 ${
                         selectedCategory === 'entertainment' ? 'bg-black text-white' : 'border border-gray-300 text-gray-700'
                       }`}
                     >
-                      🎬 Entertainment
+                      <Film className="w-4 h-4" />
+                      Entertainment
                     </button>
                   </div>
                 </div>
@@ -1159,13 +1162,14 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                         selectedCategory === 'sports'
                           ? 'bg-black text-white'
                           : 'border border-gray-300 text-gray-700 hover:border-black'
                       }`}
                     >
-                      🏀 Sports
+                      <Trophy className="w-4 h-4" />
+                      Sports
                     </button>
                     <button
                       onClick={() => {
@@ -1173,13 +1177,14 @@ export default function Home() {
                         setSelectedSubCategory(null);
                         setNearMeFilter(false);
                       }}
-                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+                      className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                         selectedCategory === 'entertainment'
                           ? 'bg-black text-white'
                           : 'border border-gray-300 text-gray-700 hover:border-black'
                       }`}
                     >
-                      🎬 Entertainment
+                      <Film className="w-4 h-4" />
+                      Entertainment
                     </button>
                   </div>
                 </div>
