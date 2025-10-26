@@ -33,11 +33,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
   ];
 
   return (
-    <header className="w-full z-40 bg-white border-b border-black">
-      <div className="container mx-auto flex items-center justify-between py-4 px-6">
+    <header className="w-full z-40 bg-black border-b-2 border-white">
+      <div className="container mx-auto flex items-center justify-between py-3 px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <Logo theme="light" />
+        <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <Logo theme="dark" size="md" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -48,7 +48,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 <NavigationMenuItem key={item.title}>
                   <NavigationMenuLink asChild>
                     <Link href={item.href}>
-                      <Button variant="ghost" className="text-black hover:bg-gray-100">
+                      <Button variant="ghost" className="text-sm font-bold uppercase text-white hover:bg-gray-800 transition-all">
                         {item.title}
                       </Button>
                     </Link>
@@ -59,29 +59,29 @@ export default function Header({ user, onLogout }: HeaderProps) {
           </NavigationMenu>
 
           {/* Auth Buttons */}
-          <div className="flex items-center gap-3 ml-6 border-l border-gray-300 pl-6" suppressHydrationWarning>
+          <div className="flex items-center gap-3 ml-6 border-l-2 border-white pl-6" suppressHydrationWarning>
             {user ? (
               <>
-                <Link href="/profile" className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <Link href="/profile" className="flex items-center gap-2 px-3 py-2 border-2 border-white bg-black hover:bg-gray-800 transition-all">
                   {user.avatar ? (
                     <img
                       src={user.avatar}
                       alt={user.name || 'User'}
-                      className="w-9 h-9 rounded-full object-cover"
+                      className="w-8 h-8 object-cover"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white text-base font-bold">
+                    <div className="w-8 h-8 bg-white flex items-center justify-center">
+                      <span className="text-black text-sm font-bold">
                         {(user.name || user.email)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <span className="text-base font-medium text-black">{user.name || user.email.split('@')[0]}</span>
+                  <span className="text-sm font-bold uppercase text-white">{user.name || user.email.split('@')[0]}</span>
                 </Link>
                 <Button
                   variant="outline"
                   onClick={onLogout}
-                  className="border-black text-black hover:bg-gray-100"
+                  className="border-2 border-white text-white text-sm font-bold uppercase hover:bg-gray-800 transition-all bg-black"
                 >
                   Log out
                 </Button>
@@ -89,12 +89,12 @@ export default function Header({ user, onLogout }: HeaderProps) {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" className="text-black hover:bg-gray-100">
+                  <Button variant="ghost" className="text-sm font-bold uppercase text-white hover:bg-gray-800 transition-all">
                     Log in
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button className="bg-black text-white hover:bg-gray-800">
+                  <Button className="bg-white text-black text-sm font-bold uppercase hover:bg-gray-100 transition-all border-2 border-white">
                     Sign up
                   </Button>
                 </Link>
@@ -108,7 +108,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
           <Button
             variant="ghost"
             onClick={() => setOpen(!isOpen)}
-            className="text-black hover:bg-gray-100"
+            className="text-white hover:bg-gray-800 transition-all border-2 border-white p-2"
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
@@ -117,38 +117,38 @@ export default function Header({ user, onLogout }: HeaderProps) {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="lg:hidden border-t border-gray-300 bg-white">
+        <div className="lg:hidden border-t-2 border-white bg-black">
           <div className="container mx-auto py-4 px-6 flex flex-col gap-4" suppressHydrationWarning>
             {navigationItems.map((item) => (
               <Link
                 key={item.title}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="text-black hover:text-gray-600 py-2"
+                className="text-white font-bold uppercase text-sm hover:bg-gray-800 py-2 px-2 transition-all"
               >
                 {item.title}
               </Link>
             ))}
-            <div className="border-t border-gray-300 pt-4 flex flex-col gap-3" suppressHydrationWarning>
+            <div className="border-t-2 border-white pt-4 flex flex-col gap-3" suppressHydrationWarning>
               {user ? (
                 <>
-                  <Link href="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 px-3 py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100">
+                  <Link href="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 px-3 py-2 border-2 border-white bg-black hover:bg-gray-800 transition-all">
                     {user.avatar ? (
                       <img
                         src={user.avatar}
                         alt={user.name || 'User'}
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="w-10 h-10 object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <span className="text-white text-base font-bold">
+                      <div className="w-10 h-10 bg-white flex items-center justify-center">
+                        <span className="text-black text-base font-bold">
                           {(user.name || user.email)?.[0]?.toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-black">{user.name || user.email.split('@')[0]}</span>
-                      <span className="text-xs text-gray-600">View profile</span>
+                      <span className="text-sm font-bold uppercase text-white">{user.name || user.email.split('@')[0]}</span>
+                      <span className="text-xs text-gray-400">View profile</span>
                     </div>
                   </Link>
                   <Button
@@ -157,7 +157,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
                       onLogout?.();
                       setOpen(false);
                     }}
-                    className="border-black text-black hover:bg-gray-100 w-full"
+                    className="border-2 border-white text-white text-sm font-bold uppercase hover:bg-gray-800 w-full transition-all bg-black"
                   >
                     Log out
                   </Button>
@@ -167,13 +167,13 @@ export default function Header({ user, onLogout }: HeaderProps) {
                   <Link href="/login" onClick={() => setOpen(false)}>
                     <Button
                       variant="ghost"
-                      className="text-black hover:bg-gray-100 w-full"
+                      className="text-white font-bold uppercase text-sm hover:bg-gray-800 w-full transition-all"
                     >
                       Log in
                     </Button>
                   </Link>
                   <Link href="/signup" onClick={() => setOpen(false)}>
-                    <Button className="bg-black text-white hover:bg-gray-800 w-full">
+                    <Button className="bg-white text-black text-sm font-bold uppercase hover:bg-gray-100 w-full transition-all border-2 border-white">
                       Sign up
                     </Button>
                   </Link>

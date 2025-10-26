@@ -5,7 +5,7 @@ import EventFeedStatusBadge from './EventFeedStatusBadge';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
 import SpotlightCard from './SpotlightCard';
 import { useState } from 'react';
-import { Calendar, MapPin, Film, Dribbble, Star, Trophy, Bike, Footprints, Dumbbell, CircleDot, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper } from 'lucide-react';
+import { Calendar, MapPin, Film, Dribbble, Star, Trophy, Bike, Footprints, Dumbbell, CircleDot, Volleyball, Theater, Music as MusicIcon, Gamepad2, Laugh, Mic2, PartyPopper, Clock, Users, Circle, Disc } from 'lucide-react';
 
 interface EventCardProps {
   event: Event;
@@ -38,37 +38,39 @@ const subcategoryToParent: Record<string, string> = {
   'Festival': 'entertainment',
 };
 
-const getCategoryIcon = (category?: string) => {
-  if (!category) return <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
+const getCategoryIcon = (category?: string, size: 'small' | 'large' = 'large') => {
+  const sizeClasses = size === 'small' ? 'w-3 h-3 sm:w-4 sm:h-4' : 'w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8';
+
+  if (!category) return <Calendar className={`${sizeClasses} flex-shrink-0`} />;
 
   // Icon map for all categories (both parent and subcategories)
   const iconMap: Record<string, React.ReactElement> = {
     // Parent categories
-    sports: <Trophy className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    entertainment: <Film className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    sports: <Trophy className={`${sizeClasses} flex-shrink-0`} />,
+    entertainment: <Film className={`${sizeClasses} flex-shrink-0`} />,
 
     // Sports subcategories
-    'Basketball': <Dribbble className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Soccer': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Tennis': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Running': <Footprints className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Gym': <Dumbbell className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Cycling': <Bike className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Volleyball': <Volleyball className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Badminton': <CircleDot className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Basketball': <Dribbble className={`${sizeClasses} flex-shrink-0`} />,
+    'Soccer': <Disc className={`${sizeClasses} flex-shrink-0`} />,
+    'Tennis': <CircleDot className={`${sizeClasses} flex-shrink-0`} />,
+    'Running': <Footprints className={`${sizeClasses} flex-shrink-0`} />,
+    'Gym': <Dumbbell className={`${sizeClasses} flex-shrink-0`} />,
+    'Cycling': <Bike className={`${sizeClasses} flex-shrink-0`} />,
+    'Volleyball': <Volleyball className={`${sizeClasses} flex-shrink-0`} />,
+    'Badminton': <CircleDot className={`${sizeClasses} flex-shrink-0`} />,
 
     // Entertainment subcategories
-    'Movies': <Film className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Theater': <Theater className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Concerts': <MusicIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Museums': <Theater className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Gaming': <Gamepad2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Comedy': <Laugh className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Karaoke': <Mic2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
-    'Festival': <PartyPopper className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    'Movies': <Film className={`${sizeClasses} flex-shrink-0`} />,
+    'Theater': <Theater className={`${sizeClasses} flex-shrink-0`} />,
+    'Concerts': <MusicIcon className={`${sizeClasses} flex-shrink-0`} />,
+    'Museums': <Theater className={`${sizeClasses} flex-shrink-0`} />,
+    'Gaming': <Gamepad2 className={`${sizeClasses} flex-shrink-0`} />,
+    'Comedy': <Laugh className={`${sizeClasses} flex-shrink-0`} />,
+    'Karaoke': <Mic2 className={`${sizeClasses} flex-shrink-0`} />,
+    'Festival': <PartyPopper className={`${sizeClasses} flex-shrink-0`} />,
   };
 
-  return iconMap[category] || <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
+  return iconMap[category] || <Calendar className={`${sizeClasses} flex-shrink-0`} />;
 };
 
 const getParentCategory = (category?: string): string | null => {
@@ -184,52 +186,61 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
         </div>
 
         {/* Location - Different display for fixed vs collaborative */}
-        <p className={`text-sm sm:text-base md:text-lg mb-2 md:mb-3 break-words ${
-          event.background_image ? 'text-gray-200' : 'text-gray-600'
-        }`}>
+        <div className="mb-3 flex flex-wrap gap-2 items-center">
           {event.location_type === 'fixed' ? (
             // Fixed location: Show venue name
-            <span className="flex items-center gap-1.5">
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-2 ${
+              event.background_image
+                ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                : 'bg-white border-black text-black'
+            }`}>
               <MapPin className="w-4 h-4 flex-shrink-0" />
-              {event.fixed_venue_name || event.location_area}
-            </span>
+              <span className="text-sm font-bold">{event.fixed_venue_name || event.location_area}</span>
+            </div>
           ) : (
             // Collaborative: Show area + finding location status
-            <span className="flex items-center gap-1.5 flex-wrap">
-              <span className="flex items-center gap-1.5">
+            <>
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-2 ${
+                event.background_image
+                  ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                  : 'bg-white border-black text-black'
+              }`}>
                 <MapPin className="w-4 h-4 flex-shrink-0" />
-                {event.location_area}
-              </span>
-              {' · '}
-              <span className={event.background_image ? 'text-blue-300' : 'text-blue-600'}>
-                <MapPin className="w-4 h-4 inline-block flex-shrink-0 mr-1" />
-                Finding location
-              </span>
-              {event.venue_count > 0 && ` · ${event.venue_count} venue${event.venue_count !== 1 ? 's' : ''}`}
-            </span>
+                <span className="text-sm font-bold">{event.location_area}</span>
+              </div>
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-2 ${
+                event.background_image
+                  ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                  : 'bg-white border-black text-black'
+              }`}>
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-bold uppercase">Finding location</span>
+              </div>
+              {event.venue_count > 0 && (
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 border-2 ${
+                  event.background_image
+                    ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                    : 'bg-white border-black text-black'
+                }`}>
+                  <span className="text-xs font-bold uppercase">{event.venue_count} venue{event.venue_count !== 1 ? 's' : ''}</span>
+                </div>
+              )}
+            </>
           )}
-        </p>
+        </div>
 
         {/* Progress Indicator and Avatars on same row */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-3 md:mb-4">
           {/* Progress Indicator - Always show for active events */}
           {event.status === 'active' && (
-            <div className={`inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded ${
+            <div className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 border-2 ${
               event.background_image
-                ? 'bg-white/20 backdrop-blur-sm'
-                : 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200'
+                ? 'bg-white/20 backdrop-blur-sm border-white text-white'
+                : 'bg-white border-black text-black'
             }`}>
-              <span className={`text-sm sm:text-base ${
-                event.background_image ? 'text-white' : 'text-gray-700'
-              }`}>
-                <span className={`font-bold ${
-                  event.background_image ? 'text-green-300' : 'text-green-600'
-                }`}>
-                  In Progress {event.participant_count}
-                </span>
-                <span className="font-normal">
-                  /{event.participant_limit || '∞'}
-                </span>
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm font-bold uppercase">
+                {event.participant_count}/{event.participant_limit || '∞'}
               </span>
             </div>
           )}
@@ -243,35 +254,51 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
           )}
         </div>
 
-        <p className={`text-sm sm:text-base md:text-lg mb-2 md:mb-3 break-words ${
-          event.background_image ? 'text-gray-200' : 'text-gray-600'
-        }`}>
+        {/* Category, Rating, Distance Info - Techno Style */}
+        <div className="flex flex-wrap gap-2 mb-3 items-center">
           {event.category && (
-            <span className="inline-flex items-center gap-1.5">
-              {getCategoryIcon(event.category)} {getParentCategory(event.category)} - {event.category}
-            </span>
+            <div className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 border-2 ${
+              event.background_image
+                ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                : 'bg-white border-black text-black'
+            }`}>
+              {getCategoryIcon(event.category, 'small')}
+              <span className="text-xs sm:text-sm font-bold uppercase">
+                {event.category}
+              </span>
+            </div>
           )}
           {event.average_rating && (
-            <span className="inline-flex items-center gap-1">
-              {event.category ? ' · ' : ''}
-              <Star className="w-4 h-4 fill-current inline-block" />
-              {event.average_rating.toFixed(1)}
-            </span>
+            <div className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 border-2 ${
+              event.background_image
+                ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                : 'bg-white border-black text-black'
+            }`}>
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-bold">{event.average_rating.toFixed(1)}</span>
+            </div>
           )}
           {event.distance_km && (
-            <span className="inline-flex items-center gap-1">
-              {' · '}
-              <MapPin className="w-4 h-4 inline-block" />
-              {event.distance_km.toFixed(1)} km
-            </span>
+            <div className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 border-2 ${
+              event.background_image
+                ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+                : 'bg-white border-black text-black'
+            }`}>
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-bold">{event.distance_km.toFixed(1)} KM</span>
+            </div>
           )}
-        </p>
+        </div>
 
-        <p className={`text-sm sm:text-base md:text-lg mb-3 md:mb-4 break-words ${
-          event.background_image ? 'text-gray-200' : 'text-gray-600'
+        {/* Time Info - Techno Style */}
+        <div className={`inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 border-2 mb-3 md:mb-4 ${
+          event.background_image
+            ? 'bg-white/10 backdrop-blur-sm border-white text-white'
+            : 'bg-white border-black text-black'
         }`}>
-          🕐 {formatTime(event.meeting_time)}
-        </p>
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-bold uppercase">{formatTime(event.meeting_time)}</span>
+        </div>
 
         <div className="flex gap-2 sm:gap-3">
           <button

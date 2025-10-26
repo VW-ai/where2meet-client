@@ -633,8 +633,12 @@ function EventDetailContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-          <p className="text-gray-500 font-medium">Loading event...</p>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-4 h-4 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-4 h-4 bg-white border-2 border-black animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-4 h-4 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+          <p className="text-sm text-black font-bold uppercase">Loading event...</p>
         </div>
       </div>
     );
@@ -666,15 +670,15 @@ function EventDetailContent() {
       />
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-300 bg-white sticky top-0 z-20">
+      <div className="border-b-2 border-black bg-white sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-8">
+          <div className="flex">
             <button
               onClick={() => setActiveTab('details')}
-              className={`py-4 px-2 font-medium transition-colors relative ${
+              className={`flex-1 sm:flex-none py-4 px-6 font-bold text-sm uppercase transition-colors border-r-2 border-black ${
                 activeTab === 'details'
-                  ? 'text-black border-b-2 border-black'
-                  : 'text-gray-500 hover:text-black'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
               }`}
             >
               Event Details
@@ -683,10 +687,10 @@ function EventDetailContent() {
             {event.location_type === 'collaborative' && (
               <button
                 onClick={() => setActiveTab('planning')}
-                className={`py-4 px-2 font-medium transition-colors relative ${
+                className={`flex-1 sm:flex-none py-4 px-6 font-bold text-sm uppercase transition-colors ${
                   activeTab === 'planning'
-                    ? 'text-black border-b-2 border-black'
-                    : 'text-gray-500 hover:text-black'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-gray-100'
                 }`}
               >
                 Find Meeting Point
@@ -775,8 +779,8 @@ function EventDetailContent() {
           {/* Meeting Location Section - Different for fixed vs collaborative events */}
           {event.location_type === 'fixed' ? (
             // Fixed Location Events: Show meeting location card
-            <div className="bg-white border-t border-gray-300 px-8 py-6">
-              <h2 className="text-xl font-bold text-black mb-4">📍 Meeting Location</h2>
+            <div className="bg-white border-t-2 border-black px-8 py-6">
+              <h2 className="text-base sm:text-lg font-bold text-black uppercase mb-4">Meeting Location</h2>
               <MeetingLocationCard
                 venueName={event.fixed_venue_name || event.location_area}
                 venueAddress={event.fixed_venue_address}
@@ -800,27 +804,27 @@ function EventDetailContent() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto p-8">
-          <div className="bg-gray-100 rounded-lg p-12 text-center">
-            <h2 className="text-2xl font-bold text-black mb-4">
-              🗺️ Collaborative Planning Interface
+          <div className="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-12 text-center">
+            <h2 className="text-lg sm:text-xl font-bold text-black uppercase mb-4">
+              Collaborative Planning Interface
             </h2>
             {eventId?.startsWith('mock-') ? (
               <>
-                <p className="text-gray-600 mb-4">
+                <p className="text-sm text-black mb-4">
                   The collaborative planning feature is only available for real events created through the platform.
                 </p>
-                <p className="text-gray-500 text-sm">
+                <p className="text-sm text-gray-600">
                   This is a demo event. Create a real event to access the interactive map and location planning tools.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-gray-600 mb-4">
+                <p className="text-sm text-black mb-6">
                   This will show the interactive map and planning tools from the existing event page.
                 </p>
                 <button
                   onClick={() => router.push(`/event?id=${eventId}${joinToken ? `&token=${joinToken}` : ''}`)}
-                  className="px-6 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  className="px-6 py-3 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-colors"
                 >
                   Go to Planning Interface
                 </button>
@@ -830,99 +834,48 @@ function EventDetailContent() {
         </div>
       )}
 
-      {/* Share Modal */}
+      {/* Share Modal - Techno Style */}
       {showShareModal && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={() => setShowShareModal(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-4xl">🔗</span>
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-base sm:text-lg font-bold uppercase">Share Event</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-sm text-black mb-4 font-medium">
+                Copy the link to invite others to this event
+              </p>
+              <div className="bg-white border-2 border-black p-3 mb-4 break-all text-sm text-black font-mono">
+                {window.location.origin}/event-detail?id={eventId}
+                {joinToken && `&token=${joinToken}`}
               </div>
-            </div>
-            <h3 className="text-xl font-bold text-black mb-2 text-center">
-              Share Event
-            </h3>
-            <p className="text-sm text-gray-500 mb-4 text-center">
-              Copy the link to invite others to this event
-            </p>
-            <div className="bg-gray-100 p-3 rounded-lg mb-4 break-all text-sm text-gray-700">
-              {window.location.origin}/event-detail?id={eventId}
-              {joinToken && `&token=${joinToken}`}
-            </div>
 
-            {/* Copy Link Button */}
-            <button
-              onClick={copyShareLink}
-              className="w-full px-4 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors mb-4"
-            >
-              Copy Link
-            </button>
+              {/* Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={copyShareLink}
+                  className="w-full px-4 py-3 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-colors"
+                >
+                  Copy Link
+                </button>
 
-            {/* Social Sharing Buttons */}
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-3 text-center">Or share via:</p>
-              <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => {
-                    const url = `${window.location.origin}/event-detail?id=${eventId}${joinToken ? `&token=${joinToken}` : ''}`;
-                    const text = `Join me at ${event?.title || 'this event'}!`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition-colors"
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full px-4 py-3 bg-white text-black font-bold text-sm uppercase border-2 border-black hover:bg-gray-100 transition-colors"
                 >
-                  <span className="text-xl">📱</span>
-                  WhatsApp
-                </button>
-                <button
-                  onClick={() => {
-                    const url = `${window.location.origin}/event-detail?id=${eventId}${joinToken ? `&token=${joinToken}` : ''}`;
-                    const subject = `Join me at ${event?.title || 'this event'}`;
-                    const body = `I thought you might be interested in this event:\n\n${event?.title || 'Event'}\n${event?.description || ''}\n\n${url}`;
-                    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-blue-500 hover:text-blue-600 transition-colors"
-                >
-                  <span className="text-xl">📧</span>
-                  Email
-                </button>
-                <button
-                  onClick={() => {
-                    const url = `${window.location.origin}/event-detail?id=${eventId}${joinToken ? `&token=${joinToken}` : ''}`;
-                    const text = `Join me at ${event?.title || 'this event'}!`;
-                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-sky-500 hover:text-sky-600 transition-colors"
-                >
-                  <span className="text-xl">🐦</span>
-                  Twitter
-                </button>
-                <button
-                  onClick={() => {
-                    const url = `${window.location.origin}/event-detail?id=${eventId}${joinToken ? `&token=${joinToken}` : ''}`;
-                    const text = `Join me at ${event?.title || 'this event'}! ${url}`;
-                    window.open(`sms:?&body=${encodeURIComponent(text)}`, '_blank');
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:border-purple-500 hover:text-purple-600 transition-colors"
-                >
-                  <span className="text-xl">💬</span>
-                  Messages
+                  Close
                 </button>
               </div>
             </div>
-
-            {/* Close Button */}
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="w-full px-4 py-2.5 border border-gray-300 text-black font-medium rounded-lg hover:border-black transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
@@ -1011,8 +964,12 @@ export default function EventDetailPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-          <p className="text-gray-500 font-medium">Loading...</p>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-4 h-4 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-4 h-4 bg-white border-2 border-black animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-4 h-4 bg-black border-2 border-black animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+          <p className="text-sm text-black font-bold uppercase">Loading...</p>
         </div>
       </div>
     }>
