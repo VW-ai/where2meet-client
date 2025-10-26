@@ -5,6 +5,7 @@ import EventFeedStatusBadge from './EventFeedStatusBadge';
 import { AvatarCircles } from '@/components/ui/avatar-circles';
 import SpotlightCard from './SpotlightCard';
 import { useState } from 'react';
+import { Calendar, MapPin, Film, Dribbble, Star } from 'lucide-react';
 
 interface EventCardProps {
   event: Event;
@@ -37,18 +38,18 @@ const subcategoryToParent: Record<string, string> = {
   'Festival': 'entertainment',
 };
 
-const getCategoryEmoji = (category?: string) => {
-  if (!category) return '📅';
+const getCategoryIcon = (category?: string) => {
+  if (!category) return <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
 
   // Check if it's a subcategory first
   const parentCategory = subcategoryToParent[category];
 
-  const emojiMap: Record<string, string> = {
-    sports: '🏀',
-    entertainment: '🎬',
+  const iconMap: Record<string, React.ReactElement> = {
+    sports: <Dribbble className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
+    entertainment: <Film className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />,
   };
 
-  return emojiMap[parentCategory || category] || '📅';
+  return iconMap[parentCategory || category] || <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex-shrink-0" />;
 };
 
 const getParentCategory = (category?: string): string | null => {
@@ -94,7 +95,7 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  const emoji = getCategoryEmoji(event.category);
+  const categoryIcon = getCategoryIcon(event.category);
   const isHost = userRole === 'host';
   const isParticipant = userRole === 'participant';
   const isFull = event.participant_limit && event.participant_count >= event.participant_limit;
@@ -151,7 +152,7 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
           <h3 className={`font-semibold text-lg sm:text-xl md:text-2xl flex items-center gap-2 break-words flex-1 ${
             event.background_image ? 'text-white' : 'text-black'
           }`}>
-            <span className="text-xl sm:text-2xl md:text-3xl flex-shrink-0">{emoji}</span>
+            {categoryIcon}
             <span className="break-words">{event.title}</span>
           </h3>
           <div className="flex gap-1 flex-shrink-0 ml-2">
@@ -169,17 +170,24 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
         }`}>
           {event.location_type === 'fixed' ? (
             // Fixed location: Show venue name
-            <>📍 {event.fixed_venue_name || event.location_area}</>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              {event.fixed_venue_name || event.location_area}
+            </span>
           ) : (
             // Collaborative: Show area + finding location status
-            <>
-              📍 {event.location_area}
+            <span className="flex items-center gap-1.5 flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                {event.location_area}
+              </span>
               {' · '}
               <span className={event.background_image ? 'text-blue-300' : 'text-blue-600'}>
-                🗺️ Finding location
+                <MapPin className="w-4 h-4 inline-block flex-shrink-0 mr-1" />
+                Finding location
               </span>
               {event.venue_count > 0 && ` · ${event.venue_count} venue${event.venue_count !== 1 ? 's' : ''}`}
-            </>
+            </span>
           )}
         </p>
 
@@ -220,12 +228,24 @@ export default function EventCard({ event, userRole = 'guest', onView, onJoin, o
           event.background_image ? 'text-gray-200' : 'text-gray-600'
         }`}>
           {event.category && (
-            <>
-              {getCategoryEmoji(event.category)} {getParentCategory(event.category)} - {event.category}
-            </>
+            <span className="inline-flex items-center gap-1.5">
+              {getCategoryIcon(event.category)} {getParentCategory(event.category)} - {event.category}
+            </span>
           )}
-          {event.average_rating && `${event.category ? ' · ' : ''}⭐ ${event.average_rating.toFixed(1)}`}
-          {event.distance_km && ` · 📍 ${event.distance_km.toFixed(1)} km`}
+          {event.average_rating && (
+            <span className="inline-flex items-center gap-1">
+              {event.category ? ' · ' : ''}
+              <Star className="w-4 h-4 fill-current inline-block" />
+              {event.average_rating.toFixed(1)}
+            </span>
+          )}
+          {event.distance_km && (
+            <span className="inline-flex items-center gap-1">
+              {' · '}
+              <MapPin className="w-4 h-4 inline-block" />
+              {event.distance_km.toFixed(1)} km
+            </span>
+          )}
         </p>
 
         <p className={`text-sm sm:text-base md:text-lg mb-3 md:mb-4 break-words ${

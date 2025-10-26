@@ -1,6 +1,7 @@
 'use client';
 
 import { AvatarCircles } from './ui/avatar-circles';
+import { Coffee, Dribbble, Film, Briefcase, Music, TreePine, Calendar, Clock, MapPin } from 'lucide-react';
 
 interface EventHeaderProps {
   title: string;
@@ -24,16 +25,16 @@ interface EventHeaderProps {
   isLeaving?: boolean;
 }
 
-const getCategoryEmoji = (category?: string) => {
-  const emojiMap: Record<string, string> = {
-    food: '☕',
-    sports: '🏀',
-    entertainment: '🎬',
-    work: '💼',
-    music: '🎵',
-    outdoors: '🌳',
+const getCategoryIcon = (category?: string) => {
+  const iconMap: Record<string, React.ReactElement> = {
+    food: <Coffee className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    sports: <Dribbble className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    entertainment: <Film className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    work: <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    music: <Music className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
+    outdoors: <TreePine className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />,
   };
-  return emojiMap[category || 'other'] || '📅';
+  return iconMap[category || 'other'] || <Calendar className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14" />;
 };
 
 const formatTime = (isoString: string) => {
@@ -69,13 +70,13 @@ export default function EventHeader({
   isJoining,
   isLeaving,
 }: EventHeaderProps) {
-  const emoji = getCategoryEmoji(category);
+  const categoryIcon = getCategoryIcon(category);
 
   return (
     <div className="bg-white border-b border-gray-300 px-4 sm:px-6 md:px-8 py-4 md:py-6">
       {/* Title */}
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-4 md:mb-5 flex items-center gap-2 md:gap-3">
-        <span className="text-3xl sm:text-4xl md:text-5xl">{emoji}</span>
+        {categoryIcon}
         <span className="break-words">{title}</span>
       </h1>
 
@@ -86,12 +87,12 @@ export default function EventHeader({
           <span className="text-black font-bold">@{hostName}</span>
         </p>
         <p className="text-base md:text-lg text-gray-700 flex items-center gap-2">
-          <span className="text-lg md:text-xl">🕐</span>
+          <Clock className="w-5 h-5 flex-shrink-0" />
           <span className="break-words">{formatTime(meetingTime)}</span>
         </p>
         <div className="text-base md:text-lg text-gray-700">
           <div className="flex items-start gap-2">
-            <span className="flex-shrink-0 text-lg md:text-xl">📍</span>
+            <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               {venueName && <div className="font-semibold text-black text-base md:text-lg break-words">{venueName}</div>}
               {venueAddress && <div className="text-sm md:text-base text-gray-600 break-words">{venueAddress}</div>}
