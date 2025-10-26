@@ -48,7 +48,7 @@ export type SortMode = 'rating' | 'distance' | 'vote';
 
 // Event Feed Types
 export type EventCategory = 'food' | 'sports' | 'entertainment' | 'work' | 'music' | 'outdoors' | 'other';
-export type EventVisibility = 'public' | 'link_only';
+export type EventVisibility = 'public' | 'link_only' | 'private';
 export type EventStatus = 'active' | 'full' | 'closed' | 'past' | 'cancelled' | 'completed';
 export type EventUserRole = 'host' | 'participant' | 'guest';
 export type LocationType = 'fixed' | 'collaborative';

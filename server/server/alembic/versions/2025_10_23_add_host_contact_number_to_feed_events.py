@@ -18,7 +18,15 @@ depends_on = None
 
 def upgrade() -> None:
     # Add host_contact_number column to feed_events table
-    op.add_column('feed_events', sa.Column('host_contact_number', sa.String(20), nullable=True))
+    from sqlalchemy import inspect
+    from alembic import context
+
+    conn = context.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('feed_events')]
+
+    if 'host_contact_number' not in columns:
+        op.add_column('feed_events', sa.Column('host_contact_number', sa.String(20), nullable=True))
 
 
 def downgrade() -> None:

@@ -18,7 +18,15 @@ depends_on = None
 
 def upgrade() -> None:
     # Add bio column to users table
-    op.add_column('users', sa.Column('bio', sa.String(500), nullable=True))
+    from sqlalchemy import inspect
+    from alembic import context
+
+    conn = context.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('users')]
+
+    if 'bio' not in columns:
+        op.add_column('users', sa.Column('bio', sa.String(500), nullable=True))
 
 
 def downgrade() -> None:

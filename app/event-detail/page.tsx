@@ -444,7 +444,7 @@ function EventDetailContent() {
   };
 
   // Remove participant (host only)
-  const handleRemoveParticipant = (participantId: string) => {
+  const handleRemoveParticipant = async (participantId: string): Promise<void> => {
     console.log('handleRemoveParticipant called with participantId:', participantId);
     setParticipantToRemove(participantId);
     setShowRemoveConfirm(true);

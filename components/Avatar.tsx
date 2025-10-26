@@ -3,7 +3,7 @@
 interface AvatarProps {
   name: string;
   src?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -43,6 +43,7 @@ export default function Avatar({ name, src, size = 'md', className = '' }: Avata
     sm: 'w-8 h-8 text-sm',
     md: 'w-10 h-10 text-base',
     lg: 'w-12 h-12 text-lg',
+    xl: 'w-16 h-16 text-xl',
   };
 
   const colorClass = getAvatarColor(name);

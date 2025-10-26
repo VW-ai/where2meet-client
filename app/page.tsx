@@ -13,7 +13,7 @@ import Header from '@/components/Header';
 import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
-import { Event as EventFeedType } from '@/types';
+import { Event as EventFeedType, EventVisibility } from '@/types';
 
 export default function Home() {
   const router = useRouter();
@@ -194,7 +194,7 @@ export default function Home() {
     location_coords?: { lat: number; lng: number };
     category?: any;
     participant_limit?: number;
-    visibility: 'public' | 'link_only';
+    visibility: EventVisibility;
     location_type?: 'fixed' | 'collaborative';
     fixed_venue_name?: string;
     fixed_venue_address?: string;

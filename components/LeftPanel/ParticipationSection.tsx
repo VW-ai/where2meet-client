@@ -185,9 +185,11 @@ export default function ParticipationSection({
 
                   {/* Blur indicator */}
                   {isBlurred(participant) && (
-                    <EyeOff className={`w-3 h-3 flex-shrink-0 ${
-                      isMe ? 'text-gray-400' : 'text-neutral-400'
-                    }`} title="Location blurred" />
+                    <div title="Location blurred">
+                      <EyeOff className={`w-3 h-3 flex-shrink-0 ${
+                        isMe ? 'text-gray-400' : 'text-neutral-400'
+                      }`} />
+                    </div>
                   )}
 
                   {/* Remove Button (Host only, can't remove self) */}
