@@ -8,55 +8,255 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1248ms
+ ✓ Ready in 1030ms
  ○ Compiling / ...
- ✓ Compiled / in 1322ms (745 modules)
- GET / 200 in 1663ms
- ✓ Compiled in 225ms (299 modules)
- GET / 200 in 112ms
- ○ Compiling /icon ...
- ✓ Compiled /icon in 758ms (524 modules)
- GET /icon 200 in 962ms
- GET / 200 in 93ms
- GET /icon 200 in 8ms
- ○ Compiling /event ...
- ✓ Compiled /event in 519ms (863 modules)
- GET /event?id=evt_7eeea4c51bd84bc7 200 in 643ms
- GET /event?id=evt_80fa600b0402473d 200 in 69ms
- GET /event?id=evt_80fa600b0402473d 200 in 170ms
- GET /icon 200 in 475ms
- GET / 200 in 125ms
- ✓ Compiled in 960ms (365 modules)
- ✓ Compiled in 250ms (365 modules)
- ✓ Compiled in 220ms (365 modules)
- ✓ Compiled in 77ms (365 modules)
- ✓ Compiled in 488ms (877 modules)
- ✓ Compiled in 449ms (877 modules)
- ✓ Compiled in 348ms (877 modules)
- ✓ Compiled in 339ms (881 modules)
- ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
-   ▲ Next.js 15.5.4
-   - Local:        http://localhost:4000
-   - Network:      http://10.13.0.99:4000
-   - Environments: .env.local
-   - Experiments (use with caution):
-     ⨯ missingSuspenseWithCSRBailout
+ ⚠ ./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
 
- ✓ Starting...
- ✓ Ready in 1040ms
- ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
-   ▲ Next.js 15.5.4
-   - Local:        http://localhost:4000
-   - Network:      http://10.13.0.99:4000
-   - Environments: .env.local
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
 
- ✓ Starting...
- ✓ Ready in 1074ms
- ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
-   ▲ Next.js 15.5.4
-   - Local:        http://localhost:4000
-   - Network:      http://10.13.0.99:4000
-   - Environments: .env.local
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
 
- ✓ Starting...
- ✓ Ready in 950ms
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ GET / 200 in 2544ms
+ ⚠ ./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ GET / 200 in 94ms
+ ⚠ ./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ ⚠ ./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/EventCard.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Calendar,Dribble,Film,MapPin,Star!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/EventCard.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ GET /icon 200 in 996ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 60ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ ./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ ⚠ ./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ ⚠ ./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ GET / 200 in 405ms
+ GET /icon 200 in 231ms
+ ⚠ ./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+
+./components/PostEventModal.tsx
+Attempted import error: 'Dribble' is not exported from '__barrel_optimize__?names=Dribble,Film!=!lucide-react' (imported as 'Dribble').
+
+Import trace for requested module:
+./components/PostEventModal.tsx
+./app/page.tsx
+ GET / 200 in 238ms
+ GET /icon 200 in 224ms
+ ✓ Compiled /icon in 317ms (769 modules)
+ GET / 200 in 58ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: Dribble is not defined
+    at eval (components/PostEventModal.tsx:33:26)
+    at (ssr)/./components/PostEventModal.tsx (.next/server/app/page.js:347:1)
+    at eval (webpack-internal:///(ssr)/./app/page.tsx:18:85)
+    at (ssr)/./app/page.tsx (.next/server/app/page.js:248:1)
+  31 |
+  32 | const categoryOptions: { id: EventCategory; icon: JSX.Element; label: string }[] = [
+> 33 |   { id: 'sports', icon: <Dribble className="w-5 h-5" />, label: 'Sports' },
+     |                          ^
+  34 |   { id: 'entertainment', icon: <Film className="w-5 h-5" />, label: 'Entertainment' },
+  35 | ];
+  36 | {
+  digest: '2325801044'
+}
+ GET / 500 in 211ms
+ ✓ Compiled in 144ms (769 modules)
+ GET / 200 in 171ms
+ GET /icon 200 in 145ms
+ ✓ Compiled in 62ms (310 modules)
+ GET / 200 in 12ms
+ ✓ Compiled in 66ms (310 modules)
+ GET / 200 in 11ms
+ GET / 200 in 103ms
+ GET /icon 200 in 195ms
+ ✓ Compiled in 385ms (769 modules)
+ GET / 200 in 103ms
+ GET /icon 200 in 183ms
+ GET /icon 200 in 4ms
+ ✓ Compiled in 187ms (793 modules)
+ GET / 200 in 70ms
+ GET /icon 200 in 115ms
+ GET /icon 200 in 5ms
+ ✓ Compiled in 221ms (793 modules)
+ GET / 200 in 53ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: Dribbble is not defined
+    at eval (components/PostEventModal.tsx:33:26)
+    at (ssr)/./components/PostEventModal.tsx (.next/server/app/page.js:347:1)
+    at eval (webpack-internal:///(ssr)/./app/page.tsx:18:85)
+    at (ssr)/./app/page.tsx (.next/server/app/page.js:248:1)
+  31 |
+  32 | const categoryOptions: { id: EventCategory; icon: React.ReactElement; label: string }[] = [
+> 33 |   { id: 'sports', icon: <Dribbble className="w-5 h-5" />, label: 'Sports' },
+     |                          ^
+  34 |   { id: 'entertainment', icon: <Film className="w-5 h-5" />, label: 'Entertainment' },
+  35 | ];
+  36 | {
+  digest: '3737286102'
+}
+ GET / 500 in 238ms
+ ✓ Compiled in 142ms (793 modules)
+ GET / 200 in 189ms
+ GET /icon 200 in 148ms
+ ✓ Compiled in 64ms (322 modules)
+ GET / 200 in 12ms
+ ✓ Compiled in 66ms (322 modules)
+ GET / 200 in 17ms
+ GET / 200 in 117ms
+ GET /icon 200 in 146ms
+ ✓ Compiled in 762ms (793 modules)
+ GET / 200 in 103ms
+ GET /icon 200 in 144ms
+ GET /icon 200 in 7ms
+ ✓ Compiled in 296ms (793 modules)
+ GET / 200 in 68ms
+ GET /icon 200 in 169ms
+ GET /icon 200 in 4ms
+ ✓ Compiled in 160ms (793 modules)
+ GET / 200 in 65ms
+ GET /icon 200 in 171ms
+ GET /icon 200 in 6ms
+ ✓ Compiled in 656ms (793 modules)
+ ✓ Compiled in 722ms (795 modules)
+ ✓ Compiled in 230ms (795 modules)
+ ✓ Compiled in 211ms (795 modules)
+ GET / 200 in 352ms
+ GET /icon 200 in 270ms

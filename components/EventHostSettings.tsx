@@ -1,6 +1,7 @@
 'use client';
 
 import { EventStatus, EventVisibility } from '@/types';
+import { Globe, Link, Lock, CheckCircle, Users, X, Check, Edit, Download, Trash2, Crown } from 'lucide-react';
 
 interface EventHostSettingsProps {
   visibility: EventVisibility;
@@ -26,11 +27,26 @@ export default function EventHostSettings({
   const getVisibilityDisplay = () => {
     switch (visibility) {
       case 'public':
-        return '🌐 Public';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5" />
+            Public
+          </span>
+        );
       case 'link_only':
-        return '🔗 Link Only';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Link className="w-3.5 h-3.5" />
+            Link Only
+          </span>
+        );
       case 'private':
-        return '🔒 Private';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" />
+            Private
+          </span>
+        );
       default:
         return visibility;
     }
@@ -39,15 +55,40 @@ export default function EventHostSettings({
   const getStatusDisplay = () => {
     switch (status) {
       case 'active':
-        return '✅ Active';
+        return (
+          <span className="flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5" />
+            Active
+          </span>
+        );
       case 'closed':
-        return '🔒 Closed';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" />
+            Closed
+          </span>
+        );
       case 'full':
-        return '👥 Full';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5" />
+            Full
+          </span>
+        );
       case 'cancelled':
-        return '❌ Cancelled';
+        return (
+          <span className="flex items-center gap-1.5">
+            <X className="w-3.5 h-3.5" />
+            Cancelled
+          </span>
+        );
       case 'completed':
-        return '✓ Completed';
+        return (
+          <span className="flex items-center gap-1.5">
+            <Check className="w-3.5 h-3.5" />
+            Completed
+          </span>
+        );
       default:
         return status;
     }
@@ -57,7 +98,8 @@ export default function EventHostSettings({
     <div className="bg-white border-2 border-yellow-400 rounded-lg shadow-lg p-6 max-w-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-black flex items-center gap-2">
-          👑 Event Settings
+          <Crown className="w-5 h-5" />
+          Event Settings
         </h3>
         <span className="px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded">
           HOST ONLY
@@ -85,8 +127,18 @@ export default function EventHostSettings({
 
         <div>
           <div className="text-xs font-medium text-gray-600 mb-0.5">Voting</div>
-          <div className="text-sm font-semibold text-black">
-            {allowVote ? '✅ On' : '❌ Off'}
+          <div className="text-sm font-semibold text-black flex items-center gap-1.5">
+            {allowVote ? (
+              <>
+                <CheckCircle className="w-3.5 h-3.5" />
+                On
+              </>
+            ) : (
+              <>
+                <X className="w-3.5 h-3.5" />
+                Off
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -96,31 +148,35 @@ export default function EventHostSettings({
         {/* Primary Actions */}
         <button
           onClick={onEdit}
-          className="w-full px-4 py-2 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors rounded"
+          className="w-full px-4 py-2 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors rounded flex items-center justify-center gap-2"
         >
-          ✏️ Edit Event
+          <Edit className="w-4 h-4" />
+          Edit Event
         </button>
 
         <button
           onClick={onExportParticipants}
-          className="w-full px-4 py-2 border border-gray-300 text-black text-sm font-medium hover:border-black transition-colors rounded"
+          className="w-full px-4 py-2 border border-gray-300 text-black text-sm font-medium hover:border-black transition-colors rounded flex items-center justify-center gap-2"
         >
-          📥 Export Participants
+          <Download className="w-4 h-4" />
+          Export Participants
         </button>
 
         {/* Danger Actions */}
         <button
           onClick={onClose}
-          className="w-full px-4 py-2 border border-gray-300 text-black text-sm font-medium hover:border-black transition-colors rounded"
+          className="w-full px-4 py-2 border border-gray-300 text-black text-sm font-medium hover:border-black transition-colors rounded flex items-center justify-center gap-2"
         >
-          🔒 Close Event
+          <Lock className="w-4 h-4" />
+          Close Event
         </button>
 
         <button
           onClick={onDelete}
-          className="w-full px-4 py-2 border border-red-500 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors rounded"
+          className="w-full px-4 py-2 border border-red-500 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors rounded flex items-center justify-center gap-2"
         >
-          🗑️ Delete Event
+          <Trash2 className="w-4 h-4" />
+          Delete Event
         </button>
       </div>
     </div>

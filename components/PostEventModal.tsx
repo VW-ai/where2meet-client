@@ -5,6 +5,7 @@ import { EventCategory, EventVisibility, LocationType } from '@/types';
 import { useGooglePlacesAutocomplete } from '@/hooks/useGooglePlacesAutocomplete';
 import DateTimePicker from './DateTimePicker';
 import CityAutocomplete from './CityAutocomplete';
+import { Trophy, Film } from 'lucide-react';
 
 interface PostEventModalProps {
   isOpen: boolean;
@@ -28,9 +29,9 @@ interface PostEventModalProps {
   }) => Promise<void>;
 }
 
-const categoryOptions: { id: EventCategory; emoji: string; label: string }[] = [
-  { id: 'sports', emoji: '🏀', label: 'Sports' },
-  { id: 'entertainment', emoji: '🎬', label: 'Entertainment' },
+const categoryOptions: { id: EventCategory; icon: React.ReactElement; label: string }[] = [
+  { id: 'sports', icon: <Trophy className="w-5 h-5" />, label: 'Sports' },
+  { id: 'entertainment', icon: <Film className="w-5 h-5" />, label: 'Entertainment' },
 ];
 
 // Subcategories for each main category
@@ -487,7 +488,7 @@ export default function PostEventModal({ isOpen, onClose, onSubmit }: PostEventM
                     }`}
                     disabled={isSubmitting}
                   >
-                    <span className="mr-2">{cat.emoji}</span>
+                    <span className="mr-2">{cat.icon}</span>
                     {cat.label}
                   </button>
                 ))}

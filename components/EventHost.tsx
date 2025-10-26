@@ -1,6 +1,7 @@
 'use client';
 
 import Avatar from './Avatar';
+import { Crown, Phone } from 'lucide-react';
 
 interface EventHostProps {
   hostName: string;
@@ -13,7 +14,7 @@ export default function EventHost({ hostName, hostAvatar, hostBio, contactNumber
   return (
     <div className="bg-white border-t border-gray-300 px-8 py-6">
       <h2 className="text-2xl font-bold text-black mb-5 flex items-center gap-2">
-        <span className="text-3xl">👑</span>
+        <Crown className="w-7 h-7" />
         Event Host
       </h2>
 
@@ -30,7 +31,7 @@ export default function EventHost({ hostName, hostAvatar, hostBio, contactNumber
             <div className="text-base text-yellow-700 font-medium">Event Organizer</div>
             {contactNumber && (
               <div className="text-base text-gray-700 mt-2 flex items-center gap-2">
-                <span className="text-lg">📞</span>
+                <Phone className="w-4 h-4" />
                 <a href={`tel:${contactNumber}`} className="hover:underline">
                   {contactNumber}
                 </a>
