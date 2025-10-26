@@ -2650,3 +2650,51 @@ WHERE events.id = %(pk_1)s::VARCHAR
 2025-10-25 19:36:28,063 INFO sqlalchemy.engine.Engine [cached since 79.33s ago] {'pk_1': 'evt_349396bb1d604255'}
 2025-10-25 19:36:28,064 INFO sqlalchemy.engine.Engine ROLLBACK
 INFO:     127.0.0.1:55086 - "POST /api/v1/events/evt_349396bb1d604255/participants HTTP/1.1" 201 Created
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_21_1346-78bd4ce0c2d7_add_photo_reference_to_candidates.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [98843]
+INFO:     Started server process [24904]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_16_2333-cb2b543a7fe9_add_custom_center_to_events.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [24904]
+INFO:     Started server process [25260]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_23_1722-b012172d21fc_add_avatar_to_user.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25260]
+INFO:     Started server process [25343]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_23_add_bio_to_users.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25343]
+INFO:     Started server process [25409]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_23_add_host_contact_number_to_feed_events.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25409]
+INFO:     Started server process [25476]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'alembic/versions/2025_10_24_1838-23ac77adfd6c_add_address_to_participants.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25476]
+INFO:     Started server process [25554]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

@@ -6,7 +6,13 @@
       "Bash(alembic revision:*)",
       "Bash(alembic upgrade:*)",
       "Bash(git commit:*)",
-      "Bash(uvicorn:*)"
+      "Bash(uvicorn:*)",
+      "Bash(rm:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm update:*)",
+      "Bash(xargs basename:*)",
+      "Bash(alembic downgrade:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
