@@ -614,7 +614,7 @@ export default function MapView(props: MapViewProps) {
           mapId="where2meet-map"
           onClick={handleMapClick}
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          disableDefaultUI={true}
           clickableIcons={false}
         >
           <MapContent
