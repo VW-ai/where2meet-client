@@ -497,6 +497,8 @@ export default function MapView(props: MapViewProps) {
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [showTravelModeDropdown, setShowTravelModeDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get user's current location on mount
   useEffect(() => {
@@ -598,6 +600,48 @@ export default function MapView(props: MapViewProps) {
     }
   }, [isGoogleLoaded, props]);
 
+  const getCurrentTravelMode = useCallback(() => {
+    if (isModeActive('WALKING')) return 'WALKING';
+    if (isModeActive('TRANSIT')) return 'TRANSIT';
+    if (isModeActive('BICYCLING')) return 'BICYCLING';
+    return 'DRIVING';
+  }, [isModeActive]);
+
+  const getTravelModeIcon = (mode: string) => {
+    switch (mode) {
+      case 'WALKING': return <PersonStanding className="w-4 h-4 text-black" />;
+      case 'TRANSIT': return <Train className="w-4 h-4 text-black" />;
+      case 'BICYCLING': return <Bike className="w-4 h-4 text-black" />;
+      default: return <Car className="w-4 h-4 text-black" />;
+    }
+  };
+
+  const getTravelModeLabel = (mode: string) => {
+    switch (mode) {
+      case 'WALKING': return 'Walking';
+      case 'TRANSIT': return 'Transit';
+      case 'BICYCLING': return 'Bicycling';
+      default: return 'Driving';
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowTravelModeDropdown(false);
+      }
+    };
+
+    if (showTravelModeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTravelModeDropdown]);
+
   // Map language codes for Google Maps API
   const mapLanguage = props.language === 'zh' ? 'zh-CN' : props.language || 'en';
 
@@ -630,7 +674,7 @@ export default function MapView(props: MapViewProps) {
         <button
           onClick={centerOnCircle}
           disabled={!props.circle && !props.centroid}
-          className="absolute bottom-32 right-4 w-12 h-12 bg-white hover:bg-black text-black hover:text-white font-medium border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10 flex items-center justify-center"
+          className="absolute bottom-4 right-4 w-12 h-12 bg-white hover:bg-black text-black hover:text-white font-medium border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10 flex items-center justify-center"
           title="Center map on search area"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,52 +703,50 @@ export default function MapView(props: MapViewProps) {
               </div>
             </div>
 
-            {/* Bottom: Horizontal Transportation Mode Icons */}
-            <div className="flex border-t-2 border-black">
+            {/* Bottom: Travel Mode Dropdown - Custom Techno Style */}
+            <div className="border-t-2 border-black relative" ref={dropdownRef}>
               <button
-                onClick={() => handleTravelModeClick('DRIVING')}
-                className={`flex-1 p-1 border-r border-black transition-all ${
-                  isModeActive('DRIVING')
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-                title="Driving"
+                onClick={() => setShowTravelModeDropdown(!showTravelModeDropdown)}
+                className="w-full flex items-center justify-between px-2 py-2 text-xs font-bold bg-white text-black cursor-pointer hover:bg-gray-100 transition-all"
               >
-                <Car className="w-3 h-3 mx-auto" />
+                <div className="flex items-center gap-2">
+                  {getTravelModeIcon(getCurrentTravelMode())}
+                  <span>{getTravelModeLabel(getCurrentTravelMode())}</span>
+                </div>
+                <svg className={`w-3 h-3 text-black transition-transform ${showTravelModeDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-              <button
-                onClick={() => handleTravelModeClick('WALKING')}
-                className={`flex-1 p-1 border-r border-black transition-all ${
-                  isModeActive('WALKING')
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-                title="Walking"
-              >
-                <PersonStanding className="w-3 h-3 mx-auto" />
-              </button>
-              <button
-                onClick={() => handleTravelModeClick('TRANSIT')}
-                className={`flex-1 p-1 border-r border-black transition-all ${
-                  isModeActive('TRANSIT')
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-                title="Public Transit"
-              >
-                <Train className="w-3 h-3 mx-auto" />
-              </button>
-              <button
-                onClick={() => handleTravelModeClick('BICYCLING')}
-                className={`flex-1 p-1 transition-all ${
-                  isModeActive('BICYCLING')
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-                title="Bicycling"
-              >
-                <Bike className="w-3 h-3 mx-auto" />
-              </button>
+
+              {/* Dropdown Menu */}
+              {showTravelModeDropdown && (
+                <div className="absolute bottom-full left-0 right-0 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-1 z-50">
+                  {['DRIVING', 'WALKING', 'TRANSIT', 'BICYCLING'].map((mode) => {
+                    const isSelected = getCurrentTravelMode() === mode;
+                    const iconClass = isSelected ? 'text-white' : 'text-black';
+                    return (
+                      <button
+                        key={mode}
+                        onClick={() => {
+                          handleTravelModeClick(mode as 'DRIVING' | 'WALKING' | 'TRANSIT' | 'BICYCLING');
+                          setShowTravelModeDropdown(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-2 py-2 text-xs font-bold transition-all border-b border-black last:border-b-0 ${
+                          isSelected
+                            ? 'bg-black text-white'
+                            : 'bg-white text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        {mode === 'WALKING' && <PersonStanding className={`w-4 h-4 ${iconClass}`} />}
+                        {mode === 'TRANSIT' && <Train className={`w-4 h-4 ${iconClass}`} />}
+                        {mode === 'BICYCLING' && <Bike className={`w-4 h-4 ${iconClass}`} />}
+                        {mode === 'DRIVING' && <Car className={`w-4 h-4 ${iconClass}`} />}
+                        <span>{getTravelModeLabel(mode)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

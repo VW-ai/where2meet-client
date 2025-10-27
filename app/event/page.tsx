@@ -117,6 +117,7 @@ function EventPageContent() {
   const [mobileTab, setMobileTab] = useState<'participants' | 'search' | 'saved'>('participants');
   const [showMobileInputModal, setShowMobileInputModal] = useState(false);
   const [showMobileVenueDetail, setShowMobileVenueDetail] = useState(false);
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
 
   // Mobile input form state
   const [mobileInputName, setMobileInputName] = useState('');
@@ -985,7 +986,14 @@ function EventPageContent() {
 
     const link = `${window.location.origin}/event?id=${eventId}&token=${joinToken}`;
     navigator.clipboard.writeText(link);
-    toast.success(t.joinLinkCopied);
+
+    // Show copied message
+    setShowCopiedMessage(true);
+
+    // Hide message after 2 seconds
+    setTimeout(() => {
+      setShowCopiedMessage(false);
+    }, 2000);
   };
 
   // Handler functions for new LeftPanel component
@@ -1655,9 +1663,9 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Circle Radius Controller - Bottom Right (All joined users) */}
+      {/* Circle Radius Controller - Mobile version: left edge above bottom nav */}
       {participantId && !selectedCandidate && (
-        <div className={`fixed right-6 z-20 ${role === 'host' ? 'bottom-6' : 'bottom-6'}`}>
+        <div className="fixed left-0 bottom-16 z-20 block lg:hidden">
           <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-3 min-w-[280px]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase text-black">Search Radius</span>
@@ -1668,7 +1676,7 @@ function EventPageContent() {
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M12 16v-4M12 8h.01"/>
                   </svg>
-                  <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-56 px-3 py-2 bg-black text-white text-xs border-2 border-black shadow-lg z-10">
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 px-3 py-2 bg-black text-white text-xs border-2 border-black shadow-lg z-10">
                     Search area radius (0.5-2km). Adjust before searching. Larger = more venues, further distance.
                   </div>
                 </div>
@@ -1677,7 +1685,7 @@ function EventPageContent() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
-                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+                className="px-3 py-1.5 text-sm font-bold text-black bg-white border-2 border-black hover:bg-black hover:text-white transition-all"
               >
                 −
               </button>
@@ -1688,14 +1696,11 @@ function EventPageContent() {
                 step="0.1"
                 value={circleRadiusKm}
                 onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 border-2 border-black appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, black ${((circleRadiusKm - 0.5) / 1.5) * 100}%, #e5e7eb ${((circleRadiusKm - 0.5) / 1.5) * 100}%)`
-                }}
+                className="flex-1 h-2 bg-black border-2 border-black appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-red-600 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
               />
               <button
                 onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
-                className="px-3 py-1.5 text-sm font-bold border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+                className="px-3 py-1.5 text-sm font-bold text-black bg-white border-2 border-black hover:bg-black hover:text-white transition-all"
               >
                 +
               </button>
@@ -1703,7 +1708,63 @@ function EventPageContent() {
               {(customCentroid || authoritativeCircle) && role === 'host' && (
                 <button
                   onClick={handleResetCentroid}
-                  className="px-3 py-1.5 text-xs font-bold uppercase border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+                  className="px-3 py-1.5 text-xs font-bold uppercase text-black border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
+                  title="Reset circle to auto-calculated position based on participants"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Circle Radius Controller - Desktop version: right side */}
+      {participantId && !selectedCandidate && (
+        <div className="fixed right-6 bottom-20 z-20 hidden lg:block">
+          <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-3 min-w-[280px]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase text-black">Search Radius</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-black">{circleRadiusKm.toFixed(1)} km</span>
+                <div className="group relative">
+                  <svg className="w-3.5 h-3.5 text-black cursor-help" fill="none" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4M12 8h.01"/>
+                  </svg>
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 px-3 py-2 bg-black text-white text-xs border-2 border-black shadow-lg z-10">
+                    Search area radius (0.5-2km). Adjust before searching. Larger = more venues, further distance.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
+                className="px-3 py-1.5 text-sm font-bold text-black bg-white border-2 border-black hover:bg-black hover:text-white transition-all"
+              >
+                −
+              </button>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={circleRadiusKm}
+                onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-black border-2 border-black appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-red-600 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
+              />
+              <button
+                onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
+                className="px-3 py-1.5 text-sm font-bold text-black bg-white border-2 border-black hover:bg-black hover:text-white transition-all"
+              >
+                +
+              </button>
+              {/* Reset Circle Position Button - Only show if circle has been manually moved */}
+              {(customCentroid || authoritativeCircle) && role === 'host' && (
+                <button
+                  onClick={handleResetCentroid}
+                  className="px-3 py-1.5 text-xs font-bold uppercase text-black border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
                   title="Reset circle to auto-calculated position based on participants"
                 >
                   Reset
@@ -1864,7 +1925,7 @@ function EventPageContent() {
       {/* Mobile Layout - Only visible on mobile */}
       <div className="block lg:hidden h-full w-full flex flex-col">
         {/* Mobile Header */}
-        <div className="bg-black text-white px-3 py-2 border-b-2 border-black flex items-center justify-between flex-shrink-0">
+        <div className="bg-black text-white px-3 py-3 border-b-2 border-white flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <button
               onClick={() => {
@@ -1888,16 +1949,66 @@ function EventPageContent() {
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => {
-                // Language toggle - uses the existing useTranslation hook
-              }}
-              className="p-1.5 border border-white hover:bg-white hover:text-black transition-all text-xs"
-            >
-              {language.toUpperCase()}
-            </button>
+            {/* Copy Link Button */}
+            <div className="relative">
+              <button
+                onClick={copyJoinLink}
+                className={`p-1.5 border-2 border-white transition-all ${
+                  showCopiedMessage
+                    ? 'bg-white text-black'
+                    : 'bg-black text-white hover:bg-white hover:text-black'
+                }`}
+                title="Copy event link"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </button>
+              {showCopiedMessage && (
+                <div className="absolute top-full right-0 mt-1 bg-black text-white px-2 py-1 text-xs font-bold whitespace-nowrap border-2 border-white">
+                  Copied!
+                </div>
+              )}
+            </div>
+
+            {/* Publish Button (Host only, when venue selected and no final decision) */}
+            {role === 'host' && selectedCandidate && !event?.final_decision && (
+              <button
+                onClick={handlePublish}
+                className="px-2 py-1.5 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all text-xs font-bold uppercase"
+                title="Publish final decision"
+              >
+                Publish
+              </button>
+            )}
+
+            {/* Unpublish Button (Host only, when final decision exists) */}
+            {role === 'host' && event?.final_decision && (
+              <button
+                onClick={handleUnpublish}
+                className="px-2 py-1.5 border-2 border-white bg-black text-white hover:bg-white hover:text-black transition-all text-xs font-bold uppercase"
+                title="Unpublish decision"
+              >
+                Unpublish
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Final Decision Banner - Mobile */}
+        {event.final_decision && (
+          <div className="bg-white border-b-4 border-black z-50">
+            <div className="bg-black text-white px-3 py-2 border-b-2 border-black flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <p className="font-bold text-xs uppercase tracking-wider">{t.finalDecision}</p>
+            </div>
+            <div className="px-3 py-2">
+              <p className="font-bold text-sm text-black uppercase text-center">{event.final_decision}</p>
+            </div>
+          </div>
+        )}
 
         {/* Map Container - 40% height */}
         <div className="relative h-[40vh] flex-shrink-0">
@@ -1930,10 +2041,10 @@ function EventPageContent() {
 
           {/* Vertical Search Radius Slider - Only show in Search/Saved tabs */}
           {(mobileTab === 'search' || mobileTab === 'saved') && participantId && (
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm border-l-2 border-y-2 border-black px-2 py-4 flex flex-col items-center gap-2">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border-r-2 border-y-2 border-black px-2 py-4 flex flex-col items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <button
                 onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
-                className="p-1 border border-black bg-white hover:bg-black hover:text-white transition-all text-xs font-bold"
+                className="p-1 border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-all text-xs font-bold"
               >
                 +
               </button>
@@ -1945,7 +2056,7 @@ function EventPageContent() {
                   step="0.1"
                   value={circleRadiusKm}
                   onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
-                  className="h-32 appearance-none bg-gray-200 border border-black cursor-pointer"
+                  className="h-32 w-2 appearance-none bg-black border-2 border-black cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-red-600 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer"
                   style={{
                     writingMode: 'vertical-lr',
                     direction: 'rtl',
@@ -1957,7 +2068,7 @@ function EventPageContent() {
               </div>
               <button
                 onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
-                className="p-1 border border-black bg-white hover:bg-black hover:text-white transition-all text-xs font-bold"
+                className="p-1 border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-all text-xs font-bold"
               >
                 −
               </button>
@@ -2159,10 +2270,10 @@ function EventPageContent() {
                         >
                           {/* Line 1: Name + Rating + Distance */}
                           <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <h5 className={`font-semibold text-xs truncate flex-1 min-w-0 ${
+                            <h5 className={`font-semibold text-xs flex-1 min-w-0 ${
                               isSelected ? 'text-white' : 'text-neutral-900'
                             }`}>
-                              {candidate.name}
+                              {candidate.name.length > 30 ? `${candidate.name.substring(0, 30)}...` : candidate.name}
                             </h5>
                             <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
                               {candidate.rating && (
@@ -2249,13 +2360,13 @@ function EventPageContent() {
             <div className="h-full">
               <div className="p-4">
                 <h3 className="text-sm font-bold uppercase mb-3 text-black">
-                  Saved Venues ({candidates.filter(c => c.addedBy).length})
+                  Liked Venues ({candidates.filter(c => myVotedCandidateIds.has(c.id)).length})
                 </h3>
 
                 {/* Saved venues list - Right 20% is vote area, no color tags */}
                 <div className="space-y-0.5">
                   {sortedCandidates()
-                    .filter(c => c.addedBy)
+                    .filter(c => myVotedCandidateIds.has(c.id))
                     .map((candidate) => {
                       const isSelected = selectedCandidate?.id === candidate.id;
                       const hasUserVoted = myVotedCandidateIds.has(candidate.id);
@@ -2280,10 +2391,10 @@ function EventPageContent() {
                           >
                             {/* Line 1: Name + Rating + Distance */}
                             <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <h5 className={`font-semibold text-xs truncate flex-1 min-w-0 ${
+                              <h5 className={`font-semibold text-xs flex-1 min-w-0 ${
                                 isSelected ? 'text-white' : 'text-neutral-900'
                               }`}>
-                                {candidate.name}
+                                {candidate.name.length > 30 ? `${candidate.name.substring(0, 30)}...` : candidate.name}
                               </h5>
                               <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
                                 {candidate.rating && (
@@ -2403,7 +2514,7 @@ function EventPageContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
               <span className="text-xs font-medium">
-                Saved ({candidates.filter(c => c.addedBy).length})
+                Saved ({candidates.filter(c => myVotedCandidateIds.has(c.id)).length})
               </span>
             </button>
           </div>
@@ -2569,67 +2680,105 @@ function EventPageContent() {
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-4">
-                {/* Rating & Distance */}
-                <div className="flex items-center gap-4 mb-3 text-sm">
-                  {selectedCandidate.rating && (
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="font-bold">{selectedCandidate.rating.toFixed(1)}</span>
-                      {selectedCandidate.userRatingsTotal && (
-                        <span className="text-gray-600">({selectedCandidate.userRatingsTotal})</span>
-                      )}
-                    </div>
-                  )}
-                  {selectedCandidate.distanceFromCenter && (
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                      <span className="font-bold">{(selectedCandidate.distanceFromCenter / 1000).toFixed(2)} km</span>
-                    </div>
+                {/* Rating, Distance, and Vote */}
+                <div className="flex items-center justify-between mb-3 text-sm text-black">
+                  {/* Left side: Rating and Distance */}
+                  <div className="flex items-center gap-3">
+                    {selectedCandidate.rating && (
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span className="font-bold text-black">{selectedCandidate.rating.toFixed(1)}</span>
+                        {selectedCandidate.userRatingsTotal && (
+                          <span className="text-black">({selectedCandidate.userRatingsTotal})</span>
+                        )}
+                      </div>
+                    )}
+                    {selectedCandidate.distanceFromCenter && (
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="font-bold text-black">{(selectedCandidate.distanceFromCenter / 1000).toFixed(2)} km</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right side: Vote Button */}
+                  {participantId && (
+                    <button
+                      onClick={() => handleVote(selectedCandidate.id)}
+                      className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    >
+                      <Heart className={`w-5 h-5 ${
+                        myVotedCandidateIds.has(selectedCandidate.id)
+                          ? 'fill-black text-black'
+                          : 'text-neutral-400'
+                      }`} />
+                      <span className="font-bold text-sm text-black">
+                        {selectedCandidate.voteCount || 0}
+                      </span>
+                    </button>
                   )}
                 </div>
 
                 {/* Address */}
                 {selectedCandidate.vicinity && (
-                  <p className="text-sm text-gray-700 mb-4">{selectedCandidate.vicinity}</p>
-                )}
-
-                {/* Vote Section */}
-                {participantId && (
-                  <div className="mb-4 p-3 border-2 border-black bg-gray-50">
-                    <button
-                      onClick={() => handleVote(selectedCandidate.id)}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-4 border-2 border-black bg-white hover:bg-black hover:text-white transition-all font-bold text-sm uppercase"
-                    >
-                      <svg className={`w-5 h-5 ${myVotedCandidateIds.has(selectedCandidate.id) ? 'fill-black' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                      {myVotedCandidateIds.has(selectedCandidate.id) ? 'Voted' : 'Vote'}
-                      <span className="ml-1">({selectedCandidate.voteCount || 0})</span>
-                    </button>
+                  <div className="mb-3">
+                    <p className="text-sm text-black">{selectedCandidate.vicinity}</p>
                   </div>
                 )}
 
-                {/* Save/Unsave Button */}
-                {participantId && (
-                  <div className="mb-4">
-                    {selectedCandidate.addedBy ? (
-                      <button
-                        onClick={() => handleUnsaveCandidate(selectedCandidate.id)}
-                        className="w-full py-2 px-4 border-2 border-black bg-gray-100 hover:bg-white transition-all font-bold text-sm uppercase"
-                      >
-                        Remove from Saved
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleSaveCandidate(selectedCandidate.id)}
-                        className="w-full py-2 px-4 border-2 border-black bg-white hover:bg-gray-100 transition-all font-bold text-sm uppercase"
-                      >
-                        Save Venue
-                      </button>
+                {/* About / Editorial Summary Section */}
+                {candidateEditorialSummary && (
+                  <div className="border-t-2 border-black pt-3 mb-3">
+                    <button
+                      onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+                      className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                    >
+                      {isAboutExpanded ? (
+                        <ChevronUp className="w-3 h-3 text-black" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3 text-black" />
+                      )}
+                      <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <h4 className="text-xs font-bold uppercase text-black">About</h4>
+                    </button>
+                    {isAboutExpanded && (
+                      <div className="text-sm text-black leading-relaxed">
+                        {candidateEditorialSummary}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Opening Hours */}
+                {candidateOpeningHours && (
+                  <div className="border-t-2 border-black pt-3 mb-3">
+                    <button
+                      onClick={() => setIsHoursExpanded(!isHoursExpanded)}
+                      className="flex items-center gap-1.5 hover:opacity-70 transition-opacity w-full mb-2"
+                    >
+                      {isHoursExpanded ? (
+                        <ChevronUp className="w-3 h-3 text-black" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3 text-black" />
+                      )}
+                      <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <h4 className="text-xs font-bold uppercase text-black">Hours</h4>
+                    </button>
+                    {isHoursExpanded && candidateOpeningHours.weekday_text && (
+                      <div className="text-sm text-black space-y-1">
+                        {candidateOpeningHours.weekday_text.map((day: string, index: number) => (
+                          <div key={index} className="leading-relaxed">{day}</div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -2639,12 +2788,12 @@ function EventPageContent() {
                   href={`https://www.google.com/maps/search/?api=1&query=${selectedCandidate.lat},${selectedCandidate.lng}&query_place_id=${selectedCandidate.placeId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-black text-white text-sm font-bold uppercase border-2 border-black hover:bg-gray-900 transition-all"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-black text-white text-xs font-bold uppercase border-2 border-black hover:bg-white hover:text-black transition-all"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                   </svg>
-                  Open in Google Maps
+                  Google Map
                 </a>
               </div>
             </div>

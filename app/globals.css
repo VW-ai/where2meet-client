@@ -316,3 +316,29 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 .techno-datepicker .react-datepicker__time-list-item--disabled {
   color: #9ca3af !important;
 }
+
+/* Techno Style Select Dropdown */
+select option {
+  background-color: #fff !important;
+  color: #000 !important;
+  padding: 8px 12px !important;
+  font-weight: 500 !important;
+}
+
+select option:checked {
+  background-color: #000 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+}
+
+select option:hover {
+  background-color: #f5f5f5 !important;
+}
+
+/* Firefox specific select styling */
+@-moz-document url-prefix() {
+  select option:checked {
+    background: #000 linear-gradient(0deg, #000 0%, #000 100%) !important;
+    color: #fff !important;
+  }
+}
