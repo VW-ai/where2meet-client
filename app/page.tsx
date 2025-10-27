@@ -528,7 +528,7 @@ export default function Home() {
 
                 <div>
                   <label className="block text-base font-medium text-black mb-2">
-                    Meeting Time
+                    Meeting Time <span className="text-gray-500 text-sm font-normal">(Optional)</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -964,7 +964,7 @@ export default function Home() {
 
                   <div>
                     <label className="block text-xl font-medium text-black mb-2">
-                      Meeting Time
+                      Meeting Time <span className="text-gray-500 text-base font-normal">(Optional)</span>
                     </label>
                     <DateTimePicker
                       selected={meetingTime}

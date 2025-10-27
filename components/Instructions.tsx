@@ -87,12 +87,12 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
   };
 
   // Show help button if dismissed
-  // Position much higher (bottom-48) if host to avoid overlapping with circle radius controller
+  // Mobile: top right corner, Desktop: bottom right, just left of focus on circle button
   if (dismissed || (!showInstructions && localStorage.getItem('where2meet_instructions_seen'))) {
     return (
       <button
         onClick={handleShow}
-        className={`fixed ${role === 'host' ? 'bottom-48' : 'bottom-48'} right-4 w-12 h-12 bg-black text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black transition-all z-50 flex items-center justify-center text-xl font-bold`}
+        className="fixed bottom-4 right-20 lg:block hidden w-12 h-12 bg-black text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black transition-all z-50 flex items-center justify-center text-xl font-bold"
         title={language === 'zh' ? '显示说明' : 'Show instructions'}
       >
         ?

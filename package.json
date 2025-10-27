@@ -41,6 +41,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.7.1",
     "@types/react": "^19.2.2",
+    "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "^19.2.1",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.37.0",

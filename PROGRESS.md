@@ -1,6 +1,231 @@
 # Where2Meet - Development Progress
 
-## Latest Session: October 24, 2025 - Typography & UX Improvements
+## Latest Session: October 26, 2025 - Mobile Event Page Enhancement
+
+### 🎯 Session Summary
+**Focus:** Comprehensive mobile event page implementation with header buttons, radius controls, and travel mode dropdown
+
+**Completed:**
+1. ✅ Mobile header buttons (copy link, publish/unpublish)
+2. ✅ Final decision banner for mobile
+3. ✅ Radius controller positioning and styling (mobile vs desktop)
+4. ✅ Custom techno-style travel mode dropdown
+5. ✅ Map controls repositioning (instruction button, focus on circle button)
+6. ✅ Venue name truncation (30 characters)
+7. ✅ Mobile venue detail modal with desktop design
+
+**Key Achievements:**
+- Mobile header now matches home screen thickness (py-3)
+- Copy link button with visual feedback (turns white, shows "Copied!" message)
+- Publish/unpublish functionality fully working on mobile with confirmation modal
+- Separate radius controller implementations for mobile (left edge, vertical) and desktop (right side, horizontal)
+- Black slider track with red thumb for consistent techno/brutalist design
+- Custom dropdown replaces native select for better styling control
+
+---
+
+### ✅ Mobile Event Page Features
+
+#### 18. Mobile Header Enhancement
+**Status:** Complete ✅
+
+**Changes Made:**
+- **Header Thickness:** Changed from `py-2` to `py-3` to match home screen
+- **Border Color:** Changed from `border-black` to `border-white` for consistency
+- **Copy Link Button:**
+  - Direct copy functionality (no modal)
+  - Visual feedback: turns white on click, returns to black after 2 seconds
+  - Shows "Copied!" message below button
+  - Link icon (chain link symbol)
+- **Publish Button (Host only):**
+  - Shows when venue selected and no final decision
+  - White background with black text
+  - Opens confirmation modal
+  - Calls `handlePublish` → `confirmPublish` → API
+- **Unpublish Button (Host only):**
+  - Shows when final decision exists
+  - Black background with white text
+  - Calls `handleUnpublish` → API
+
+**Files Modified:**
+- `app/event/page.tsx:1920-1977` - Mobile header with buttons
+- `app/event/page.tsx:120` - Added `showCopiedMessage` state
+- `app/event/page.tsx:984-997` - Updated `copyJoinLink` with visual feedback
+
+---
+
+#### 19. Final Decision Banner (Mobile)
+**Status:** Complete ✅
+
+**Features:**
+- Banner appears between header and map when decision is published
+- Black header with checkmark icon and "FINAL DECISION" text
+- White content area showing venue name
+- Matches desktop design, adapted for mobile layout
+
+**Implementation:**
+- Position: Between mobile header and map container
+- Full-width design (no absolute positioning like desktop)
+- Border styling: `border-b-4 border-black`
+- Auto-shows when `event.final_decision` exists
+
+**Files Modified:**
+- `app/event/page.tsx:1979-1992` - Final decision banner component
+
+---
+
+#### 20. Map Controls Repositioning
+**Status:** Complete ✅
+
+**Desktop Changes:**
+- **Instruction Button:** Moved from `bottom-48 right-4` to `bottom-4 right-20` (left of focus on circle button)
+- **Focus on Circle Button:** Remains at `bottom-4 right-4`
+- Both buttons now at bottom-right corner
+
+**Files Modified:**
+- `components/Instructions.tsx:95` - Updated button positioning
+- `components/MapView.tsx:633` - Focus on circle button (already correct)
+
+---
+
+#### 21. Radius Controller - Separate Mobile/Desktop Implementations
+**Status:** Complete ✅
+
+**Mobile Implementation:**
+- **Position:** Left edge of map (`left-0 top-1/2 -translate-y-1/2`)
+- **Visibility:** Only in Search/Saved tabs
+- **Design:** Vertical slider with +/- buttons
+- **Styling:**
+  - Black slider track (`bg-black`)
+  - Red slider thumb (`bg-red-600`)
+  - Black text for +/- buttons
+  - Border-right-2 with brutalist shadow
+
+**Desktop Implementation:**
+- **Position:** Bottom right (`right-6 bottom-6`)
+- **Visibility:** Shows when joined and no candidate selected
+- **Design:** Horizontal slider with +/- buttons and Reset
+- **Styling:**
+  - Black slider track (`bg-black`)
+  - Red slider thumb (`bg-red-600`)
+  - Black text for all buttons
+  - Border-2 on +/- buttons
+
+**Technical Details:**
+- Two completely separate components (mobile: lines 1984-2018, desktop: 1714-1768)
+- Mobile: `block lg:hidden`, Desktop: `hidden lg:block`
+- Both use same `handleCircleRadiusChange` function
+- Custom Tailwind classes for slider thumb styling
+
+**Files Modified:**
+- `app/event/page.tsx:1984-2018` - Mobile vertical radius slider
+- `app/event/page.tsx:1658-1712` - Desktop horizontal radius slider (kept for reference)
+- `app/event/page.tsx:1714-1768` - Desktop horizontal radius slider (actual implementation)
+
+---
+
+#### 22. Custom Travel Mode Dropdown
+**Status:** Complete ✅
+
+**Problem:** Native browser `<select>` dropdowns can't be styled with custom techno/brutalist design
+
+**Solution:** Built custom dropdown component with full styling control
+
+**Features:**
+- Button shows current mode with icon and label
+- Dropdown menu appears on click
+- Options shown as buttons (not native options)
+- Selected option has black background with white text
+- Unselected options have white background with black text
+- Icons change color based on selection state
+- Clicks outside close the dropdown
+- Arrow icon rotates when open
+
+**Implementation:**
+- State: `showTravelModeDropdown` (boolean)
+- Ref: `dropdownRef` for click-outside detection
+- Helper functions: `getCurrentTravelMode()`, `getTravelModeIcon()`, `getTravelModeLabel()`
+- Icons: Car, PersonStanding, Train, Bike from lucide-react
+- Dropdown position: `absolute bottom-full` (appears above button)
+
+**Files Modified:**
+- `components/MapView.tsx:72-73` - State and ref
+- `components/MapView.tsx:600-626` - Helper functions
+- `components/MapView.tsx:628-643` - Click outside handler
+- `components/MapView.tsx:706-750` - Custom dropdown UI
+- `components/MapView.tsx:608-614` - Icon function with black text
+
+**Styling:**
+- Border: `border-2 border-black`
+- Shadow: `shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`
+- Selected: `bg-black text-white`
+- Unselected: `bg-white text-black hover:bg-gray-100`
+
+---
+
+#### 23. Venue Name Truncation
+**Status:** Complete ✅
+
+**Problem:** Long restaurant names causing layout overflow
+
+**Solution:** Manual character limit with ellipsis
+
+**Implementation:**
+- Character limit: 30 characters
+- Applied to both Search and Saved tabs
+- Ternary operator: `{candidate.name.length > 30 ? ${candidate.name.substring(0, 30)}... : candidate.name}`
+
+**Files Modified:**
+- `app/event/page.tsx:2180` - Search tab venue cards
+- `app/event/page.tsx:2301` - Saved tab venue cards
+
+---
+
+#### 24. Mobile Venue Detail Modal
+**Status:** Complete ✅
+
+**Features:**
+- Uses desktop venue detail design
+- Rating and vote button on same line (rating left, vote right)
+- About section (collapsible, editorial summary)
+- Hours section (collapsible, opening hours)
+- Google Map button at bottom
+- Heart icon for voting (matches desktop)
+
+**Layout:**
+1. Header with photo and close button
+2. Rating/Distance + Vote button
+3. Address
+4. About (collapsible with info icon)
+5. Hours (collapsible with clock icon)
+6. Google Map button
+
+**Files Modified:**
+- `app/event/page.tsx:2618-2730` - Mobile venue detail modal
+
+---
+
+### 🔧 Technical Improvements
+
+**State Management:**
+- Added `showCopiedMessage` for copy link visual feedback
+- Separate mobile and desktop radius controllers with independent positioning
+- Custom dropdown state with click-outside detection
+
+**Component Architecture:**
+- Fully separated mobile and desktop radius implementations
+- Custom dropdown component replacing native select
+- Reusable helper functions for travel mode management
+
+**Styling:**
+- Consistent techno/brutalist design across all new components
+- Black borders, white/black contrast, brutalist shadows
+- Red accent color for slider thumbs
+- Proper z-index layering for dropdowns and modals
+
+---
+
+## Previous Session: October 24, 2025 - Typography & UX Improvements
 
 ### 🎯 Session Summary
 **Focus:** Enhanced typography with Afacad Flux font and significantly improved readability across the entire application

@@ -116,6 +116,7 @@ export default function LeftPanel({
         finalDecision={finalDecision}
         onPublishDecision={onPublishDecision}
         onUnpublishDecision={onUnpublishDecision}
+        isJoined={isJoined}
       />
 
 
