@@ -850,10 +850,13 @@ function EventPageContent() {
 
   // Show publish confirmation modal
   const handlePublish = useCallback(() => {
+    console.log('🔵 handlePublish clicked - eventId:', eventId, 'role:', role, 'selectedCandidate:', selectedCandidate?.name);
     if (!eventId || role !== 'host' || !selectedCandidate) {
+      console.log('🔴 Publish blocked - eventId:', !!eventId, 'isHost:', role === 'host', 'hasCandidate:', !!selectedCandidate);
       toast.info(t.pleaseSelectVenue);
       return;
     }
+    console.log('🟢 Setting showPublishConfirm to true');
     setShowPublishConfirm(true);
   }, [eventId, role, selectedCandidate, t]);
 
@@ -1840,44 +1843,6 @@ function EventPageContent() {
         }}
       />
 
-      {/* Publish Confirmation Modal */}
-      {showPublishConfirm && selectedCandidate && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4">
-            {/* Header */}
-            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
-              <h3 className="text-base sm:text-lg font-bold uppercase">Publish Final Decision</h3>
-            </div>
-
-            {/* Content */}
-            <div className="px-6 py-6">
-              <p className="text-sm text-black mb-4 font-medium">
-                You are about to publish <span className="font-bold">{selectedCandidate.name}</span> as the final meeting location.
-              </p>
-              <p className="text-sm text-black mb-6">
-                All participants will be notified of this decision. This action cannot be undone.
-              </p>
-
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowPublishConfirm(false)}
-                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmPublish}
-                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
-                >
-                  Publish
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Location Confirmation Modal */}
       {showLocationConfirm && clickedLocation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -2813,6 +2778,54 @@ function EventPageContent() {
           </div>
         )}
       </div>
+
+      {/* Publish Confirmation Modal - Global (visible on both desktop and mobile) */}
+      {(() => {
+        console.log('📋 Publish modal check - showPublishConfirm:', showPublishConfirm, 'selectedCandidate:', selectedCandidate?.name);
+        console.log('📋 Mobile modals - showMobileInputModal:', showMobileInputModal, 'showMobileVenueDetail:', showMobileVenueDetail);
+        return null;
+      })()}
+      {showPublishConfirm && selectedCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110]" onClick={(e) => {
+          console.log('🎯 Modal backdrop clicked');
+          if (e.target === e.currentTarget) {
+            setShowPublishConfirm(false);
+          }
+        }}>
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-base sm:text-lg font-bold uppercase">Publish Final Decision</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-sm text-black mb-4 font-medium">
+                You are about to publish <span className="font-bold">{selectedCandidate.name}</span> as the final meeting location.
+              </p>
+              <p className="text-sm text-black mb-6">
+                All participants will be notified of this decision. This action cannot be undone.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPublishConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPublish}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Publish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
