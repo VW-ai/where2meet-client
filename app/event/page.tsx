@@ -113,6 +113,11 @@ function EventPageContent() {
   const [showLocationConfirm, setShowLocationConfirm] = useState(false); // Custom location confirmation modal
   const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number; address: string | null } | null>(null); // Temporary clicked location
 
+  // Mobile UI state
+  const [mobileTab, setMobileTab] = useState<'participants' | 'search' | 'saved'>('participants');
+  const [showMobileInputModal, setShowMobileInputModal] = useState(false);
+  const [showMobileVenueDetail, setShowMobileVenueDetail] = useState(false);
+
   // Create participant colors map
   const participantColors = useMemo(() => {
     const colorMap = new Map<string, string>();
@@ -1149,9 +1154,11 @@ function EventPageContent() {
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-white">
-      {/* Full-Screen Map */}
-      <div className="absolute inset-0">
-        <MapView
+      {/* Desktop Layout - Hidden on mobile */}
+      <div className="hidden lg:block h-full w-full">
+        {/* Full-Screen Map */}
+        <div className="absolute inset-0">
+          <MapView
           key={`map-${language}`}
           apiKey={apiKey}
           locations={locations}
@@ -1691,12 +1698,523 @@ function EventPageContent() {
         </div>
       )}
 
-      {/* Instructions & Help */}
-      <Instructions
-        role={role}
-        hasLocations={locations.length > 0}
-        hasCandidates={candidates.length > 0}
-      />
+        {/* Instructions & Help */}
+        <Instructions
+          role={role}
+          hasLocations={locations.length > 0}
+          hasCandidates={candidates.length > 0}
+        />
+      </div>
+
+      {/* Mobile Layout - Only visible on mobile */}
+      <div className="block lg:hidden h-full w-full flex flex-col">
+        {/* Mobile Header */}
+        <div className="bg-black text-white px-3 py-2 border-b-2 border-black flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <button
+              onClick={() => {
+                if (participantId) {
+                  // Show confirmation if joined
+                  if (window.confirm('Return to home? You will lose your current session.')) {
+                    router.push('/');
+                  }
+                } else {
+                  router.push('/');
+                }
+              }}
+              className="flex-shrink-0 hover:opacity-80 transition-opacity"
+            >
+              <Logo size="sm" showText={false} theme="dark" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xs font-bold uppercase truncate">
+                {event?.title || t.eventTitle}
+              </h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => {
+                // Language toggle - uses the existing useTranslation hook
+              }}
+              className="p-1.5 border border-white hover:bg-white hover:text-black transition-all text-xs"
+            >
+              {language.toUpperCase()}
+            </button>
+          </div>
+        </div>
+
+        {/* Map Container - 40% height */}
+        <div className="relative h-[40vh] flex-shrink-0">
+          <MapView
+            key={`map-mobile-${language}`}
+            apiKey={apiKey}
+            locations={locations}
+            centroid={centroid}
+            circle={circle}
+            candidates={sortedCandidates()}
+            selectedCandidate={selectedCandidate}
+            onMapClick={handleMapClick}
+            onCandidateClick={(candidate) => {
+              setSelectedCandidate(candidate);
+              setShowMobileVenueDetail(true);
+            }}
+            myParticipantId={participantId || undefined}
+            routeFromParticipantId={selectedCandidate && selectedParticipantId ? selectedParticipantId : routeFromParticipantId}
+            travelMode={selectedCandidate && selectedParticipantId ? chartTravelMode : travelMode}
+            onTravelModeChange={setTravelMode}
+            onCentroidDrag={role === 'host' ? handleCentroidDrag : undefined}
+            isHost={role === 'host'}
+            language={language}
+            participantColors={participantColors}
+            candidateColors={candidateColors}
+            showParticipantNames={showParticipantNames}
+            selectedParticipantId={selectedParticipantId}
+            chartRouteMode={selectedCandidate && selectedParticipantId ? true : false}
+          />
+
+          {/* Vertical Search Radius Slider - Only show in Search/Saved tabs */}
+          {(mobileTab === 'search' || mobileTab === 'saved') && participantId && (
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm border-l-2 border-y-2 border-black px-2 py-4 flex flex-col items-center gap-2">
+              <button
+                onClick={() => handleCircleRadiusChange(Math.min(2, circleRadiusKm + 0.1))}
+                className="p-1 border border-black bg-white hover:bg-black hover:text-white transition-all text-xs font-bold"
+              >
+                +
+              </button>
+              <div className="flex flex-col items-center gap-1">
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={circleRadiusKm}
+                  onChange={(e) => handleCircleRadiusChange(parseFloat(e.target.value))}
+                  className="h-32 appearance-none bg-gray-200 border border-black cursor-pointer"
+                  style={{
+                    writingMode: 'vertical-lr',
+                    direction: 'rtl',
+                  }}
+                />
+                <span className="text-[10px] font-bold text-black whitespace-nowrap">
+                  {circleRadiusKm.toFixed(1)}km
+                </span>
+              </div>
+              <button
+                onClick={() => handleCircleRadiusChange(Math.max(0.5, circleRadiusKm - 0.1))}
+                className="p-1 border border-black bg-white hover:bg-black hover:text-white transition-all text-xs font-bold"
+              >
+                −
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area - Remaining height minus bottom nav */}
+        <div className="flex-1 overflow-y-auto pb-16">
+          {/* Participants Tab */}
+          {mobileTab === 'participants' && (
+            <div className="h-full">
+              <div className="p-4">
+                <h3 className="text-sm font-bold uppercase mb-3">Participants ({participants.length})</h3>
+
+                {/* User's own info - Pinned at top */}
+                {participantId && participants.find(p => p.id === participantId) && (
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setShowMobileInputModal(true)}
+                      className="w-full border-2 border-black p-3 bg-black text-white hover:bg-gray-900 transition-all text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-sm">
+                            {participants.find(p => p.id === participantId)?.name} (You)
+                          </p>
+                          <p className="text-xs opacity-80 mt-1">
+                            Tap to edit your location
+                          </p>
+                        </div>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {/* Other participants list */}
+                <div className="space-y-2">
+                  {participants
+                    .filter(p => p.id !== participantId)
+                    .map((participant) => (
+                      <button
+                        key={participant.id}
+                        onClick={() => handleParticipantClick(participant.id)}
+                        className={`w-full border-2 border-black p-3 transition-all text-left ${
+                          selectedParticipantId === participant.id
+                            ? 'bg-black text-white'
+                            : 'bg-white hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 border-2 border-current flex-shrink-0"
+                            style={{ backgroundColor: participantColors.get(participant.id) }}
+                          />
+                          <p className="font-bold text-sm">{participant.name}</p>
+                        </div>
+                      </button>
+                    ))}
+                </div>
+
+                {/* Join button for non-participants */}
+                {!participantId && (
+                  <button
+                    onClick={() => setShowMobileInputModal(true)}
+                    className="w-full mt-4 border-2 border-black p-3 bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                  >
+                    Join Event
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Search Tab */}
+          {mobileTab === 'search' && (
+            <div className="h-full">
+              <div className="p-4">
+                <h3 className="text-sm font-bold uppercase mb-3">Search Venues</h3>
+
+                {/* Search Input */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="Search for places..."
+                    className="w-full px-3 py-2 text-sm border-2 border-black focus:outline-none"
+                  />
+                  <button
+                    onClick={searchPlaces}
+                    disabled={isSearching || !keyword.trim()}
+                    className="w-full mt-2 px-4 py-2 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 disabled:opacity-50"
+                  >
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+
+                {/* Results List */}
+                <div className="space-y-2">
+                  {sortedCandidates().map((candidate) => (
+                    <button
+                      key={candidate.id}
+                      onClick={() => {
+                        setSelectedCandidate(candidate);
+                        setShowMobileVenueDetail(true);
+                      }}
+                      className={`w-full border-2 border-black p-3 transition-all text-left ${
+                        selectedCandidate?.id === candidate.id
+                          ? 'bg-black text-white'
+                          : 'bg-white hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-bold text-sm">{candidate.name}</p>
+                          {candidate.rating && (
+                            <p className="text-xs mt-1">⭐ {candidate.rating.toFixed(1)}</p>
+                          )}
+                        </div>
+                        {candidate.addedBy && (
+                          <span className="text-xs bg-gray-200 px-2 py-1 border border-black">Saved</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+
+                  {candidates.length === 0 && !isSearching && (
+                    <p className="text-center text-gray-500 text-sm py-8">
+                      Search for venues to see results
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Saved Tab */}
+          {mobileTab === 'saved' && (
+            <div className="h-full">
+              <div className="p-4">
+                <h3 className="text-sm font-bold uppercase mb-3">
+                  Saved Venues ({candidates.filter(c => c.addedBy).length})
+                </h3>
+
+                {/* Saved venues list */}
+                <div className="space-y-2">
+                  {sortedCandidates()
+                    .filter(c => c.addedBy)
+                    .map((candidate) => (
+                      <button
+                        key={candidate.id}
+                        onClick={() => {
+                          setSelectedCandidate(candidate);
+                          setShowMobileVenueDetail(true);
+                        }}
+                        className={`w-full border-2 border-black p-3 transition-all text-left ${
+                          selectedCandidate?.id === candidate.id
+                            ? 'bg-black text-white'
+                            : 'bg-white hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">{candidate.name}</p>
+                            {candidate.rating && (
+                              <p className="text-xs mt-1">⭐ {candidate.rating.toFixed(1)}</p>
+                            )}
+                            {(candidate.voteCount ?? 0) > 0 && (
+                              <p className="text-xs mt-1">❤️ {candidate.voteCount} votes</p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+
+                  {candidates.filter(c => c.addedBy).length === 0 && (
+                    <p className="text-center text-gray-500 text-sm py-8">
+                      No saved venues yet
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Navigation Bar - Fixed at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black z-50">
+          <div className="flex justify-around items-center h-16">
+            <button
+              onClick={() => setMobileTab('participants')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'participants' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span className="text-xs font-medium">Participants</span>
+              {participants.length > 0 && (
+                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
+                  {participants.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setMobileTab('search')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'search' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span className="text-xs font-medium">Search</span>
+              {candidates.length > 0 && (
+                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
+                  {candidates.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setMobileTab('saved')}
+              className={`flex-1 flex flex-col items-center justify-center h-full transition-colors ${
+                mobileTab === 'saved' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <span className="text-xs font-medium">Saved</span>
+              {candidates.filter(c => c.addedBy).length > 0 && (
+                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
+                  {candidates.filter(c => c.addedBy).length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Input Modal - Full screen */}
+        {showMobileInputModal && (
+          <div className="fixed inset-0 bg-white z-[100] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-black text-white px-4 py-3 flex items-center justify-between border-b-2 border-black flex-shrink-0">
+              <h3 className="text-sm font-bold uppercase">
+                {participantId ? 'Edit Location' : 'Join Event'}
+              </h3>
+              <button
+                onClick={() => setShowMobileInputModal(false)}
+                className="p-1 hover:bg-white hover:text-black transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-sm text-gray-600 mb-4">
+                {participantId
+                  ? 'Update your name or location for this event'
+                  : 'Add your location to join the event and find the perfect meeting spot'}
+              </p>
+
+              {/* Input form content will go here */}
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-sm">Input form component coming soon...</p>
+                <p className="text-xs mt-2">Will reuse InputSection component logic</p>
+              </div>
+            </div>
+
+            {/* Modal Footer with action buttons */}
+            <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
+              <button
+                onClick={() => setShowMobileInputModal(false)}
+                className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-all"
+              >
+                {participantId ? 'Save Changes' : 'Join Event'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Venue Detail Modal - Large centered */}
+        {showMobileVenueDetail && selectedCandidate && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+            onClick={() => setShowMobileVenueDetail(false)}
+          >
+            <div
+              className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-[90vw] max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header with Photo */}
+              <div
+                className="relative h-32 bg-black text-white border-b-4 border-black flex-shrink-0"
+                style={{
+                  backgroundImage: selectedCandidate.photoReference
+                    ? `url(https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${selectedCandidate.photoReference}&key=${apiKey})`
+                    : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="absolute inset-0 bg-black/50"></div>
+                <div className="relative flex items-center justify-between px-4 py-3 h-full">
+                  <h3 className="font-bold text-base uppercase truncate flex-1 text-white drop-shadow-lg">
+                    {selectedCandidate.name}
+                  </h3>
+                  <button
+                    onClick={() => setShowMobileVenueDetail(false)}
+                    className="ml-2 hover:bg-white hover:text-black w-8 h-8 flex items-center justify-center transition-all bg-black/50 backdrop-blur-sm"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {/* Rating & Distance */}
+                <div className="flex items-center gap-4 mb-3 text-sm">
+                  {selectedCandidate.rating && (
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="font-bold">{selectedCandidate.rating.toFixed(1)}</span>
+                      {selectedCandidate.userRatingsTotal && (
+                        <span className="text-gray-600">({selectedCandidate.userRatingsTotal})</span>
+                      )}
+                    </div>
+                  )}
+                  {selectedCandidate.distanceFromCenter && (
+                    <div className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      </svg>
+                      <span className="font-bold">{(selectedCandidate.distanceFromCenter / 1000).toFixed(2)} km</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Address */}
+                {selectedCandidate.vicinity && (
+                  <p className="text-sm text-gray-700 mb-4">{selectedCandidate.vicinity}</p>
+                )}
+
+                {/* Vote Section */}
+                {participantId && (
+                  <div className="mb-4 p-3 border-2 border-black bg-gray-50">
+                    <button
+                      onClick={() => handleVote(selectedCandidate.id)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 border-2 border-black bg-white hover:bg-black hover:text-white transition-all font-bold text-sm uppercase"
+                    >
+                      <svg className={`w-5 h-5 ${myVotedCandidateIds.has(selectedCandidate.id) ? 'fill-black' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      {myVotedCandidateIds.has(selectedCandidate.id) ? 'Voted' : 'Vote'}
+                      <span className="ml-1">({selectedCandidate.voteCount || 0})</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Save/Unsave Button */}
+                {participantId && (
+                  <div className="mb-4">
+                    {selectedCandidate.addedBy ? (
+                      <button
+                        onClick={() => handleUnsaveCandidate(selectedCandidate.id)}
+                        className="w-full py-2 px-4 border-2 border-black bg-gray-100 hover:bg-white transition-all font-bold text-sm uppercase"
+                      >
+                        Remove from Saved
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleSaveCandidate(selectedCandidate.id)}
+                        className="w-full py-2 px-4 border-2 border-black bg-white hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                      >
+                        Save Venue
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Google Maps Link */}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${selectedCandidate.lat},${selectedCandidate.lng}&query_place_id=${selectedCandidate.placeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-black text-white text-sm font-bold uppercase border-2 border-black hover:bg-gray-900 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  Open in Google Maps
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
