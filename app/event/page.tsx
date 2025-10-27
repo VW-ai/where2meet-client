@@ -13,7 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import Logo from '@/components/Logo';
 import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
 import TravelChart from '@/components/TravelChart';
-import { ChevronUp, ChevronDown, Heart, Utensils, Coffee, Beer, Trees, Star, MapPin } from 'lucide-react';
+import { ChevronUp, ChevronDown, Heart, Utensils, Coffee, Beer, Trees, Star, MapPin, Copy } from 'lucide-react';
 import EventStatusBadge from '@/components/EventStatusBadge';
 
 // Dynamically import MapView to avoid SSR issues with Google Maps
@@ -117,7 +117,7 @@ function EventPageContent() {
   const [mobileTab, setMobileTab] = useState<'participants' | 'search' | 'saved'>('participants');
   const [showMobileInputModal, setShowMobileInputModal] = useState(false);
   const [showMobileVenueDetail, setShowMobileVenueDetail] = useState(false);
-  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   // Mobile input form state
   const [mobileInputName, setMobileInputName] = useState('');
@@ -377,10 +377,18 @@ function EventPageContent() {
 
   // Fetch photo when a candidate is selected
   useEffect(() => {
-    if (!selectedCandidate || !eventId) return;
+    console.log('📸 Photo useEffect triggered - Candidate:', selectedCandidate?.name, 'ID:', selectedCandidate?.id, 'Has photo?', !!selectedCandidate?.photoReference);
+
+    if (!selectedCandidate || !eventId) {
+      console.log('📸 Skipping: no candidate or eventId');
+      return;
+    }
 
     // Check if we already have the photo reference
-    if (selectedCandidate.photoReference) return;
+    if (selectedCandidate.photoReference) {
+      console.log('📸 Candidate already has photo reference:', selectedCandidate.photoReference);
+      return;
+    }
 
     // Check cache first
     const cached = candidatePhotoCache.get(selectedCandidate.id);
@@ -981,19 +989,20 @@ function EventPageContent() {
   }, [eventId, t]);
 
   // Copy join link
-  const copyJoinLink = () => {
+  const copyJoinLink = async () => {
     if (!eventId || !joinToken) return;
 
     const link = `${window.location.origin}/event?id=${eventId}&token=${joinToken}`;
-    navigator.clipboard.writeText(link);
 
-    // Show copied message
-    setShowCopiedMessage(true);
-
-    // Hide message after 2 seconds
-    setTimeout(() => {
-      setShowCopiedMessage(false);
-    }, 2000);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopyFeedback(t.joinLinkCopied);
+      setTimeout(() => setCopyFeedback(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      setCopyFeedback('Failed to copy link');
+      setTimeout(() => setCopyFeedback(null), 2000);
+    }
   };
 
   // Handler functions for new LeftPanel component
@@ -1948,49 +1957,53 @@ function EventPageContent() {
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Copy Link Button */}
-            <div className="relative">
-              <button
-                onClick={copyJoinLink}
-                className={`p-1.5 border-2 border-white transition-all ${
-                  showCopiedMessage
-                    ? 'bg-white text-black'
-                    : 'bg-black text-white hover:bg-white hover:text-black'
-                }`}
-                title="Copy event link"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </button>
-              {showCopiedMessage && (
-                <div className="absolute top-full right-0 mt-1 bg-black text-white px-2 py-1 text-xs font-bold whitespace-nowrap border-2 border-white">
-                  Copied!
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Copy Link Button - Desktop Style */}
+            {eventId && (
+              <div className="relative">
+                <button
+                  onClick={copyJoinLink}
+                  className="px-3 py-2 border-2 border-white hover:bg-white hover:text-black transition-all font-bold text-xs flex items-center gap-1.5"
+                  title={t.copyLink}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{t.copyLink}</span>
+                </button>
 
-            {/* Publish Button (Host only, when venue selected and no final decision) */}
-            {role === 'host' && selectedCandidate && !event?.final_decision && (
-              <button
-                onClick={handlePublish}
-                className="px-2 py-1.5 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all text-xs font-bold uppercase"
-                title="Publish final decision"
-              >
-                Publish
-              </button>
+                {/* Copy Feedback Toast */}
+                {copyFeedback && (
+                  <div className="absolute top-full right-0 mt-2 px-2 py-1 bg-white text-black text-xs font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] whitespace-nowrap z-50">
+                    {copyFeedback}
+                  </div>
+                )}
+              </div>
             )}
 
-            {/* Unpublish Button (Host only, when final decision exists) */}
-            {role === 'host' && event?.final_decision && (
-              <button
-                onClick={handleUnpublish}
-                className="px-2 py-1.5 border-2 border-white bg-black text-white hover:bg-white hover:text-black transition-all text-xs font-bold uppercase"
-                title="Unpublish decision"
-              >
-                Unpublish
-              </button>
+            {/* Publish/Unpublish Decision Button (Host only) */}
+            {role === 'host' && (
+              <>
+                {/* Publish button - show when no decision and venue selected */}
+                {selectedCandidate && !event?.final_decision && (
+                  <button
+                    onClick={handlePublish}
+                    className="px-3 py-2 border-2 border-white bg-white text-black hover:bg-black hover:text-white transition-all font-bold text-xs uppercase"
+                    title={t.publishDecision}
+                  >
+                    {t.publishDecision}
+                  </button>
+                )}
+
+                {/* Unpublish button - show when decision is published */}
+                {event?.final_decision && (
+                  <button
+                    onClick={handleUnpublish}
+                    className="px-3 py-2 border-2 border-white bg-black text-white hover:bg-white hover:text-black transition-all font-bold text-xs uppercase"
+                    title="Unpublish Decision"
+                  >
+                    Unpublish
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
