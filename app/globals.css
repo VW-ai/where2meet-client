@@ -317,6 +317,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   color: #9ca3af !important;
 }
 
+/* React DatePicker styles */
+@import 'react-datepicker/dist/react-datepicker.css';
+
 /* Techno Style Select Dropdown */
 select option {
   background-color: #fff !important;

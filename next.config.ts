@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Skip trailing slash to avoid issues
+  skipTrailingSlashRedirect: true,
   images: {
     remotePatterns: [
       {
@@ -17,6 +19,16 @@ const nextConfig: NextConfig = {
         hostname: 'avatars.githubusercontent.com',
       },
     ],
+  },
+  experimental: {
+    optimizePackageImports: ['react-datepicker'],
+  },
+  // Webpack configuration to handle potential issues
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    };
+    return config;
   },
 };
 
