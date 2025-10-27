@@ -3,6 +3,7 @@
 import { Copy, Globe } from 'lucide-react';
 import { useLanguage, Language } from '@/lib/i18n';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 
 interface TopViewProps {
@@ -14,6 +15,7 @@ interface TopViewProps {
   finalDecision?: string | null;
   onPublishDecision?: () => void;
   onUnpublishDecision?: () => void;
+  isJoined?: boolean;
 }
 
 export default function TopView({
@@ -24,10 +26,13 @@ export default function TopView({
   selectedCandidate,
   finalDecision,
   onPublishDecision,
-  onUnpublishDecision
+  onUnpublishDecision,
+  isJoined
 }: TopViewProps) {
+  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [showHomeConfirm, setShowHomeConfirm] = useState(false);
 
   const handleCopyLink = async () => {
     if (!eventId) return;
@@ -53,13 +58,34 @@ export default function TopView({
     setLanguage(newLang);
   };
 
+  const handleLogoClick = () => {
+    // Show confirmation modal if user has joined the event
+    if (isJoined) {
+      setShowHomeConfirm(true);
+    } else {
+      // If not joined, go directly to home
+      router.push('/');
+    }
+  };
+
+  const confirmGoHome = () => {
+    router.push('/');
+  };
+
   return (
-    <div className="bg-black text-white p-3 border-b-2 border-black">
-      <div className="flex items-center justify-between gap-3">
-        {/* Left: Logo + Event Title */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Logo */}
-          <Logo size="sm" showText={false} theme="dark" className="flex-shrink-0" />
+    <>
+      <div className="bg-black text-white p-3 border-b-2 border-black">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Logo + Event Title */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Logo - Clickable */}
+            <button
+              onClick={handleLogoClick}
+              className="flex-shrink-0 hover:opacity-80 transition-opacity"
+              title="Return to Home"
+            >
+              <Logo size="sm" showText={false} theme="dark" />
+            </button>
 
           {/* Event Title */}
           <div className="flex-1 min-w-0">
@@ -133,5 +159,50 @@ export default function TopView({
         </div>
       </div>
     </div>
+
+      {/* Home Confirmation Modal */}
+      {showHomeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowHomeConfirm(false)}>
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-base sm:text-lg font-bold uppercase">Return to Home?</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-sm text-black mb-4 font-bold">
+                {isHost
+                  ? "You are the host of this event."
+                  : "You are currently participating in this event."
+                }
+              </p>
+              <p className="text-sm text-black mb-6">
+                {isHost
+                  ? "Leaving this page won't affect the event, but you'll need the event link to return. Make sure you've copied the join link if you want to come back."
+                  : "If you leave, you won't be able to rejoin with the same participant ID. To participate again, you'll need to join as a new participant using the event link."
+                }
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowHomeConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Stay
+                </button>
+                <button
+                  onClick={confirmGoHome}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Go Home
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
