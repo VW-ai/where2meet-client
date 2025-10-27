@@ -3,6 +3,7 @@
 import { Copy, Globe } from 'lucide-react';
 import { useLanguage, Language } from '@/lib/i18n';
 import { useState } from 'react';
+import Logo from '@/components/Logo';
 
 interface TopViewProps {
   eventTitle?: string;
@@ -57,12 +58,8 @@ export default function TopView({
       <div className="flex items-center justify-between gap-3">
         {/* Left: Logo + Event Title */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Logo - Brutalist Style */}
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-white flex items-center justify-center relative border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
-              <span className="text-black font-black text-[10px] leading-none tracking-tighter">W2M</span>
-            </div>
-          </div>
+          {/* Logo */}
+          <Logo size="sm" showText={false} theme="dark" className="flex-shrink-0" />
 
           {/* Event Title */}
           <div className="flex-1 min-w-0">
