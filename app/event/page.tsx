@@ -2074,8 +2074,22 @@ function EventPageContent() {
 
           {/* Search Tab */}
           {mobileTab === 'search' && (
-            <div className="h-full">
-              <div className="p-4">
+            <div className="h-full flex flex-col">
+              {/* Sticky Search Bar */}
+              <div className="sticky top-0 z-20 bg-white border-b-2 border-black p-4 flex-shrink-0">
+                <input
+                  ref={mobileSearchInputRef}
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchPlaces()}
+                  placeholder="Search for places..."
+                  className="w-full px-3 py-2 text-sm text-black placeholder:text-gray-500 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4">
                 <h3 className="text-sm font-bold uppercase mb-3 text-black">Search Venues</h3>
 
                 {/* Category Chips - First 4 */}
@@ -2110,26 +2124,16 @@ function EventPageContent() {
                   </button>
                 </div>
 
-                {/* Search Input */}
-                <div className="mb-4">
-                  <input
-                    ref={mobileSearchInputRef}
-                    type="text"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="Search for places..."
-                    className="w-full px-3 py-2 text-sm text-black placeholder:text-gray-500 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                  <button
-                    onClick={searchPlaces}
-                    disabled={isSearching || !keyword.trim()}
-                    className="w-full mt-2 px-4 py-2 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 disabled:opacity-50"
-                  >
-                    {isSearching ? 'Searching...' : 'Search'}
-                  </button>
-                </div>
+                {/* Search Button */}
+                <button
+                  onClick={searchPlaces}
+                  disabled={isSearching || !keyword.trim()}
+                  className="w-full mb-4 px-4 py-2 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 disabled:opacity-50"
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
+                </button>
 
-                {/* Results List - Matching desktop SearchSubView */}
+                {/* Results List - Right 20% is vote area */}
                 <div className="space-y-0.5">
                   {sortedCandidates().map((candidate) => {
                     const isSelected = selectedCandidate?.id === candidate.id;
@@ -2139,91 +2143,93 @@ function EventPageContent() {
                     return (
                       <div
                         key={candidate.id}
-                        onClick={() => {
-                          setSelectedCandidate(candidate);
-                          setShowMobileVenueDetail(true);
-                        }}
-                        className={`p-1.5 border-2 cursor-pointer transition-all ${
+                        className={`flex border-2 transition-all ${
                           isSelected
                             ? 'bg-black text-white border-black'
                             : 'bg-white border-black hover:bg-gray-100'
                         }`}
                       >
-                        {/* Line 1: Name + Rating + Distance */}
-                        <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <h5 className={`font-semibold text-xs truncate flex-1 ${
-                            isSelected ? 'text-white' : 'text-neutral-900'
-                          }`}>
-                            {candidate.name}
-                          </h5>
-                          <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
-                            {candidate.rating && (
-                              <div className="flex items-center gap-0.5">
-                                <Star className={`w-3 h-3 ${
-                                  isSelected ? 'fill-white text-white' : 'fill-yellow-400 text-yellow-400'
-                                }`} />
-                                <span className={`font-medium ${
-                                  isSelected ? 'text-white' : 'text-neutral-700'
-                                }`}>
-                                  {candidate.rating.toFixed(1)}
-                                </span>
-                              </div>
-                            )}
-                            {candidate.distanceFromCenter !== undefined && (
-                              <div className="flex items-center gap-0.5">
-                                <MapPin className={`w-3 h-3 ${
-                                  isSelected ? 'text-white' : 'text-neutral-500'
-                                }`} />
-                                <span className={isSelected ? 'text-white' : 'text-neutral-600'}>
-                                  {(candidate.distanceFromCenter / 1000).toFixed(1)}km
-                                </span>
-                              </div>
-                            )}
+                        {/* Left 80%: Card content - opens detail */}
+                        <div
+                          onClick={() => {
+                            setSelectedCandidate(candidate);
+                            setShowMobileVenueDetail(true);
+                          }}
+                          className="flex-1 p-1.5 cursor-pointer"
+                        >
+                          {/* Line 1: Name + Rating + Distance */}
+                          <div className="flex items-center justify-between gap-1 mb-0.5">
+                            <h5 className={`font-semibold text-xs truncate flex-1 min-w-0 ${
+                              isSelected ? 'text-white' : 'text-neutral-900'
+                            }`}>
+                              {candidate.name}
+                            </h5>
+                            <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
+                              {candidate.rating && (
+                                <div className="flex items-center gap-0.5">
+                                  <Star className={`w-3 h-3 ${
+                                    isSelected ? 'fill-white text-white' : 'fill-yellow-400 text-yellow-400'
+                                  }`} />
+                                  <span className={`font-medium ${
+                                    isSelected ? 'text-white' : 'text-neutral-700'
+                                  }`}>
+                                    {candidate.rating.toFixed(1)}
+                                  </span>
+                                </div>
+                              )}
+                              {candidate.distanceFromCenter !== undefined && (
+                                <div className="flex items-center gap-0.5">
+                                  <MapPin className={`w-3 h-3 ${
+                                    isSelected ? 'text-white' : 'text-neutral-500'
+                                  }`} />
+                                  <span className={isSelected ? 'text-white' : 'text-neutral-600'}>
+                                    {(candidate.distanceFromCenter / 1000).toFixed(1)}km
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Line 2: Address + Vote count + Vote button */}
-                        <div className="flex items-center justify-between gap-1">
-                          <p className={`text-xs truncate flex-1 ${
+                          {/* Line 2: Address */}
+                          <p className={`text-xs truncate ${
                             isSelected ? 'text-gray-300' : 'text-neutral-500'
                           }`}>
                             {candidate.vicinity || 'No address'}
                           </p>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {hasVoteCount && (
-                              <div className={`flex items-center gap-0.5 text-xs font-semibold ${
-                                isSelected ? 'text-white' : 'text-black'
-                              }`}>
-                                <Heart className={`w-3 h-3 ${
-                                  isSelected ? 'fill-white' : 'fill-black'
-                                }`} />
-                                <span>{candidate.voteCount}</span>
-                              </div>
-                            )}
-                            {participantId && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (hasUserVoted) {
-                                    handleVote(candidate.id);
-                                  } else {
-                                    handleSaveCandidate(candidate.id);
-                                  }
-                                }}
-                                className={`p-0.5 border border-black transition-colors ${
-                                  isSelected
-                                    ? 'bg-white text-black hover:bg-gray-200'
-                                    : 'bg-white hover:bg-gray-100'
-                                }`}
-                                title={hasUserVoted ? 'Remove vote' : 'Save and Vote'}
-                              >
-                                <Heart className={`w-3.5 h-3.5 ${
-                                  hasUserVoted ? 'fill-black text-black' : 'text-neutral-400'
-                                }`} />
-                              </button>
-                            )}
-                          </div>
                         </div>
+
+                        {/* Right 20%: Vote button area */}
+                        {participantId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (hasUserVoted) {
+                                handleVote(candidate.id);
+                              } else {
+                                handleSaveCandidate(candidate.id);
+                              }
+                            }}
+                            className={`w-[20%] flex items-center justify-center border-l-2 border-black transition-colors relative ${
+                              isSelected
+                                ? 'bg-white text-black hover:bg-gray-200'
+                                : hasUserVoted
+                                ? 'bg-black hover:bg-gray-900'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                            title={hasUserVoted ? 'Remove vote' : 'Save and Vote'}
+                          >
+                            <Heart className={`w-6 h-6 ${
+                              hasUserVoted ? 'text-white' : 'text-neutral-400'
+                            }`} />
+                            {hasVoteCount && (
+                              <span className={`absolute bottom-1 text-xs font-bold ${
+                                hasUserVoted ? 'text-white' : 'text-black'
+                              }`}>
+                                {candidate.voteCount}
+                              </span>
+                            )}
+                          </button>
+                        )}
                       </div>
                     );
                   })}
@@ -2246,118 +2252,101 @@ function EventPageContent() {
                   Saved Venues ({candidates.filter(c => c.addedBy).length})
                 </h3>
 
-                {/* Saved venues list - Matching desktop design */}
+                {/* Saved venues list - Right 20% is vote area, no color tags */}
                 <div className="space-y-0.5">
                   {sortedCandidates()
                     .filter(c => c.addedBy)
                     .map((candidate) => {
                       const isSelected = selectedCandidate?.id === candidate.id;
                       const hasUserVoted = myVotedCandidateIds.has(candidate.id);
-                      const assignedColor = candidateColors.get(candidate.id) || '#ef4444';
-                      const voteCount = candidate.voteCount || 0;
+                      const hasVoteCount = candidate.voteCount && candidate.voteCount > 0;
 
                       return (
                         <div
                           key={candidate.id}
-                          onClick={() => {
-                            setSelectedCandidate(candidate);
-                            setShowMobileVenueDetail(true);
-                          }}
-                          className={`relative p-1.5 border-2 cursor-pointer transition-all overflow-hidden ${
+                          className={`flex border-2 transition-all ${
                             isSelected
                               ? 'bg-black text-white border-black'
                               : 'bg-white border-black hover:bg-gray-100'
                           }`}
                         >
-                          {/* Line 1: Name + Rating + Distance */}
-                          <div className="relative z-10 flex items-center justify-between gap-1 mb-0.5">
-                            <h5 className={`font-semibold text-xs truncate flex-1 min-w-0 ${
-                              isSelected ? 'text-white' : 'text-neutral-900'
-                            }`}>
-                              {candidate.name}
-                            </h5>
-                            <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
-                              {candidate.rating && (
-                                <div className="flex items-center gap-0.5">
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <span className="font-medium text-black">
-                                    {candidate.rating.toFixed(1)}
-                                  </span>
-                                </div>
-                              )}
-                              {candidate.distanceFromCenter !== undefined && (
-                                <div className="flex items-center gap-0.5">
-                                  <MapPin className="w-3 h-3 text-black" />
-                                  <span className="text-black">
-                                    {(candidate.distanceFromCenter / 1000).toFixed(1)}km
-                                  </span>
-                                </div>
-                              )}
+                          {/* Left 80%: Card content - opens detail */}
+                          <div
+                            onClick={() => {
+                              setSelectedCandidate(candidate);
+                              setShowMobileVenueDetail(true);
+                            }}
+                            className="flex-1 p-1.5 cursor-pointer"
+                          >
+                            {/* Line 1: Name + Rating + Distance */}
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <h5 className={`font-semibold text-xs truncate flex-1 min-w-0 ${
+                                isSelected ? 'text-white' : 'text-neutral-900'
+                              }`}>
+                                {candidate.name}
+                              </h5>
+                              <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
+                                {candidate.rating && (
+                                  <div className="flex items-center gap-0.5">
+                                    <Star className={`w-3 h-3 ${
+                                      isSelected ? 'fill-white text-white' : 'fill-yellow-400 text-yellow-400'
+                                    }`} />
+                                    <span className={`font-medium ${
+                                      isSelected ? 'text-white' : 'text-neutral-700'
+                                    }`}>
+                                      {candidate.rating.toFixed(1)}
+                                    </span>
+                                  </div>
+                                )}
+                                {candidate.distanceFromCenter !== undefined && (
+                                  <div className="flex items-center gap-0.5">
+                                    <MapPin className={`w-3 h-3 ${
+                                      isSelected ? 'text-white' : 'text-neutral-500'
+                                    }`} />
+                                    <span className={isSelected ? 'text-white' : 'text-neutral-600'}>
+                                      {(candidate.distanceFromCenter / 1000).toFixed(1)}km
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Line 2: Address + Vote buttons */}
-                          <div className="relative z-10 flex items-center justify-between gap-1">
-                            <p className={`text-xs truncate flex-1 ${
+                            {/* Line 2: Address */}
+                            <p className={`text-xs truncate ${
                               isSelected ? 'text-gray-300' : 'text-neutral-500'
                             }`}>
                               {candidate.vicinity || 'No address'}
                             </p>
-                            {participantId && (
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                {/* Upvote button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleVote(candidate.id);
-                                  }}
-                                  className={`p-0.5 border border-black transition-colors ${
-                                    isSelected
-                                      ? 'bg-white text-black hover:bg-gray-200'
-                                      : 'bg-white hover:bg-gray-100'
-                                  }`}
-                                  title={hasUserVoted ? 'Remove vote' : 'Vote'}
-                                >
-                                  <Heart className={`w-3.5 h-3.5 ${
-                                    hasUserVoted ? 'fill-black text-black' : 'text-neutral-400'
-                                  }`} />
-                                </button>
-
-                                {/* Vote count */}
-                                <span className={`text-xs font-bold min-w-[1.5rem] text-center ${
-                                  isSelected ? 'text-white' : 'text-black'
-                                }`}>
-                                  {voteCount}
-                                </span>
-
-                                {/* Remove button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveCandidate(candidate.id);
-                                  }}
-                                  className={`p-0.5 border border-black transition-colors text-xs font-bold uppercase px-1.5 ${
-                                    isSelected
-                                      ? 'bg-white text-black hover:bg-gray-200'
-                                      : 'bg-gray-200 text-black hover:bg-gray-300'
-                                  }`}
-                                  title="Remove from saved"
-                                >
-                                  ✓
-                                </button>
-                              </div>
-                            )}
                           </div>
 
-                          {/* Color tag - Rightmost with angled left edge */}
-                          <div
-                            className="absolute right-0 top-0 bottom-0 w-[30%] flex-shrink-0 z-0"
-                            style={{
-                              backgroundColor: assignedColor,
-                              clipPath: 'polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)',
-                            }}
-                            title={`Map marker color: ${assignedColor}`}
-                          />
+                          {/* Right 20%: Vote button area */}
+                          {participantId && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVote(candidate.id);
+                              }}
+                              className={`w-[20%] flex items-center justify-center border-l-2 border-black transition-colors relative ${
+                                isSelected
+                                  ? 'bg-white text-black hover:bg-gray-200'
+                                  : hasUserVoted
+                                  ? 'bg-black hover:bg-gray-900'
+                                  : 'bg-white hover:bg-gray-100'
+                              }`}
+                              title={hasUserVoted ? 'Remove vote' : 'Vote'}
+                            >
+                              <Heart className={`w-6 h-6 ${
+                                hasUserVoted ? 'text-white' : 'text-neutral-400'
+                              }`} />
+                              {hasVoteCount && (
+                                <span className={`absolute bottom-1 text-xs font-bold ${
+                                  hasUserVoted ? 'text-white' : 'text-black'
+                                }`}>
+                                  {candidate.voteCount}
+                                </span>
+                              )}
+                            </button>
+                          )}
                         </div>
                       );
                     })}
