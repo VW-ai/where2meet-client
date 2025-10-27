@@ -1818,53 +1818,90 @@ function EventPageContent() {
               <div className="p-4">
                 <h3 className="text-sm font-bold uppercase mb-3">Participants ({participants.length})</h3>
 
-                {/* User's own info - Pinned at top */}
-                {participantId && participants.find(p => p.id === participantId) && (
-                  <div className="mb-4">
-                    <button
-                      onClick={() => setShowMobileInputModal(true)}
-                      className="w-full border-2 border-black p-3 bg-black text-white hover:bg-gray-900 transition-all text-left"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-sm">
-                            {participants.find(p => p.id === participantId)?.name} (You)
-                          </p>
-                          <p className="text-xs opacity-80 mt-1">
-                            Tap to edit your location
-                          </p>
-                        </div>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                )}
+                {/* Participants list - matching desktop design */}
+                <div className="space-y-1">
+                  {participants.map((participant, index) => {
+                    const isMe = participant.id === participantId;
+                    const color = participantColors.get(participant.id) || '#10b981';
+                    const displayName = participant.name || `Participant ${participant.id.slice(0, 8)}`;
+                    const isSelected = participant.id === selectedParticipantId;
 
-                {/* Other participants list */}
-                <div className="space-y-2">
-                  {participants
-                    .filter(p => p.id !== participantId)
-                    .map((participant) => (
-                      <button
+                    // Check if location is blurred
+                    const isBlurred = participant.fuzzy_lat !== null && participant.fuzzy_lng !== null &&
+                      (participant.fuzzy_lat !== participant.lat || participant.fuzzy_lng !== participant.lng);
+
+                    // Use fuzzy coordinates if available, otherwise exact
+                    const displayLat = participant.fuzzy_lat ?? participant.lat;
+                    const displayLng = participant.fuzzy_lng ?? participant.lng;
+
+                    return (
+                      <div
                         key={participant.id}
-                        onClick={() => handleParticipantClick(participant.id)}
-                        className={`w-full border-2 border-black p-3 transition-all text-left ${
-                          selectedParticipantId === participant.id
+                        onClick={() => isMe ? setShowMobileInputModal(true) : handleParticipantClick(participant.id)}
+                        className={`relative flex border-2 border-black cursor-pointer transition-all overflow-hidden ${
+                          isMe
                             ? 'bg-black text-white'
+                            : isSelected
+                            ? 'bg-gray-300 text-black'
                             : 'bg-white hover:bg-gray-100'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 border-2 border-current flex-shrink-0"
-                            style={{ backgroundColor: participantColors.get(participant.id) }}
-                          />
-                          <p className="font-bold text-sm">{participant.name}</p>
+                        {/* Left content - Two-line layout */}
+                        <div className="flex-1 min-w-0 relative z-10 p-2 pr-3">
+                          {/* Line 1: Name and indicators */}
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className={`text-sm font-bold flex-shrink-0 ${
+                              isMe ? 'text-white' : 'text-black'
+                            }`}>
+                              {isMe && '→ '}
+                              {displayName}
+                            </span>
+
+                            {/* Blur indicator */}
+                            {isBlurred && (
+                              <svg className={`w-3 h-3 flex-shrink-0 ${
+                                isMe ? 'text-gray-400' : 'text-neutral-400'
+                              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                              </svg>
+                            )}
+
+                            {/* Edit hint for own card */}
+                            {isMe && (
+                              <span className="text-xs text-gray-400 ml-auto">Tap to edit</span>
+                            )}
+                          </div>
+
+                          {/* Line 2: Address or Coordinates */}
+                          <div className="flex items-center">
+                            {!isBlurred && participant.address ? (
+                              <span className={`text-xs truncate ${
+                                isMe ? 'text-gray-300' : 'text-neutral-600'
+                              }`} title={participant.address}>
+                                {participant.address.replace(/,?\s*USA\s*$/i, '').replace(/,?\s*United States\s*$/i, '').replace(/,?\s*\d{5}(-\d{4})?\s*$/i, '')}
+                              </span>
+                            ) : (
+                              <span className={`text-xs truncate ${
+                                isMe ? 'text-gray-300' : 'text-neutral-600'
+                              }`} title={`${displayLat}, ${displayLng}`}>
+                                {displayLat.toFixed(4)}, {displayLng.toFixed(4)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </button>
-                    ))}
+
+                        {/* Color tag - Rightmost 25% with angled left edge */}
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-[25%] flex-shrink-0"
+                          style={{
+                            backgroundColor: color,
+                            clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
+                          }}
+                          title={`Map marker color: ${color}`}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Join button for non-participants */}
@@ -2005,12 +2042,9 @@ function EventPageContent() {
               <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              <span className="text-xs font-medium">Participants</span>
-              {participants.length > 0 && (
-                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
-                  {participants.length}
-                </span>
-              )}
+              <span className="text-xs font-medium">
+                Participants ({participants.length})
+              </span>
             </button>
 
             <button
@@ -2022,12 +2056,9 @@ function EventPageContent() {
               <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <span className="text-xs font-medium">Search</span>
-              {candidates.length > 0 && (
-                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
-                  {candidates.length}
-                </span>
-              )}
+              <span className="text-xs font-medium">
+                Search ({candidates.length})
+              </span>
             </button>
 
             <button
@@ -2039,57 +2070,62 @@ function EventPageContent() {
               <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              <span className="text-xs font-medium">Saved</span>
-              {candidates.filter(c => c.addedBy).length > 0 && (
-                <span className="absolute top-1 bg-black text-white text-[10px] px-1 rounded-full">
-                  {candidates.filter(c => c.addedBy).length}
-                </span>
-              )}
+              <span className="text-xs font-medium">
+                Saved ({candidates.filter(c => c.addedBy).length})
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Mobile Input Modal - Full screen */}
+        {/* Mobile Input Modal - Centered Popup */}
         {showMobileInputModal && (
-          <div className="fixed inset-0 bg-white z-[100] flex flex-col">
-            {/* Modal Header */}
-            <div className="bg-black text-white px-4 py-3 flex items-center justify-between border-b-2 border-black flex-shrink-0">
-              <h3 className="text-sm font-bold uppercase">
-                {participantId ? 'Edit Location' : 'Join Event'}
-              </h3>
-              <button
-                onClick={() => setShowMobileInputModal(false)}
-                className="p-1 hover:bg-white hover:text-black transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Modal Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <p className="text-sm text-gray-600 mb-4">
-                {participantId
-                  ? 'Update your name or location for this event'
-                  : 'Add your location to join the event and find the perfect meeting spot'}
-              </p>
-
-              {/* Input form content will go here */}
-              <div className="text-center py-12 text-gray-500">
-                <p className="text-sm">Input form component coming soon...</p>
-                <p className="text-xs mt-2">Will reuse InputSection component logic</p>
+          <div
+            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+            onClick={() => setShowMobileInputModal(false)}
+          >
+            <div
+              className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md max-h-[85vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-black text-white px-4 py-3 flex items-center justify-between border-b-4 border-black flex-shrink-0">
+                <h3 className="text-sm font-bold uppercase">
+                  {participantId ? 'Edit Location' : 'Join Event'}
+                </h3>
+                <button
+                  onClick={() => setShowMobileInputModal(false)}
+                  className="hover:bg-white hover:text-black w-6 h-6 flex items-center justify-center transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-            </div>
 
-            {/* Modal Footer with action buttons */}
-            <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
-              <button
-                onClick={() => setShowMobileInputModal(false)}
-                className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-all"
-              >
-                {participantId ? 'Save Changes' : 'Join Event'}
-              </button>
+              {/* Modal Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  {participantId
+                    ? 'Update your name or location for this event'
+                    : 'Add your location to join the event and find the perfect meeting spot'}
+                </p>
+
+                {/* Input form content will go here */}
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-sm">Input form component coming soon...</p>
+                  <p className="text-xs mt-2">Will reuse InputSection component logic</p>
+                </div>
+              </div>
+
+              {/* Modal Footer with action buttons */}
+              <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
+                <button
+                  onClick={() => setShowMobileInputModal(false)}
+                  className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-all"
+                >
+                  {participantId ? 'Save Changes' : 'Join Event'}
+                </button>
+              </div>
             </div>
           </div>
         )}
