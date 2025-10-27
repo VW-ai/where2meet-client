@@ -118,6 +118,14 @@ function EventPageContent() {
   const [showMobileInputModal, setShowMobileInputModal] = useState(false);
   const [showMobileVenueDetail, setShowMobileVenueDetail] = useState(false);
 
+  // Mobile input form state
+  const [mobileInputName, setMobileInputName] = useState('');
+  const [mobileInputAddress, setMobileInputAddress] = useState('');
+  const [mobileInputCoordinates, setMobileInputCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [mobileInputBlur, setMobileInputBlur] = useState(false);
+  const [mobileInputSubmitting, setMobileInputSubmitting] = useState(false);
+  const mobileAddressInputRef = useRef<HTMLInputElement>(null);
+
   // Create participant colors map
   const participantColors = useMemo(() => {
     const colorMap = new Map<string, string>();
@@ -1107,6 +1115,122 @@ function EventPageContent() {
     setAuthoritativeCircle(null);
   }, []);
 
+  // Initialize mobile input form when modal opens
+  useEffect(() => {
+    if (showMobileInputModal) {
+      const currentParticipant = participants.find(p => p.id === participantId);
+      if (currentParticipant) {
+        // Editing existing participant
+        setMobileInputName(currentParticipant.name || '');
+        setMobileInputAddress(currentParticipant.address || 'Your location');
+        setMobileInputCoordinates({ lat: currentParticipant.lat, lng: currentParticipant.lng });
+        setMobileInputBlur(currentParticipant.visibility === 'blur');
+      } else {
+        // New participant
+        setMobileInputName(generateUniqueName(extractExistingNames(participants)));
+        setMobileInputAddress('');
+        setMobileInputCoordinates(null);
+        setMobileInputBlur(false);
+      }
+    }
+  }, [showMobileInputModal, participantId, participants]);
+
+  // Initialize Google Places Autocomplete for mobile address input
+  useEffect(() => {
+    if (!mobileAddressInputRef.current || !showMobileInputModal) {
+      return;
+    }
+
+    // Wait for Google Maps to load
+    const checkGoogleLoaded = () => {
+      if (typeof window !== 'undefined' && window.google?.maps?.places?.Autocomplete) {
+        const autocomplete = new google.maps.places.Autocomplete(mobileAddressInputRef.current!, {
+          fields: ['formatted_address', 'geometry', 'name', 'place_id'],
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place.geometry?.location) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const formattedAddress = place.formatted_address || place.name || '';
+            setMobileInputCoordinates({ lat, lng });
+            setMobileInputAddress(formattedAddress);
+            toast.success(`Location set: ${formattedAddress}`);
+          }
+        });
+      } else {
+        setTimeout(checkGoogleLoaded, 100);
+      }
+    };
+
+    checkGoogleLoaded();
+  }, [showMobileInputModal]);
+
+  // Mobile input form handlers
+  const handleMobileCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported');
+      return;
+    }
+
+    toast.info('Getting your location...');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setMobileInputCoordinates({ lat: latitude, lng: longitude });
+        setMobileInputAddress('Current location');
+        toast.success('Location retrieved!');
+      },
+      (error) => {
+        toast.error('Unable to retrieve your location');
+        console.error('Geolocation error:', error);
+      }
+    );
+  };
+
+  const handleMobileShuffleName = () => {
+    const newName = generateUniqueName(extractExistingNames(participants));
+    setMobileInputName(newName);
+  };
+
+  const handleMobileSubmit = async () => {
+    if (!mobileInputName.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+    if (!mobileInputCoordinates) {
+      toast.error('Please select a location');
+      return;
+    }
+
+    setMobileInputSubmitting(true);
+    try {
+      if (participantId) {
+        // Update existing participant
+        await handleEditOwnLocation({
+          name: mobileInputName.trim(),
+          lat: mobileInputCoordinates.lat,
+          lng: mobileInputCoordinates.lng,
+          blur: mobileInputBlur,
+        });
+      } else {
+        // Join as new participant
+        await handleJoinEvent({
+          name: mobileInputName.trim(),
+          lat: mobileInputCoordinates.lat,
+          lng: mobileInputCoordinates.lng,
+          blur: mobileInputBlur,
+        });
+      }
+      setShowMobileInputModal(false);
+    } catch (error) {
+      console.error('Failed to submit:', error);
+    } finally {
+      setMobileInputSubmitting(false);
+    }
+  };
+
   // Show enhanced loading screen during initialization
   if (isInitializing || !event) {
     return (
@@ -1816,7 +1940,7 @@ function EventPageContent() {
           {mobileTab === 'participants' && (
             <div className="h-full">
               <div className="p-4">
-                <h3 className="text-sm font-bold uppercase mb-3">Participants ({participants.length})</h3>
+                <h3 className="text-sm font-bold uppercase mb-3 text-black">Participants ({participants.length})</h3>
 
                 {/* Participants list - matching desktop design */}
                 <div className="space-y-1">
@@ -2103,27 +2227,95 @@ function EventPageContent() {
               </div>
 
               {/* Modal Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <p className="text-sm text-gray-600 mb-4">
-                  {participantId
-                    ? 'Update your name or location for this event'
-                    : 'Add your location to join the event and find the perfect meeting spot'}
-                </p>
-
-                {/* Input form content will go here */}
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-sm">Input form component coming soon...</p>
-                  <p className="text-xs mt-2">Will reuse InputSection component logic</p>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Name Input */}
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1 text-black">Name</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={mobileInputName}
+                      onChange={(e) => setMobileInputName(e.target.value)}
+                      placeholder="Your name"
+                      className="flex-1 px-3 py-2 text-sm text-black placeholder:text-gray-500 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                    <button
+                      onClick={handleMobileShuffleName}
+                      className="px-3 py-2 border-2 border-black bg-white hover:bg-gray-100 transition-all text-black"
+                      title="Shuffle name"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+
+                {/* Address Input */}
+                <div>
+                  <label className="block text-xs font-bold uppercase mb-1 text-black">Location</label>
+                  <input
+                    ref={mobileAddressInputRef}
+                    type="text"
+                    value={mobileInputAddress}
+                    onChange={(e) => setMobileInputAddress(e.target.value)}
+                    placeholder="Search for an address..."
+                    className="w-full px-3 py-2 text-sm text-black placeholder:text-gray-500 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black mb-2"
+                  />
+                  <button
+                    onClick={handleMobileCurrentLocation}
+                    className="w-full px-3 py-2 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all text-sm font-bold uppercase flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Use Current Location
+                  </button>
+                </div>
+
+                {/* Privacy Toggle - Full width */}
+                <button
+                  onClick={() => setMobileInputBlur(!mobileInputBlur)}
+                  className={`w-full p-3 border-2 border-black transition-all flex items-center gap-3 ${
+                    mobileInputBlur
+                      ? 'bg-black text-white hover:bg-gray-900'
+                      : 'bg-white text-black hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex-shrink-0">
+                    {mobileInputBlur ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-bold uppercase">
+                      {mobileInputBlur ? 'Privacy: ON' : 'Privacy: OFF'}
+                    </p>
+                    <p className="text-xs opacity-80 mt-0.5">
+                      {mobileInputBlur
+                        ? 'Location blurred by ~500m'
+                        : 'Exact location will be visible'}
+                    </p>
+                  </div>
+                </button>
               </div>
 
               {/* Modal Footer with action buttons */}
               <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
                 <button
-                  onClick={() => setShowMobileInputModal(false)}
-                  className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-all"
+                  onClick={handleMobileSubmit}
+                  disabled={mobileInputSubmitting || !mobileInputName.trim() || !mobileInputCoordinates}
+                  className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase border-2 border-black hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {participantId ? 'Save Changes' : 'Join Event'}
+                  {mobileInputSubmitting ? 'Saving...' : participantId ? 'Save Changes' : 'Join Event'}
                 </button>
               </div>
             </div>
