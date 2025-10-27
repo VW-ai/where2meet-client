@@ -57,16 +57,16 @@ export default function TopView({
       <div className="flex items-center justify-between gap-3">
         {/* Left: Logo + Event Title */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Logo */}
+          {/* Logo - Brutalist Style */}
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-white border-2 border-white flex items-center justify-center">
-              <span className="text-black font-bold text-sm">W2M</span>
+            <div className="w-8 h-8 bg-white flex items-center justify-center relative border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
+              <span className="text-black font-black text-[10px] leading-none tracking-tighter">W2M</span>
             </div>
           </div>
 
           {/* Event Title */}
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold truncate">
+            <h2 className="text-sm font-bold uppercase truncate">
               {eventTitle || t.eventTitle}
             </h2>
           </div>

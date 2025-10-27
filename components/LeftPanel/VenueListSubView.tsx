@@ -77,10 +77,10 @@ export default function VenueListSubView({
 
   if (candidates.length === 0) {
     return (
-      <div className="p-4 text-center py-12 text-neutral-500">
-        <Heart className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-        <p className="text-sm font-medium">No venues added yet</p>
-        <p className="text-xs">Save venues from search results to see them here</p>
+      <div className="p-4 text-center py-12">
+        <Heart className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+        <p className="text-sm font-bold uppercase text-black">No venues added yet</p>
+        <p className="text-xs text-gray-600">Save venues from search results to see them here</p>
       </div>
     );
   }
