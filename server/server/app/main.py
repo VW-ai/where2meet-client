@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1 import events, participants, candidates, votes, sse, auth, feed
+from app.api.v1 import events, participants, candidates, votes, sse, auth, feed, lists
 
 # Create FastAPI app
 app = FastAPI(
@@ -30,6 +30,7 @@ app.include_router(candidates.router, prefix="/api/v1", tags=["candidates"])
 app.include_router(votes.router, prefix="/api/v1", tags=["votes"])
 app.include_router(sse.router, prefix="/api/v1", tags=["sse"])
 app.include_router(feed.router, prefix="/api/v1", tags=["event-feed"])
+app.include_router(lists.router, prefix="/api/v1/lists", tags=["lists"])
 
 
 @app.get("/")

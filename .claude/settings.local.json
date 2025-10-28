@@ -12,7 +12,9 @@
       "Bash(pnpm update:*)",
       "Bash(xargs basename:*)",
       "Bash(alembic downgrade:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(python -m alembic revision:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
