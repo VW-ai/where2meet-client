@@ -121,28 +121,45 @@ class GoogleMapsService:
 
             return places
 
-    async def get_place_photo_reference(self, place_id: str) -> Optional[str]:
+    async def get_place_photo_reference(self, place_id: str, db_photo_reference: Optional[str] = None) -> Optional[str]:
         """
-        Get photo reference for a specific place (with Redis caching).
+        Get photo reference for a specific place with proper caching hierarchy.
+
+        Caching hierarchy:
+        1. Check Redis cache (fastest - in-memory)
+        2. Check database value (fast - already loaded)
+        3. Call Google Places API (slow - network request)
 
         Args:
             place_id: Google Place ID
+            db_photo_reference: Photo reference from database (if already loaded)
 
         Returns:
             Photo reference string or None
         """
-        # Check Redis cache first
+        # 1. Check Redis cache first (fastest)
         cache_key = f"photo_ref:{place_id}"
         if self.redis_client:
             try:
                 cached = self.redis_client.get(cache_key)
                 if cached is not None:
-                    print(f"📸 Photo cache HIT for {place_id}")
+                    print(f"📸 Photo cache HIT (Redis) for {place_id}")
                     return cached if cached != "None" else None
             except Exception as e:
                 print(f"⚠️ Redis get error: {e}")
 
-        # Fetch from Google Places API
+        # 2. Check database value (if provided and Redis miss)
+        if db_photo_reference:
+            print(f"📸 Photo cache HIT (Database) for {place_id}")
+            # Cache it in Redis for next time
+            if self.redis_client:
+                try:
+                    self.redis_client.setex(cache_key, 86400, db_photo_reference)  # Cache for 24 hours
+                except Exception as e:
+                    print(f"⚠️ Redis set error: {e}")
+            return db_photo_reference
+
+        # 3. Fetch from Google Places API (both Redis and database missed)
         url = f"{self.base_url}/place/details/json"
         params = {
             "place_id": place_id,
@@ -165,7 +182,7 @@ class GoogleMapsService:
                 photo_reference = None
                 if photos and len(photos) > 0:
                     photo_reference = photos[0].get("photo_reference")
-                    print(f"📸 Photo fetched for {place_id}")
+                    print(f"📸 Photo cache MISS - Fetched from Google API for {place_id}")
 
                 # Cache the result (cache "None" string for places without photos)
                 if self.redis_client:

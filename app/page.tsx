@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api, CreateEventRequest } from '@/lib/api';
+import { api, CreateEventRequest, VenueListSummary } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -47,6 +47,18 @@ export default function Home() {
   const [hostedEventIds, setHostedEventIds] = useState<string[]>([]);
   const [mobileTab, setMobileTab] = useState<'meeting' | 'events' | 'lists'>('events');
   const [isEventFeedFullscreen, setIsEventFeedFullscreen] = useState(false);
+
+  // Desktop lists state
+  const [desktopLists, setDesktopLists] = useState<VenueListSummary[]>([]);
+  const [desktopListCategory, setDesktopListCategory] = useState<string | null>(null);
+  const [desktopListsLoading, setDesktopListsLoading] = useState(false);
+  const [desktopListsError, setDesktopListsError] = useState<string | null>(null);
+
+  // Mobile lists state
+  const [mobileLists, setMobileLists] = useState<VenueListSummary[]>([]);
+  const [mobileListCategory, setMobileListCategory] = useState<string | null>(null);
+  const [mobileListsLoading, setMobileListsLoading] = useState(false);
+  const [mobileListsError, setMobileListsError] = useState<string | null>(null);
 
   // Toast notification state
   const [toast, setToast] = useState<Omit<ToastProps, 'onClose'> | null>(null);
@@ -411,6 +423,131 @@ export default function Home() {
     }
   };
 
+  // Fetch desktop lists from backend
+  const fetchDesktopLists = async (category?: string) => {
+    setDesktopListsLoading(true);
+    setDesktopListsError(null);
+
+    try {
+      const params: any = {
+        limit: 12, // Show 12 lists in 3-column grid
+      };
+
+      if (category) {
+        params.category = category;
+      }
+
+      const data = await api.getPublicLists(params, token || undefined);
+      setDesktopLists(data);
+    } catch (err) {
+      console.error('Failed to fetch desktop lists:', err);
+      setDesktopListsError('Failed to load lists. Please try again.');
+      setDesktopLists([]);
+    } finally {
+      setDesktopListsLoading(false);
+    }
+  };
+
+  // Handle list like/unlike
+  const handleDesktopListLike = async (listId: string, isLiked: boolean) => {
+    if (!token) {
+      setToast({
+        message: 'Please log in to like lists',
+        type: 'info',
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await api.unlikeList(listId, token);
+      } else {
+        await api.likeList(listId, token);
+      }
+      // Refresh lists to update like status
+      await fetchDesktopLists(desktopListCategory || undefined);
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+      setToast({
+        message: 'Failed to update like. Please try again.',
+        type: 'error',
+        duration: 4000,
+      });
+    }
+  };
+
+  // Load desktop lists on mount
+  useEffect(() => {
+    fetchDesktopLists();
+  }, []);
+
+  // Reload when filter changes
+  useEffect(() => {
+    fetchDesktopLists(desktopListCategory || undefined);
+  }, [desktopListCategory]);
+
+  // Fetch mobile lists from backend
+  const fetchMobileLists = async (category?: string) => {
+    setMobileListsLoading(true);
+    setMobileListsError(null);
+
+    try {
+      const params: any = {
+        limit: 10, // Show 10 lists on mobile
+      };
+
+      if (category) {
+        params.category = category;
+      }
+
+      const data = await api.getPublicLists(params, token || undefined);
+      setMobileLists(data);
+    } catch (err) {
+      console.error('Failed to fetch mobile lists:', err);
+      setMobileListsError('Failed to load lists. Please try again.');
+      setMobileLists([]);
+    } finally {
+      setMobileListsLoading(false);
+    }
+  };
+
+  // Handle mobile list like/unlike
+  const handleMobileListLike = async (listId: string, isLiked: boolean) => {
+    if (!token) {
+      setToast({
+        message: 'Please log in to like lists',
+        type: 'info',
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await api.unlikeList(listId, token);
+      } else {
+        await api.likeList(listId, token);
+      }
+      // Refresh lists to update like status
+      await fetchMobileLists(mobileListCategory || undefined);
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+      setToast({
+        message: 'Failed to update like. Please try again.',
+        type: 'error',
+        duration: 4000,
+      });
+    }
+  };
+
+  // Load mobile lists when tab is switched to lists
+  useEffect(() => {
+    if (mobileTab === 'lists') {
+      fetchMobileLists(mobileListCategory || undefined);
+    }
+  }, [mobileTab, mobileListCategory]);
+
   const handleCreateEvent = async () => {
     if (!title.trim()) {
       setError(t.pleaseEnterEventTitle);
@@ -772,114 +909,147 @@ export default function Home() {
 
               {/* Categories */}
               <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
-                <button className="px-3 py-1.5 text-sm bg-black text-white border-2 border-black font-bold uppercase flex-shrink-0">All</button>
-                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                <button
+                  onClick={() => setMobileListCategory(null)}
+                  className={`px-3 py-1.5 text-sm border-2 border-black font-bold uppercase flex-shrink-0 ${
+                    mobileListCategory === null
+                      ? 'bg-black text-white'
+                      : 'text-black bg-white hover:bg-gray-100'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setMobileListCategory('Food & Drink')}
+                  className={`px-3 py-1.5 text-sm border-2 border-black font-bold uppercase flex-shrink-0 flex items-center gap-1.5 ${
+                    mobileListCategory === 'Food & Drink'
+                      ? 'bg-black text-white'
+                      : 'text-black bg-white hover:bg-gray-100'
+                  }`}
+                >
                   <UtensilsCrossed className="w-3.5 h-3.5" />
                   Food
                 </button>
-                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                <button
+                  onClick={() => setMobileListCategory('Sports')}
+                  className={`px-3 py-1.5 text-sm border-2 border-black font-bold uppercase flex-shrink-0 flex items-center gap-1.5 ${
+                    mobileListCategory === 'Sports'
+                      ? 'bg-black text-white'
+                      : 'text-black bg-white hover:bg-gray-100'
+                  }`}
+                >
                   <Trophy className="w-3.5 h-3.5" />
                   Sports
                 </button>
-                <button className="px-3 py-1.5 text-sm text-black bg-white border-2 border-black font-bold uppercase hover:bg-gray-100 flex-shrink-0 flex items-center gap-1.5">
+                <button
+                  onClick={() => setMobileListCategory('Entertainment')}
+                  className={`px-3 py-1.5 text-sm border-2 border-black font-bold uppercase flex-shrink-0 flex items-center gap-1.5 ${
+                    mobileListCategory === 'Entertainment'
+                      ? 'bg-black text-white'
+                      : 'text-black bg-white hover:bg-gray-100'
+                  }`}
+                >
                   <Film className="w-3.5 h-3.5" />
                   Culture
                 </button>
               </div>
 
+              {/* Loading State */}
+              {mobileListsLoading && (
+                <div className="flex justify-center py-12">
+                  <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {mobileListsError && (
+                <div className="bg-red-50 border-2 border-red-600 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                  {mobileListsError}
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!mobileListsLoading && !mobileListsError && mobileLists.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4 text-sm">No lists found</p>
+                  {user && (
+                    <button
+                      onClick={() => router.push('/lists/create')}
+                      className="px-6 py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black text-sm"
+                    >
+                      Create Your First List
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Lists Grid - 1 column on mobile, 2 on tablet */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Placeholder list cards */}
-                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
-                  <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                    <UtensilsCrossed className="w-4 h-4" />
-                    Best Ramen in Tokyo
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">by @foodie_explorer</p>
-                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      12 venues
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5" />
-                      234
-                    </span>
-                  </p>
-                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                    View List
-                  </button>
-                </div>
+              {!mobileListsLoading && !mobileListsError && mobileLists.length > 0 && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mobileLists.map((list) => (
+                      <div key={list.id} className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
+                        <h3 className="font-semibold text-base text-black mb-2 line-clamp-2">
+                          {list.title}
+                        </h3>
+                        {list.description && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                            {list.description}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600 mb-2">by {list.user_name}</p>
+                        <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {list.item_count} {list.item_count === 1 ? 'venue' : 'venues'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Heart className={`w-3.5 h-3.5 ${list.is_liked ? 'fill-red-500 text-red-500' : ''}`} />
+                            {list.like_count}
+                          </span>
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => router.push(`/lists/${list.id}`)}
+                            className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white"
+                          >
+                            View List
+                          </button>
+                          <button
+                            onClick={() => handleMobileListLike(list.id, list.is_liked)}
+                            className={`w-full py-2 px-3 text-sm font-bold uppercase transition-colors ${
+                              list.is_liked
+                                ? 'text-red-500 hover:text-red-600'
+                                : 'text-gray-600 hover:text-black'
+                            }`}
+                          >
+                            {list.is_liked ? 'Saved ❤️' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
-                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
-                    <Coffee className="w-4 h-4" />
-                    Best Coffee - NYC
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">by @coffee_addict</p>
-                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      18 venues
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5" />
-                      567
-                    </span>
-                  </p>
-                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                    View List
-                  </button>
-                </div>
-
-                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
-                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
-                    <Dumbbell className="w-4 h-4" />
-                    Best Gyms for CrossFit
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">by @fitness_freak</p>
-                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      8 venues
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5" />
-                      123
-                    </span>
-                  </p>
-                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                    View List
-                  </button>
-                </div>
-
-                <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all">
-                  <h3 className="font-semibold text-sm text-black mb-2 flex items-center gap-1.5">
-                    <Pizza className="w-4 h-4" />
-                    NYC Pizza Joints
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">by @pizza_lover</p>
-                  <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      15 venues
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5" />
-                      445
-                    </span>
-                  </p>
-                  <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                    View List
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button className="text-gray-600 hover:text-black font-medium text-base">
-                  View All Lists →
-                </button>
-              </div>
+                  <div className="mt-6 space-y-3">
+                    {user && (
+                      <button
+                        onClick={() => router.push('/lists/create')}
+                        className="w-full py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black text-sm"
+                      >
+                        Create Your List
+                      </button>
+                    )}
+                    <div className="text-center">
+                      <button
+                        onClick={() => router.push('/lists')}
+                        className="text-gray-600 hover:text-black font-medium text-base"
+                      >
+                        View All Lists →
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1013,18 +1183,46 @@ export default function Home() {
                     Other People's Lists
                   </h2>
                   <div className="flex gap-2">
-                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black bg-black text-white font-bold text-sm uppercase hover:bg-gray-900 transition-all">
+                    <button
+                      onClick={() => setDesktopListCategory(null)}
+                      className={`px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black font-bold text-sm uppercase hover:bg-gray-900 transition-all ${
+                        desktopListCategory === null
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                    >
                       All
                     </button>
-                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                    <button
+                      onClick={() => setDesktopListCategory('Food & Drink')}
+                      className={`px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black font-bold text-sm uppercase transition-all flex items-center gap-1.5 ${
+                        desktopListCategory === 'Food & Drink'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                    >
                       <UtensilsCrossed className="w-4 h-4" />
                       Food
                     </button>
-                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                    <button
+                      onClick={() => setDesktopListCategory('Sports')}
+                      className={`px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black font-bold text-sm uppercase transition-all flex items-center gap-1.5 ${
+                        desktopListCategory === 'Sports'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                    >
                       <Trophy className="w-4 h-4" />
                       Sports
                     </button>
-                    <button className="px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black text-black font-bold text-sm uppercase bg-white hover:bg-gray-100 transition-all flex items-center gap-1.5">
+                    <button
+                      onClick={() => setDesktopListCategory('Entertainment')}
+                      className={`px-3 lg:px-4 py-1.5 lg:py-2 border-2 border-black font-bold text-sm uppercase transition-all flex items-center gap-1.5 ${
+                        desktopListCategory === 'Entertainment'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                    >
                       <Film className="w-4 h-4" />
                       Culture
                     </button>
@@ -1032,216 +1230,101 @@ export default function Home() {
                 </div>
 
                 <div className="p-8">
+                {/* Loading State */}
+                {desktopListsLoading && (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {desktopListsError && (
+                  <div className="bg-red-50 border-2 border-red-600 text-red-700 px-4 py-3 rounded mb-4">
+                    {desktopListsError}
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!desktopListsLoading && !desktopListsError && desktopLists.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">No lists found</p>
+                    {user && (
+                      <button
+                        onClick={() => router.push('/lists/create')}
+                        className="px-6 py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black"
+                      >
+                        Create Your First List
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Venue Lists - 3 Column Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  {/* List Card 1 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <UtensilsCrossed className="w-4 h-4" />
-                      Best Ramen in Tokyo
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @foodie_explorer</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        12 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        234
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. Ichiran <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
-                      <p className="flex items-center gap-1">2. Ippudo <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
-                      <p className="flex items-center gap-1">3. Afuri <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
-                      </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
+                {!desktopListsLoading && !desktopListsError && desktopLists.length > 0 && (
+                <>
+                  <div className="grid grid-cols-3 gap-4 mb-8">
+                    {desktopLists.map((list) => (
+                      <div key={list.id} className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
+                        <h3 className="font-semibold text-base text-black mb-2 line-clamp-2">
+                          {list.title}
+                        </h3>
+                        {list.description && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                            {list.description}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600 mb-2">by {list.user_name}</p>
+                        <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {list.item_count} {list.item_count === 1 ? 'venue' : 'venues'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Heart className={`w-3.5 h-3.5 ${list.is_liked ? 'fill-red-500 text-red-500' : ''}`} />
+                            {list.like_count}
+                          </span>
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => router.push(`/lists/${list.id}`)}
+                            className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDesktopListLike(list.id, list.is_liked)}
+                            className={`w-full py-2 px-3 text-sm font-bold uppercase transition-colors ${
+                              list.is_liked
+                                ? 'text-red-500 hover:text-red-600'
+                                : 'text-gray-600 hover:text-black'
+                            }`}
+                          >
+                            {list.is_liked ? 'Saved ❤️' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* List Card 2 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <Coffee className="w-4 h-4" />
-                      Best Coffee Shops - NYC
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @coffee_addict</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        18 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        567
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. Blue Bottle <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
-                      <p className="flex items-center gap-1">2. La Colombe <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
-                      <p className="flex items-center gap-1">3. Stumptown <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
+                  {/* CTA Buttons */}
+                  <div className="space-y-3 pt-6 border-t-2 border-black">
+                    {user && (
+                      <button
+                        onClick={() => router.push('/lists/create')}
+                        className="w-full py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black"
+                      >
+                        Create Your List
                       </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
+                    )}
+                    <button
+                      onClick={() => router.push('/lists')}
+                      className="w-full py-2 text-gray-600 hover:text-black font-medium"
+                    >
+                      View All Lists →
+                    </button>
                   </div>
-
-                  {/* List Card 3 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <Dumbbell className="w-4 h-4" />
-                      Best Gyms for CrossFit
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @fitness_freak</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        8 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        123
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. CrossFit Box <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
-                      <p className="flex items-center gap-1">2. Iron Paradise <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
-                      <p className="flex items-center gap-1">3. The WOD <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
-                      </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* List Card 4 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <Pizza className="w-4 h-4" />
-                      NYC Pizza Joints
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @pizza_lover</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        15 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        445
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. Joe's Pizza <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
-                      <p className="flex items-center gap-1">2. Lombardi's <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
-                      <p className="flex items-center gap-1">3. Prince St <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
-                      </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* List Card 5 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <TreePine className="w-4 h-4" />
-                      Best Parks for Picnics
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @outdoors_fan</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        10 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        189
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. Central Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 5.0</p>
-                      <p className="flex items-center gap-1">2. Prospect Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
-                      <p className="flex items-center gap-1">3. Bryant Park <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.6</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
-                      </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* List Card 6 */}
-                  <div className="border-2 border-black p-4 hover:bg-gray-100 transition-all bg-white">
-                    <h3 className="font-semibold text-base text-black mb-2 flex items-center gap-1.5">
-                      <Music2 className="w-4 h-4" />
-                      Live Music Venues
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">by @music_nerd</p>
-                    <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        14 venues
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3.5 h-3.5" />
-                        356
-                      </span>
-                    </p>
-                    <div className="text-sm text-gray-700 mb-3 space-y-1">
-                      <p className="font-medium">Preview:</p>
-                      <p className="flex items-center gap-1">1. Blue Note <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.9</p>
-                      <p className="flex items-center gap-1">2. Village Vanguard <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.8</p>
-                      <p className="flex items-center gap-1">3. Bowery Ballroom <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /> 4.7</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full py-2 px-3 border-2 border-black text-black text-sm font-bold uppercase hover:bg-gray-50 transition-all bg-white">
-                        View
-                      </button>
-                      <button className="w-full py-2 px-3 text-gray-600 hover:text-black text-sm font-bold uppercase">
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="space-y-3 pt-6 border-t-2 border-black">
-                  <button className="w-full py-3 bg-black text-white font-bold uppercase hover:bg-gray-900 transition-colors border-2 border-black">
-                    Create Your List
-                  </button>
-                  <button className="w-full py-2 text-gray-600 hover:text-black font-medium">
-                    View All Lists →
-                  </button>
-                </div>
+                </>
+                )}
                 </div>
               </div>
             </div>

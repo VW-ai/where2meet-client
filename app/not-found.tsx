@@ -1,8 +1,5 @@
 import Link from 'next/link';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
