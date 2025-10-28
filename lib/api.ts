@@ -723,16 +723,6 @@ export class Where2MeetAPI {
     });
   }
 
-  async updateList(listId: string, data: Partial<CreateListRequest>, token: string): Promise<VenueListDetail> {
-    return this.request<VenueListDetail>(`/api/v1/lists/${listId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-  }
-
   async updateList(listId: string, data: VenueListUpdate, token: string): Promise<VenueListDetail> {
     return this.request<VenueListDetail>(`/api/v1/lists/${listId}`, {
       method: 'PATCH',
