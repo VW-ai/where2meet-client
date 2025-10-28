@@ -2,6 +2,295 @@
 
 ---
 
+## 2025-10-27: Dual-Circle UX - Per-Participant Custom Search Centers ✅
+
+### Overview
+Implemented a dual-circle visualization system that solves the critical UX flaw where dragging the search circle would prevent it from updating when participants changed their locations. Now each participant can have their own custom search center while still seeing the auto-calculated group centroid as a reference.
+
+---
+
+### 🎯 Problem Solved
+
+**Original Flaw:**
+1. User drags the search circle to customize search location
+2. New participants join or existing participants update their locations
+3. Circle stays at the dragged position (doesn't update to new optimal centroid)
+4. User has no visibility that the group center has shifted
+
+**New Solution:**
+- **Dual circles**: Light reference circle (auto-calculated) + Dark custom circle (user-dragged)
+- **Per-participant storage**: Each user has their own custom center (localStorage)
+- **Always up-to-date**: Auto-centroid circle updates when participants change
+- **Easy reset**: Reset button to snap back to group center
+
+---
+
+### ✅ Implementation Details
+
+#### 1. localStorage Helpers ([lib/utils.ts:8-48](lib/utils.ts#L8-L48))
+**Added Functions:**
+- `getCustomCentroid(eventId, participantId)` - Load user's custom center
+- `setCustomCentroid(eventId, participantId, centroid)` - Save user's custom center
+- `clearCustomCentroid(eventId, participantId)` - Remove custom center
+
+**Storage Key Format:**
+```
+event_{eventId}_participant_{participantId}_custom_center
+```
+
+**Why localStorage:**
+- Client-side only (no backend changes required)
+- Per-participant customization
+- Persists across page refreshes
+- Fast and simple
+
+---
+
+#### 2. Dual Circle Rendering ([MapView.tsx:302-395](components/MapView.tsx#L302-L395))
+
+**Auto-Centroid Circle (Light):**
+```typescript
+strokeColor: '#94a3b8',    // Lighter slate gray
+strokeOpacity: 0.5,         // Semi-transparent
+strokeWeight: 2,            // Thinner
+fillColor: '#cbd5e1',       // Light slate
+fillOpacity: 0.05,          // Very transparent
+draggable: false,           // Never draggable
+zIndex: 1                   // Below custom circle
+```
+
+**Custom Circle (Dark):**
+```typescript
+strokeColor: '#000000',     // Black (techno style)
+strokeOpacity: 1.0,         // Solid
+strokeWeight: 3,            // Thicker
+fillColor: '#1a1a1a',       // Dark gray-black
+fillOpacity: 0.08,          // Slightly visible
+draggable: true,            // Everyone can drag
+zIndex: 2                   // Above auto circle
+```
+
+**Props Added to MapView:**
+- `autoCentroidCircle?: Circle | null` - Auto-calculated reference circle
+
+---
+
+#### 3. State Management ([page.tsx:463-547](app/event/page.tsx#L463-L547))
+
+**New State:**
+```typescript
+const [autoCentroidCircle, setAutoCentroidCircle] = useState<Circle | null>(null);
+```
+
+**Load from localStorage on Mount:**
+```typescript
+useEffect(() => {
+  if (!eventId || !participantId) {
+    setCustomCentroid(null);
+    return;
+  }
+  const savedCentroid = getCustomCentroid(eventId, participantId);
+  if (savedCentroid) {
+    setCustomCentroid(savedCentroid);
+  }
+}, [eventId, participantId]);
+```
+
+**Circle Computation Logic:**
+```typescript
+// ALWAYS compute auto centroid (for the light reference circle)
+const autoCentroid = computeCentroid(locations);
+setCentroid(autoCentroid);
+
+// Create auto-centroid circle (light, always shown)
+setAutoCentroidCircle({
+  center: autoCentroid || mec.center,
+  radius: previewRadius,
+});
+
+// Create custom circle if user has dragged it, otherwise use auto-centroid
+const customCircleCenter = customCentroid || (autoCentroid || mec.center);
+setCircle({
+  center: customCircleCenter,
+  radius: previewRadius,
+});
+```
+
+---
+
+#### 4. Drag Handling ([page.tsx:975-987](app/event/page.tsx#L975-L987))
+
+**Before (Host-only, Backend):**
+```typescript
+const handleCentroidDrag = useCallback(async (lat: number, lng: number) => {
+  if (!eventId) return;
+  setCustomCentroid({ lat, lng });
+  await api.updateEvent(eventId, {
+    custom_center_lat: lat,
+    custom_center_lng: lng,
+  });
+}, [eventId]);
+```
+
+**After (All Users, localStorage):**
+```typescript
+const handleCentroidDrag = useCallback((lat: number, lng: number) => {
+  if (!eventId || !participantId) return;
+  const newCentroid = { lat, lng };
+  setCustomCentroid(newCentroid);
+  setAuthoritativeCircle(null);
+
+  // Save to localStorage (per-participant)
+  saveCustomCentroid(eventId, participantId, newCentroid);
+  toast.success('Search center adjusted');
+}, [eventId, participantId]);
+```
+
+---
+
+#### 5. Reset Functionality ([page.tsx:990-1001](app/event/page.tsx#L990-L1001))
+
+**Before (Host-only):**
+```typescript
+{(customCentroid || authoritativeCircle) && role === 'host' && (
+  <button onClick={handleResetCentroid}>Reset</button>
+)}
+```
+
+**After (All Users):**
+```typescript
+{customCentroid && participantId && (
+  <button
+    onClick={handleResetCentroid}
+    title="Reset search circle to group center"
+  >
+    Reset
+  </button>
+)}
+```
+
+**Reset Handler:**
+```typescript
+const handleResetCentroid = useCallback(() => {
+  if (!eventId || !participantId) return;
+
+  setCustomCentroid(null);
+  setAuthoritativeCircle(null);
+  clearCustomCentroid(eventId, participantId);
+  toast.success('Search center reset to group center');
+}, [eventId, participantId]);
+```
+
+---
+
+#### 6. Removed Backend Dependencies
+
+**Removed from Event Model Usage:**
+- `custom_center_lat` / `custom_center_lng` no longer loaded from backend
+- WebSocket handlers for `event_updated` no longer update customCentroid
+- `updateEvent()` API calls removed from drag handler
+
+**Why:**
+- Per-participant centers can't be stored on Event model (one per event)
+- localStorage is simpler and faster
+- No database migration required
+- No backend changes required
+
+---
+
+### 🎨 User Experience Flow
+
+#### Scenario 1: Default State
+- **What user sees**: Single dark circle at group centroid
+- **Behavior**: Circle updates automatically when participants change locations
+
+#### Scenario 2: User Drags Circle
+- **What user sees**:
+  - Light circle at group centroid (reference)
+  - Dark circle at custom position (search area)
+- **Behavior**:
+  - Light circle updates when participants move
+  - Dark circle stays at dragged position
+  - Venue search uses dark circle position
+  - Reset button appears
+
+#### Scenario 3: Participants Update Locations
+- **What user sees**:
+  - Light circle shifts to new group centroid
+  - Dark circle stays at user's custom position
+  - Visual comparison between group center and custom position
+- **User can decide**: Keep custom position or reset to group center
+
+#### Scenario 4: User Clicks Reset
+- **What user sees**: Dark circle snaps to group centroid
+- **What happens**:
+  - Light circle disappears (merged with dark circle)
+  - localStorage cleared
+  - Back to single-circle mode
+  - Reset button disappears
+
+---
+
+### 📁 Files Modified
+
+1. **lib/utils.ts**
+   - Added `getCustomCentroid()`, `setCustomCentroid()`, `clearCustomCentroid()`
+
+2. **components/MapView.tsx**
+   - Added `autoCentroidCircle` prop
+   - Split circle rendering into two effects (auto + custom)
+   - Changed `draggable: true` for everyone (removed host-only restriction)
+   - Updated z-index for proper layering
+
+3. **app/event/page.tsx**
+   - Added `autoCentroidCircle` state
+   - Added localStorage load effect
+   - Updated circle computation to always calculate auto-centroid
+   - Changed drag handler to save to localStorage
+   - Changed reset handler to clear localStorage
+   - Updated reset button visibility (everyone, not just hosts)
+   - Removed backend `custom_center_lat/lng` loading
+   - Removed WebSocket `event_updated` custom center handling
+   - Passed `autoCentroidCircle` to both desktop and mobile MapView
+
+---
+
+### 🔧 Technical Notes
+
+**Performance:**
+- localStorage operations are synchronous but fast
+- No network requests for drag/reset operations
+- Circle rendering uses Google Maps native overlays (efficient)
+
+**Edge Cases Handled:**
+- No participantId: No drag functionality, no custom center
+- Page refresh: Custom center restored from localStorage
+- Multiple devices: Each device has independent custom center (by design)
+- Cleared localStorage: Falls back to auto-centroid gracefully
+
+**Future Enhancements:**
+- Could add backend sync for multi-device consistency
+- Could add visual indicator showing distance between circles
+- Could add "jump to group center" button without resetting custom position
+
+---
+
+### ✅ Testing Checklist
+
+- [x] Single circle displays at group centroid (default state)
+- [x] Dragging circle saves to localStorage
+- [x] Dual circles appear after drag (light + dark)
+- [x] Auto-centroid updates when participants change locations
+- [x] Custom circle stays at dragged position
+- [x] Reset button appears when custom center exists
+- [x] Reset clears localStorage and merges circles
+- [x] Search uses custom center when available
+- [x] All users can drag (not just hosts)
+- [x] Page refresh restores custom center
+- [x] Works on both desktop and mobile layouts
+
+---
+
 ## 2025-10-26: Event Pages - Complete Techno/Brutalist Styling ✅
 
 ### Overview

@@ -10,6 +10,7 @@ interface MapViewProps {
   locations: Location[];
   centroid: { lat: number; lng: number } | null;
   circle: Circle | null;
+  autoCentroidCircle?: Circle | null; // Auto-calculated centroid circle (lighter color, non-draggable)
   candidates: Candidate[];
   selectedCandidate: Candidate | null;
   onMapClick: (lat: number, lng: number) => void;
@@ -32,6 +33,7 @@ function MapContent({
   locations,
   centroid,
   circle,
+  autoCentroidCircle,
   candidates,
   selectedCandidate,
   onMapClick,
@@ -297,21 +299,64 @@ function MapContent({
     });
   }, [map, directionsRenderer, selectedCandidate, myParticipantId, routeFromParticipantId, locations, travelMode, onRouteInfoChange]);
 
-  // Draw circle overlay
+  // Draw auto-calculated centroid circle (light, non-draggable)
   useEffect(() => {
-    console.log('🟣 MapView circle effect triggered - map:', !!map, 'circle:', circle);
+    console.log('🟢 MapView auto-centroid circle effect triggered - map:', !!map, 'autoCentroidCircle:', autoCentroidCircle);
 
     if (!map) {
-      console.log('🟣 MapView: No map yet, skipping circle render');
+      console.log('🟢 MapView: No map yet, skipping auto-centroid circle render');
+      return;
+    }
+
+    if (!autoCentroidCircle) {
+      console.log('🟢 MapView: No auto-centroid circle data, skipping render');
+      return;
+    }
+
+    console.log('🟢 MapView: Creating auto-centroid circle overlay with:', {
+      center: autoCentroidCircle.center,
+      radius: autoCentroidCircle.radius,
+      radiusKm: (autoCentroidCircle.radius / 1000).toFixed(2)
+    });
+
+    const autoCircleOverlay = new google.maps.Circle({
+      map: map,
+      center: autoCentroidCircle.center,
+      radius: autoCentroidCircle.radius,
+      strokeColor: '#94a3b8', // Lighter slate gray border
+      strokeOpacity: 0.5, // Semi-transparent border
+      strokeWeight: 2, // Thinner border
+      fillColor: '#cbd5e1', // Light slate fill
+      fillOpacity: 0.05, // Very transparent
+      draggable: false, // Never draggable - this is the reference circle
+      editable: false,
+      clickable: false, // Don't intercept clicks
+      zIndex: 1, // Lower z-index so custom circle appears on top
+    });
+
+    console.log('🟢 MapView: Auto-centroid circle overlay created successfully (non-draggable)');
+
+    return () => {
+      console.log('🟢 MapView: Cleaning up auto-centroid circle overlay');
+      autoCircleOverlay.setMap(null);
+    };
+  }, [map, autoCentroidCircle]);
+
+  // Draw custom/user circle overlay (dark, draggable)
+  useEffect(() => {
+    console.log('🟣 MapView custom circle effect triggered - map:', !!map, 'circle:', circle);
+
+    if (!map) {
+      console.log('🟣 MapView: No map yet, skipping custom circle render');
       return;
     }
 
     if (!circle) {
-      console.log('🟣 MapView: No circle data, skipping circle render');
+      console.log('🟣 MapView: No custom circle data, skipping render');
       return;
     }
 
-    console.log('🟣 MapView: Creating circle overlay with:', {
+    console.log('🟣 MapView: Creating custom circle overlay with:', {
       center: circle.center,
       radius: circle.radius,
       radiusKm: (circle.radius / 1000).toFixed(2)
@@ -326,12 +371,13 @@ function MapContent({
       strokeWeight: 3, // Thicker border
       fillColor: '#1a1a1a', // Very dark grey-black
       fillOpacity: 0.08, // Very transparent
-      draggable: isHost, // Allow hosts to drag the entire circle
+      draggable: true, // Everyone can drag their own circle now
       editable: false, // Don't allow resizing
+      zIndex: 2, // Higher z-index so it appears on top of auto circle
     });
 
-    // Handle circle drag event for hosts
-    if (isHost && onCentroidDrag) {
+    // Handle circle drag event for all users
+    if (onCentroidDrag) {
       google.maps.event.addListener(circleOverlay, 'dragend', () => {
         const newCenter = circleOverlay.getCenter();
         if (newCenter) {
@@ -340,13 +386,13 @@ function MapContent({
       });
     }
 
-    console.log('🟣 MapView: Circle overlay created successfully', isHost ? '(draggable)' : '(static)');
+    console.log('🟣 MapView: Custom circle overlay created successfully (draggable for all users)');
 
     return () => {
-      console.log('🟣 MapView: Cleaning up circle overlay');
+      console.log('🟣 MapView: Cleaning up custom circle overlay');
       circleOverlay.setMap(null);
     };
-  }, [map, circle, isHost, onCentroidDrag]);
+  }, [map, circle, onCentroidDrag]);
 
   // Fit bounds to show all markers
   useEffect(() => {
