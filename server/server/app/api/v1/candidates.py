@@ -534,7 +534,14 @@ async def get_candidate_photo(
 ):
     """
     Fetch photo reference for a specific candidate (on-demand with caching).
+
+    Caching hierarchy:
+    1. Check Redis (fastest)
+    2. Check database (if Redis miss)
+    3. Call Google API (if database miss)
+    4. Store in both Redis and database
     """
+    # First, get the candidate to verify it exists and get place_id
     candidate = db.query(Candidate).filter(
         Candidate.id == candidate_id,
         Candidate.event_id == event_id
@@ -546,15 +553,14 @@ async def get_candidate_photo(
             detail="Candidate not found"
         )
 
-    # Check if we already have the photo reference
-    if candidate.photo_reference:
-        return {"photo_reference": candidate.photo_reference}
+    # Try to get from cache/API (this checks Redis first, then calls Google API if needed)
+    photo_reference = await google_maps_service.get_place_photo_reference(
+        candidate.place_id,
+        db_photo_reference=candidate.photo_reference  # Pass database value to service
+    )
 
-    # Fetch photo reference from Google Places API (with Redis caching)
-    photo_reference = await google_maps_service.get_place_photo_reference(candidate.place_id)
-
-    # Update database with the fetched photo reference
-    if photo_reference:
+    # Update database if we got a new photo reference
+    if photo_reference and photo_reference != candidate.photo_reference:
         candidate.photo_reference = photo_reference
         db.commit()
 

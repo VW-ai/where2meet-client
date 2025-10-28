@@ -150,6 +150,70 @@ export interface UserUpdate {
   password?: string;
 }
 
+// ===== Venue List Types =====
+
+export interface VenueListSummary {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  user_id: string;
+  user_name: string;
+  item_count: number;
+  like_count: number;
+  is_liked: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListItem {
+  id: string;
+  list_id: string;
+  place_id: string;
+  venue_name: string;
+  venue_address?: string;
+  venue_lat: number;
+  venue_lng: number;
+  rating?: number;
+  notes?: string;
+  order_index: number;
+  added_at: string;
+}
+
+export interface VenueListDetail extends VenueListSummary {
+  items: ListItem[];
+}
+
+export interface CreateListRequest {
+  title: string;
+  description?: string;
+  category: string;
+  items: {
+    place_id: string;
+    venue_name: string;
+    venue_address?: string;
+    venue_lat: number;
+    venue_lng: number;
+    rating?: number;
+    notes?: string;
+  }[];
+}
+
+export interface VenueListUpdate {
+  title?: string;
+  description?: string;
+  category?: string;
+  items?: {
+    place_id: string;
+    venue_name: string;
+    venue_address?: string;
+    venue_lat: number;
+    venue_lng: number;
+    rating?: number;
+    notes?: string;
+  }[];
+}
+
 // ===== API Client Class =====
 
 export class Where2MeetAPI {
@@ -613,6 +677,86 @@ export class Where2MeetAPI {
     return this.request(`/api/v1/feed/events/${eventId}`, {
       method: 'DELETE',
       headers,
+    });
+  }
+
+  // ===== Venue List Endpoints =====
+
+  async getPublicLists(params: {
+    category?: string;
+    limit?: number;
+    offset?: number;
+  } = {}, token?: string): Promise<VenueListSummary[]> {
+    const query = new URLSearchParams();
+    if (params.category) query.append('category', params.category);
+    if (params.limit) query.append('limit', params.limit.toString());
+    if (params.offset) query.append('offset', params.offset.toString());
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const queryString = query.toString();
+    return this.request<VenueListSummary[]>(
+      `/api/v1/lists${queryString ? `?${queryString}` : ''}`,
+      { headers }
+    );
+  }
+
+  async getListDetail(listId: string, token?: string): Promise<VenueListDetail> {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.request<VenueListDetail>(`/api/v1/lists/${listId}`, { headers });
+  }
+
+  async createList(data: CreateListRequest, token: string): Promise<VenueListDetail> {
+    return this.request<VenueListDetail>('/api/v1/lists', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateList(listId: string, data: VenueListUpdate, token: string): Promise<VenueListDetail> {
+    return this.request<VenueListDetail>(`/api/v1/lists/${listId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteList(listId: string, token: string): Promise<void> {
+    return this.request<void>(`/api/v1/lists/${listId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async likeList(listId: string, token: string): Promise<void> {
+    return this.request<void>(`/api/v1/lists/${listId}/like`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async unlikeList(listId: string, token: string): Promise<void> {
+    return this.request<void>(`/api/v1/lists/${listId}/like`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
   }
 }
