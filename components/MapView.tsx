@@ -323,11 +323,11 @@ function MapContent({
       map: map,
       center: autoCentroidCircle.center,
       radius: autoCentroidCircle.radius,
-      strokeColor: '#94a3b8', // Lighter slate gray border
-      strokeOpacity: 0.5, // Semi-transparent border
-      strokeWeight: 2, // Thinner border
-      fillColor: '#cbd5e1', // Light slate fill
-      fillOpacity: 0.05, // Very transparent
+      strokeColor: '#eab308', // Yellow/gold border (Tailwind yellow-500)
+      strokeOpacity: 0.8, // More opaque for visibility
+      strokeWeight: 3, // Thicker for visibility
+      fillColor: '#fef08a', // Light yellow fill (Tailwind yellow-200)
+      fillOpacity: 0.15, // More visible fill
       draggable: false, // Never draggable - this is the reference circle
       editable: false,
       clickable: false, // Don't intercept clicks
@@ -342,7 +342,7 @@ function MapContent({
     };
   }, [map, autoCentroidCircle]);
 
-  // Draw custom/user circle overlay (dark, draggable)
+  // Draw custom/user circle overlay (dark, draggable) with drag hint
   useEffect(() => {
     console.log('🟣 MapView custom circle effect triggered - map:', !!map, 'circle:', circle);
 
@@ -371,26 +371,107 @@ function MapContent({
       strokeWeight: 3, // Thicker border
       fillColor: '#1a1a1a', // Very dark grey-black
       fillOpacity: 0.08, // Very transparent
-      draggable: true, // Everyone can drag their own circle now
+      draggable: false, // Not draggable - use the drag handle instead
       editable: false, // Don't allow resizing
       zIndex: 2, // Higher z-index so it appears on top of auto circle
     });
 
-    // Handle circle drag event for all users
-    if (onCentroidDrag) {
-      google.maps.event.addListener(circleOverlay, 'dragend', () => {
-        const newCenter = circleOverlay.getCenter();
-        if (newCenter) {
-          onCentroidDrag(newCenter.lat(), newCenter.lng());
-        }
-      });
-    }
+    // Create draggable button/handle at circle center with move icon
+    const dragHandleIcon = {
+      path: 'M12 2C11.5 2 11 2.19 10.59 2.59L2.59 10.59C1.8 11.37 1.8 12.63 2.59 13.41L10.59 21.41C11.37 22.2 12.63 22.2 13.41 21.41L21.41 13.41C22.2 12.63 22.2 11.37 21.41 10.59L13.41 2.59C13 2.19 12.5 2 12 2M12 4L15.5 7.5L12 11L8.5 7.5L12 4M7.5 8.5L11 12L7.5 15.5L4 12L7.5 8.5M16.5 8.5L20 12L16.5 15.5L13 12L16.5 8.5M12 13L15.5 16.5L12 20L8.5 16.5L12 13Z',
+      fillColor: '#000000',
+      fillOpacity: 0.8,
+      strokeColor: '#ffffff',
+      strokeWeight: 2,
+      scale: 1.2,
+      anchor: new google.maps.Point(12, 12),
+    };
 
-    console.log('🟣 MapView: Custom circle overlay created successfully (draggable for all users)');
+    const dragHandleMarker = new google.maps.Marker({
+      position: circle.center,
+      map: map,
+      icon: dragHandleIcon,
+      draggable: true, // This marker is the drag button
+      clickable: true,
+      zIndex: 3, // Above circle
+      title: 'Drag to move search area',
+    });
+
+    // Track drag state for visual feedback
+    let isDragging = false;
+
+    // Update circle position when marker is dragged
+    const updateCirclePosition = () => {
+      const position = dragHandleMarker.getPosition();
+      if (position) {
+        circleOverlay.setCenter(position);
+      }
+    };
+
+    // Handle marker drag start - enlarge icon
+    const handleMarkerDragStart = () => {
+      isDragging = true;
+      dragHandleMarker.setIcon({
+        ...dragHandleIcon,
+        scale: 1.8, // Larger during drag
+        fillOpacity: 1.0, // More visible during drag
+      });
+    };
+
+    // Handle marker drag - update circle position
+    const handleMarkerDrag = () => {
+      updateCirclePosition();
+    };
+
+    // Handle marker drag end - restore normal size and save
+    const handleMarkerDragEnd = () => {
+      isDragging = false;
+      dragHandleMarker.setIcon({
+        ...dragHandleIcon,
+        scale: 1.2, // Normal size
+        fillOpacity: 0.8, // Normal opacity
+      });
+
+      const newPosition = dragHandleMarker.getPosition();
+      if (newPosition && onCentroidDrag) {
+        onCentroidDrag(newPosition.lat(), newPosition.lng());
+      }
+    };
+
+    // Handle marker hover - visual feedback
+    const handleMarkerMouseOver = () => {
+      if (!isDragging) {
+        dragHandleMarker.setIcon({
+          ...dragHandleIcon,
+          scale: 1.4, // Slightly larger on hover
+          fillOpacity: 1.0, // Fully visible on hover
+        });
+      }
+    };
+
+    const handleMarkerMouseOut = () => {
+      if (!isDragging) {
+        dragHandleMarker.setIcon({
+          ...dragHandleIcon,
+          scale: 1.2, // Normal size
+          fillOpacity: 0.8, // Normal opacity
+        });
+      }
+    };
+
+    // Add event listeners to the draggable marker
+    google.maps.event.addListener(dragHandleMarker, 'dragstart', handleMarkerDragStart);
+    google.maps.event.addListener(dragHandleMarker, 'drag', handleMarkerDrag);
+    google.maps.event.addListener(dragHandleMarker, 'dragend', handleMarkerDragEnd);
+    google.maps.event.addListener(dragHandleMarker, 'mouseover', handleMarkerMouseOver);
+    google.maps.event.addListener(dragHandleMarker, 'mouseout', handleMarkerMouseOut);
+
+    console.log('🟣 MapView: Custom circle with drag handle created successfully');
 
     return () => {
-      console.log('🟣 MapView: Cleaning up custom circle overlay');
+      console.log('🟣 MapView: Cleaning up custom circle overlay and drag handle');
       circleOverlay.setMap(null);
+      dragHandleMarker.setMap(null);
     };
   }, [map, circle, onCentroidDrag]);
 
