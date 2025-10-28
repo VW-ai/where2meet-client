@@ -12,6 +12,7 @@ import { api, Event as APIEvent, Participant, Candidate as APICandidate } from '
 import { useTranslation } from '@/lib/i18n';
 import Logo from '@/components/Logo';
 import { generateUniqueName, extractExistingNames } from '@/lib/nameGenerator';
+import { getCustomCentroid, setCustomCentroid as saveCustomCentroid, clearCustomCentroid } from '@/lib/utils';
 import TravelChart from '@/components/TravelChart';
 import { ChevronUp, ChevronDown, Heart, Utensils, Coffee, Beer, Trees, Star, MapPin, Copy } from 'lucide-react';
 import EventStatusBadge from '@/components/EventStatusBadge';
@@ -78,6 +79,7 @@ function EventPageContent() {
   const [centroid, setCentroid] = useState<{ lat: number; lng: number } | null>(null);
   const [customCentroid, setCustomCentroid] = useState<{ lat: number; lng: number } | null>(null);
   const [circle, setCircle] = useState<Circle | null>(null);
+  const [autoCentroidCircle, setAutoCentroidCircle] = useState<Circle | null>(null); // Auto-calculated circle (always updates)
   const [authoritativeCircle, setAuthoritativeCircle] = useState<Circle | null>(null); // Backend-provided circle after search
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -220,15 +222,8 @@ function EventPageContent() {
       setEvent(eventData);
       setKeyword(eventData.category);
 
-      // Load custom centroid if it exists in the event
-      if (eventData.custom_center_lat && eventData.custom_center_lng) {
-        setCustomCentroid({
-          lat: eventData.custom_center_lat,
-          lng: eventData.custom_center_lng,
-        });
-      } else {
-        setCustomCentroid(null);
-      }
+      // Load custom centroid from localStorage (per-participant)
+      // Note: participantId might not be available yet, will load again when participantId is set
 
       // Load participants
       const participantData = await api.getParticipants(id);
@@ -318,17 +313,7 @@ function EventPageContent() {
             break;
           case 'event_updated':
             console.log('Event updated - reloading event data');
-            // Update custom centroid from SSE message if available
-            if (message.data?.custom_center_lat !== undefined && message.data?.custom_center_lng !== undefined) {
-              if (message.data.custom_center_lat === null || message.data.custom_center_lng === null) {
-                setCustomCentroid(null);
-              } else {
-                setCustomCentroid({
-                  lat: message.data.custom_center_lat,
-                  lng: message.data.custom_center_lng,
-                });
-              }
-            }
+            // Custom centroid is now per-participant in localStorage, not from backend
             loadEventData(id);
             break;
           case 'event_published':
@@ -465,14 +450,32 @@ function EventPageContent() {
     fetchDetails();
   }, [selectedCandidate?.id, eventId]);
 
-  // Recompute centroid and circle with 2-second debounce
+  // Load custom centroid from localStorage when participantId is available
+  useEffect(() => {
+    if (!eventId || !participantId) {
+      setCustomCentroid(null);
+      return;
+    }
+
+    const savedCentroid = getCustomCentroid(eventId, participantId);
+    if (savedCentroid) {
+      console.log('📍 Loaded custom centroid from localStorage:', savedCentroid);
+      setCustomCentroid(savedCentroid);
+    } else {
+      console.log('📍 No custom centroid in localStorage');
+      setCustomCentroid(null);
+    }
+  }, [eventId, participantId]);
+
+  // Recompute centroid and circles with 2-second debounce
   useEffect(() => {
     console.log('🔵 Circle effect triggered - locations:', locations.length, 'customCentroid:', customCentroid, 'authCircle:', authoritativeCircle);
 
     if (locations.length === 0) {
-      console.log('🔵 Circle effect: No locations, clearing circle');
+      console.log('🔵 Circle effect: No locations, clearing circles');
       setCentroid(null);
       setCircle(null);
+      setAutoCentroidCircle(null);
       return;
     }
 
@@ -481,23 +484,35 @@ function EventPageContent() {
     const timeoutId = setTimeout(() => {
       console.log('🔵 Circle recalculation starting now (after 2s delay)');
 
-      // Use custom centroid if available, otherwise compute automatically
-      const effectiveCentroid = customCentroid || computeCentroid(locations);
-      setCentroid(effectiveCentroid);
-      console.log('🔵 Circle effect: Centroid set to', effectiveCentroid, 'from locations:', locations.map(l => ({ lat: l.lat, lng: l.lng })));
+      // ALWAYS compute auto centroid (for the light reference circle)
+      const autoCentroid = computeCentroid(locations);
+      setCentroid(autoCentroid);
+      console.log('🔵 Circle effect: Auto centroid set to', autoCentroid, 'from locations:', locations.map(l => ({ lat: l.lat, lng: l.lng })));
 
       // Compute MEC to get the baseline radius
       const mec = computeMinimumEnclosingCircle(locations);
       if (!mec) {
-        console.log('🔵 Circle effect: MEC computation failed, clearing circle');
+        console.log('🔵 Circle effect: MEC computation failed, clearing circles');
         setCircle(null);
+        setAutoCentroidCircle(null);
         return;
       }
 
       console.log('🔵 Circle effect: MEC computed -', { center: mec.center, radius: mec.radius });
 
-      // Use custom centroid for circle center if available, otherwise use MEC center
-      const circleCenter = customCentroid || mec.center;
+      // Calculate radius based on circleRadiusKm slider
+      const previewRadius = circleRadiusKm * 1000; // Convert km to meters
+
+      // Create auto-centroid circle (light, always shown)
+      const autoCircle = {
+        center: autoCentroid || mec.center,
+        radius: previewRadius,
+      };
+      console.log('🟢 Circle effect: Setting auto-centroid circle', autoCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
+      setAutoCentroidCircle(autoCircle);
+
+      // Create custom circle if user has dragged it, otherwise use auto-centroid
+      const customCircleCenter = customCentroid || (autoCentroid || mec.center);
 
       // Use authoritative circle from backend if available (after search)
       // Otherwise show preview with direct circleRadiusKm
@@ -505,14 +520,11 @@ function EventPageContent() {
         console.log('🔵 Circle effect: Using authoritative circle from backend', authoritativeCircle);
         setCircle(authoritativeCircle);
       } else {
-        // Use direct circleRadiusKm value (1-20km range) for preview circle
-        const previewRadius = circleRadiusKm * 1000; // Convert km to meters
-
         const newCircle = {
-          center: circleCenter,
+          center: customCircleCenter,
           radius: previewRadius,
         };
-        console.log('🔵 Circle effect: Setting preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
+        console.log('🟣 Circle effect: Setting custom/preview circle', newCircle, `(Circle Radius: ${circleRadiusKm.toFixed(1)}km)`);
         setCircle(newCircle);
       }
     }, 2000); // 2 second delay
@@ -949,47 +961,34 @@ function EventPageContent() {
   }, [eventId]);
 
 
-  // Handle centroid drag (host only)
-  const handleCentroidDrag = useCallback(async (lat: number, lng: number) => {
-    if (!eventId) return;
+  // Handle centroid drag (for all users - saves to localStorage)
+  const handleCentroidDrag = useCallback((lat: number, lng: number) => {
+    if (!eventId || !participantId) return;
 
     setIsDraggingCentroid(true);
-    setCustomCentroid({ lat, lng });
+    const newCentroid = { lat, lng };
+    setCustomCentroid(newCentroid);
     setAuthoritativeCircle(null); // Clear authoritative circle to show preview
 
-    // Save to backend
-    try {
-      await api.updateEvent(eventId, {
-        custom_center_lat: lat,
-        custom_center_lng: lng,
-      });
-      toast.success(t.centerPointAdjusted || 'Center point adjusted');
-    } catch (err) {
-      console.error('Failed to save custom center:', err);
-      toast.error('Failed to save center point');
-    }
-  }, [eventId, t]);
+    // Save to localStorage (per-participant)
+    saveCustomCentroid(eventId, participantId, newCentroid);
+    console.log('📍 Saved custom centroid to localStorage:', newCentroid);
+    toast.success(t.centerPointAdjusted || 'Search center adjusted');
+  }, [eventId, participantId, t]);
 
   // Reset to auto-calculated centroid
-  const handleResetCentroid = useCallback(async () => {
-    if (!eventId) return;
+  const handleResetCentroid = useCallback(() => {
+    if (!eventId || !participantId) return;
 
     // Clear both custom centroid and authoritative circle to force recalculation
     setCustomCentroid(null);
     setAuthoritativeCircle(null);
 
-    // Save null to backend
-    try {
-      await api.updateEvent(eventId, {
-        custom_center_lat: null as any,
-        custom_center_lng: null as any,
-      });
-      toast.success(t.centerPointReset || 'Center point reset to auto-calculated position');
-    } catch (err) {
-      console.error('Failed to reset custom center:', err);
-      toast.error('Failed to reset center point');
-    }
-  }, [eventId, t]);
+    // Clear from localStorage
+    clearCustomCentroid(eventId, participantId);
+    console.log('📍 Cleared custom centroid from localStorage');
+    toast.success(t.centerPointReset || 'Search center reset to group center');
+  }, [eventId, participantId, t]);
 
   // Copy join link
   const copyJoinLink = async () => {
@@ -1339,6 +1338,7 @@ function EventPageContent() {
           locations={locations}
           centroid={centroid}
           circle={circle}
+          autoCentroidCircle={autoCentroidCircle}
           candidates={sortedCandidates()}
           selectedCandidate={selectedCandidate}
           onMapClick={handleMapClick}
@@ -1717,11 +1717,11 @@ function EventPageContent() {
                 +
               </button>
               {/* Reset Circle Position Button - Only show if circle has been manually moved */}
-              {(customCentroid || authoritativeCircle) && role === 'host' && (
+              {customCentroid && participantId && (
                 <button
                   onClick={handleResetCentroid}
                   className="px-3 py-1.5 text-xs font-bold uppercase text-black border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
-                  title="Reset circle to auto-calculated position based on participants"
+                  title="Reset search circle to group center"
                 >
                   Reset
                 </button>
@@ -1773,11 +1773,11 @@ function EventPageContent() {
                 +
               </button>
               {/* Reset Circle Position Button - Only show if circle has been manually moved */}
-              {(customCentroid || authoritativeCircle) && role === 'host' && (
+              {customCentroid && participantId && (
                 <button
                   onClick={handleResetCentroid}
                   className="px-3 py-1.5 text-xs font-bold uppercase text-black border-2 border-black bg-white hover:bg-black hover:text-white transition-all"
-                  title="Reset circle to auto-calculated position based on participants"
+                  title="Reset search circle to group center"
                 >
                   Reset
                 </button>
@@ -1996,6 +1996,7 @@ function EventPageContent() {
             locations={locations}
             centroid={centroid}
             circle={circle}
+            autoCentroidCircle={autoCentroidCircle}
             candidates={sortedCandidates()}
             selectedCandidate={selectedCandidate}
             onMapClick={handleMapClick}
@@ -2007,7 +2008,7 @@ function EventPageContent() {
             routeFromParticipantId={selectedCandidate && selectedParticipantId ? selectedParticipantId : routeFromParticipantId}
             travelMode={selectedCandidate && selectedParticipantId ? chartTravelMode : travelMode}
             onTravelModeChange={setTravelMode}
-            onCentroidDrag={role === 'host' ? handleCentroidDrag : undefined}
+            onCentroidDrag={handleCentroidDrag}
             isHost={role === 'host'}
             language={language}
             participantColors={participantColors}
