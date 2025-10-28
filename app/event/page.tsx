@@ -97,6 +97,7 @@ function EventPageContent() {
   // UI state
   const [isInitializing, setIsInitializing] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showMobileHomeConfirm, setShowMobileHomeConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [travelMode, setTravelMode] = useState<any>('DRIVING'); // Start with string, will be converted when Google loads
   const [isDraggingCentroid, setIsDraggingCentroid] = useState(false);
@@ -1888,6 +1889,50 @@ function EventPageContent() {
         </div>
       )}
 
+      {/* Mobile Return Home Confirmation Modal */}
+      {showMobileHomeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowMobileHomeConfirm(false)}>
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-black text-white px-6 py-4 border-b-4 border-black">
+              <h3 className="text-base sm:text-lg font-bold uppercase">Return to Home?</h3>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <p className="text-sm text-black mb-4 font-bold">
+                {role === 'host'
+                  ? "You are the host of this event."
+                  : "You are currently participating in this event."
+                }
+              </p>
+              <p className="text-sm text-black mb-6">
+                {role === 'host'
+                  ? "Leaving this page won't affect the event, but you'll need the event link to return. Make sure you've copied the join link if you want to come back."
+                  : "If you leave, you won't be able to rejoin with the same participant ID. To participate again, you'll need to join as a new participant using the event link."
+                }
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowMobileHomeConfirm(false)}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-white text-black hover:bg-gray-100 transition-all font-bold text-sm uppercase"
+                >
+                  Stay
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 px-4 py-3 border-2 border-black bg-black text-white hover:bg-gray-900 transition-all font-bold text-sm uppercase"
+                >
+                  Go Home
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
         {/* Instructions & Help */}
         <Instructions
           role={role}
@@ -1904,10 +1949,8 @@ function EventPageContent() {
             <button
               onClick={() => {
                 if (participantId) {
-                  // Show confirmation if joined
-                  if (window.confirm('Return to home? You will lose your current session.')) {
-                    router.push('/');
-                  }
+                  // Show confirmation modal if joined
+                  setShowMobileHomeConfirm(true);
                 } else {
                   router.push('/');
                 }
