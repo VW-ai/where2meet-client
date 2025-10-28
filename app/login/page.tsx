@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,21 +37,21 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Where2Meet</h1>
+          <Link href="/" className="inline-block mb-4 hover:opacity-80 transition-opacity">
+            <Logo theme="light" size="lg" />
           </Link>
-          <p className="text-xl text-gray-600">Welcome back</p>
+          <h2 className="text-2xl font-bold text-black uppercase">Welcome Back</h2>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-bold text-black mb-2 uppercase">
                 Email
               </label>
               <input
@@ -60,12 +61,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-black bg-white border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-bold text-black mb-2 uppercase">
                 Password
               </label>
               <input
@@ -75,12 +76,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-black bg-white border-2 border-black focus:border-black outline-none placeholder:text-gray-400"
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="p-3 bg-white border-2 border-red-600 text-red-700 text-sm font-medium">
                 {error}
               </div>
             )}
@@ -88,16 +89,16 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="w-full py-3 bg-black text-white font-bold uppercase border-2 border-black hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              {isLoading ? 'Logging in...' : 'Log In'}
+              {isLoading ? 'LOGGING IN...' : 'LOG IN'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="mt-6 pt-6 border-t-2 border-black text-center">
+            <p className="text-black text-sm">
               Don't have an account?{' '}
-              <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link href="/signup" className="font-bold underline hover:no-underline">
                 Sign up
               </Link>
             </p>
@@ -108,7 +109,7 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="inline-block px-6 py-2 text-gray-600 hover:text-gray-800 font-medium"
+            className="inline-block px-6 py-3 text-black font-bold uppercase text-sm border-2 border-black bg-white hover:bg-gray-100 transition-all"
           >
             Continue as guest
           </Link>
