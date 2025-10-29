@@ -78,9 +78,9 @@ export default function SearchSubView({
       return;
     }
 
-    // Initialize Autocomplete - focus on establishments (venues)
+    // Initialize Autocomplete - NO type restriction to allow both generic terms and specific venues
     const autocompleteInstance = new google.maps.places.Autocomplete(keywordInputRef.current, {
-      types: ['establishment'], // Focus on businesses/venues
+      // Remove types restriction - allow user to type generic keywords OR select specific places
       fields: ['name', 'place_id'],
     });
 
@@ -88,9 +88,24 @@ export default function SearchSubView({
     autocompleteInstance.addListener('place_changed', () => {
       const place = autocompleteInstance.getPlace();
 
+      console.log('🔍 Autocomplete place selected:', place);
+      console.log('🔍 Place name:', place.name);
+      console.log('🔍 Formatted address:', place.formatted_address);
+
       if (place.name) {
-        // Set the venue name as the keyword
-        onKeywordChange(place.name);
+        // Extract just the main venue name (before any comma) to use as search keyword
+        // This handles cases like "Elmer Holmes Bobst Library, Washington Square South, New York, NY, USA"
+        // We want just "Elmer Holmes Bobst Library" as the search term
+        const cleanName = place.name.split(',')[0].trim();
+        console.log('🔍 Clean name for search:', cleanName);
+        onKeywordChange(cleanName);
+
+        // Auto-trigger search when user selects from autocomplete
+        // Use setTimeout to ensure the keyword state is updated first
+        setTimeout(() => {
+          console.log('🔍 Triggering search with keyword');
+          onSearch();
+        }, 100);
       }
     });
 
@@ -99,7 +114,7 @@ export default function SearchSubView({
         google.maps.event.clearInstanceListeners(autocompleteInstance);
       }
     };
-  }, [isGoogleLoaded, onKeywordChange]);
+  }, [isGoogleLoaded, onKeywordChange, onSearch]);
 
   // Auto-scroll to selected candidate when it changes
   useEffect(() => {

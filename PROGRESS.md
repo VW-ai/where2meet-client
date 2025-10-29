@@ -1,6 +1,49 @@
 # Where2Meet - Development Progress
 
-## Latest Session: October 28, 2025 - Brutalist/Techno Design Applied to Auth Pages
+## Latest Session: October 28, 2025 - Text Search Implementation for Specific Venues
+
+### 🎯 Session Summary
+**Focus:** Fixed venue search to support specific place names using Google Places Text Search API
+
+**Problem Identified:**
+- When users searched for specific venues (e.g., "Elmer Holmes Bobst Library"), the Nearby Search API couldn't find them
+- Venues were being filtered out by the `only_in_circle` setting when found outside the MEC circle
+- Users had to manually click search button after selecting from autocomplete
+
+**Completed:**
+1. ✅ Added Google Places Text Search API integration
+2. ✅ Implemented smart fallback: Nearby Search → Text Search for specific venues
+3. ✅ Disabled `in_circle` filter when using Text Search (specific venues may be outside circle)
+4. ✅ Added metadata to search response (`used_text_search`, `has_out_of_circle_results`)
+5. ✅ Auto-trigger search when user selects from autocomplete dropdown
+6. ✅ Clean venue names from autocomplete (remove address components)
+7. ✅ User notification when venues found outside the meetup circle
+8. ✅ Added debug logging for troubleshooting
+
+**Key Achievements:**
+- Specific venue searches now work immediately without manual refresh
+- Users are informed when selected venues are outside the optimal meetup area
+- Seamless UX: selecting from autocomplete triggers search automatically
+- Smart heuristic detection: multi-word or capitalized queries trigger Text Search
+
+**Technical Implementation:**
+- Backend: `search_places_text()` method in `google_maps.py`
+- Backend: Text Search fallback logic in `candidates.py`
+- Frontend: Autocomplete improvements in `SearchSubView.tsx`
+- Frontend: Toast notifications in `event/page.tsx`
+- Schema: Extended `SearchAreaInfo` with text search metadata
+
+**Files Modified:**
+- `server/server/app/services/google_maps.py` - Text Search API method
+- `server/server/app/api/v1/candidates.py` - Search fallback logic
+- `server/server/app/schemas/event.py` - Response schema updates
+- `components/LeftPanel/SearchSubView.tsx` - Autocomplete enhancements
+- `lib/api.ts` - TypeScript types
+- `app/event/page.tsx` - User notifications
+
+---
+
+## Previous Session: October 28, 2025 - Brutalist/Techno Design Applied to Auth Pages
 
 ### 🎯 Session Summary
 **Focus:** Applied brutalist/techno design system to login and signup pages for consistent branding

@@ -102,6 +102,8 @@ export interface SearchAreaInfo {
   was_snapped: boolean;
   original_center_lat?: number;
   original_center_lng?: number;
+  used_text_search: boolean;
+  has_out_of_circle_results: boolean;
 }
 
 export interface CandidateSearchResponse {

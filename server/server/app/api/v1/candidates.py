@@ -115,12 +115,37 @@ async def search_candidates(
     db.commit()
 
     # Search Google Places using land-based center
+    print(f"🔍 Starting search with keyword: '{search_data.keyword}'")
+
+    # First try Nearby Search (better for generic categories like "restaurant")
     places = await google_maps_service.search_places_nearby(
         lat=search_center_lat,
         lng=search_center_lng,
         radius=search_radius,
         keyword=search_data.keyword
     )
+    print(f"📍 Nearby Search found {len(places)} results")
+
+    # Track if we used text search (for filtering logic later)
+    used_text_search = False
+
+    # If no results and keyword looks like a specific place name (has capital letters or is multi-word),
+    # try Text Search as fallback (better for specific venue names)
+    if len(places) == 0 and search_data.keyword:
+        # Heuristic: if keyword has multiple words or uppercase letters, it might be a specific place
+        is_specific_place = ' ' in search_data.keyword.strip() or any(c.isupper() for c in search_data.keyword)
+
+        if is_specific_place:
+            print(f"🔍 Nearby search returned 0 results. Trying Text Search for: '{search_data.keyword}'")
+            places = await google_maps_service.search_places_text(
+                query=search_data.keyword,
+                lat=search_center_lat,
+                lng=search_center_lng,
+                radius=search_radius
+            )
+            if len(places) > 0:
+                print(f"✅ Text Search found {len(places)} results!")
+                used_text_search = True
 
     # Store new candidates in database and track all place IDs
     place_ids_from_search = []
@@ -174,7 +199,8 @@ async def search_candidates(
     )
 
     # Filter to only in-circle candidates if requested
-    if search_data.only_in_circle:
+    # BUT: Don't filter when using Text Search (specific venues may be outside the circle)
+    if search_data.only_in_circle and not used_text_search:
         query = query.filter(Candidate.in_circle == True)
 
     candidates = query.all()
@@ -221,6 +247,9 @@ async def search_candidates(
             vote_count=vote_count_map.get(c.id, 0)
         ))
 
+    # Check if any results are outside the circle
+    has_out_of_circle_results = any(not c.in_circle for c in candidates)
+
     # Build search area metadata
     search_area = SearchAreaInfo(
         center_lat=search_center_lat,
@@ -228,7 +257,9 @@ async def search_candidates(
         radius_km=search_radius,
         was_snapped=was_snapped,
         original_center_lat=original_center_lat if was_snapped else None,
-        original_center_lng=original_center_lng if was_snapped else None
+        original_center_lng=original_center_lng if was_snapped else None,
+        used_text_search=used_text_search,
+        has_out_of_circle_results=has_out_of_circle_results
     )
 
     return CandidateSearchResponse(
