@@ -1447,7 +1447,7 @@ function EventPageContent() {
 
       {/* Venue Detail Panel - Middle Right (when venue selected) */}
       {selectedCandidate && (
-        <div className="fixed bottom-64 right-6 w-96 h-[40 vh] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-20 flex flex-col">
+        <div className="fixed bottom-24 right-6 w-96 h-[40 vh] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-20 flex flex-col">
           {/* Header with Photo Background */}
           <div
             className="relative flex items-center justify-between px-4 py-3 bg-black text-white border-b-2 border-black h-32"
