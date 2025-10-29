@@ -749,6 +749,11 @@ function EventPageContent() {
         toast.info('Search center adjusted to nearby land for better results', { duration: 4000 });
       }
 
+      // Show info if specific venue was found outside the circle
+      if (response.search_area.used_text_search && response.search_area.has_out_of_circle_results) {
+        toast.info(`Found "${keyword}" outside the meetup area. Consider choosing a venue within the circle for easier access.`, { duration: 6000 });
+      }
+
       if (response.candidates.length === 0) {
         toast.warning(`${t.noResultsFound} "${keyword}". ${t.tryDifferentSearch}`);
       }

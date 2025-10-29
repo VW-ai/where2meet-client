@@ -174,6 +174,8 @@ class SearchAreaInfo(BaseModel):
     was_snapped: bool = False  # Whether the center was adjusted from water to land
     original_center_lat: Optional[float] = None
     original_center_lng: Optional[float] = None
+    used_text_search: bool = False  # Whether Text Search was used (for specific venues)
+    has_out_of_circle_results: bool = False  # Whether results include venues outside the circle
 
 
 class CandidateSearchResponse(BaseModel):

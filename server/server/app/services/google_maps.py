@@ -20,6 +20,85 @@ class GoogleMapsService:
             print(f"⚠️ Redis connection failed: {e}. Photo caching will be disabled.")
             self.redis_client = None
 
+    async def search_places_text(
+        self,
+        query: str,
+        lat: float,
+        lng: float,
+        radius: float,
+        min_rating: float = 2.5,
+        max_results: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for places using Text Search API (better for specific venue names).
+
+        Args:
+            query: Search query (e.g., "Elmer Holmes Bobst Library")
+            lat: Center latitude for location bias
+            lng: Center longitude for location bias
+            radius: Search radius in km (for filtering results)
+            min_rating: Minimum rating filter
+            max_results: Maximum number of results to fetch
+
+        Returns:
+            List of place dictionaries
+        """
+        url = f"{self.base_url}/place/textsearch/json"
+        params = {
+            "query": query,
+            "location": f"{lat},{lng}",
+            "radius": int(radius * 1000),  # Convert km to meters
+            "key": self.api_key
+        }
+
+        places = []
+        seen_place_ids = set()
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10.0)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("status") not in ["OK", "ZERO_RESULTS"]:
+                print(f"⚠️ Text search failed with status: {data.get('status')}")
+                return []
+
+            # Process results
+            for result in data.get("results", []):
+                if len(places) >= max_results:
+                    break
+
+                place_id = result.get("place_id")
+
+                # De-duplicate
+                if place_id in seen_place_ids:
+                    continue
+
+                # Filter by rating (allow unrated venues)
+                rating = result.get("rating", 0)
+                if rating > 0 and rating < min_rating:
+                    continue
+
+                # Extract photo reference
+                photos = result.get("photos", [])
+                photo_reference = photos[0].get("photo_reference") if photos else None
+
+                seen_place_ids.add(place_id)
+
+                places.append({
+                    "place_id": place_id,
+                    "name": result.get("name", ""),
+                    "address": result.get("formatted_address", ""),
+                    "lat": result["geometry"]["location"]["lat"],
+                    "lng": result["geometry"]["location"]["lng"],
+                    "rating": rating if rating > 0 else None,
+                    "user_ratings_total": result.get("user_ratings_total", 0),
+                    "opening_hours": result.get("opening_hours"),
+                    "photo_reference": photo_reference,
+                })
+
+        return places
+
     async def search_places_nearby(
         self,
         lat: float,
