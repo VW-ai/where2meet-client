@@ -2,7 +2,7 @@
 
 import { Search, MapPin, Star, Heart, RefreshCw, Utensils, Coffee, Beer, Trees, Dumbbell, Film, Navigation, Info } from 'lucide-react';
 import { Candidate, SortMode } from '@/types';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 
 interface SearchSubViewProps {
   keyword: string;
@@ -22,6 +22,14 @@ interface SearchSubViewProps {
   onSaveCandidate?: (candidateId: string) => void;
   isHost: boolean;
   hasAutoSearched: boolean;
+  onAddVenueFromAutocomplete?: (place: {
+    place_id: string;
+    name: string;
+    address: string;
+    lat: number;
+    lng: number;
+    rating?: number;
+  }) => Promise<void>;
 }
 
 const CATEGORY_CHIPS = [
@@ -51,6 +59,7 @@ export default function SearchSubView({
   onSaveCandidate,
   isHost,
   hasAutoSearched,
+  onAddVenueFromAutocomplete,
 }: SearchSubViewProps) {
 
   // Refs for auto-scroll functionality
@@ -59,12 +68,71 @@ export default function SearchSubView({
   // Google Places Autocomplete for keyword input
   const keywordInputRef = useRef<HTMLInputElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+
+  // Track place_id from autocomplete for auto-selection after search
+  const pendingAutoSelectRef = useRef<string | null>(null);
+  const latestCandidatesRef = useRef<Candidate[]>(candidates);
+  const latestOnCandidateClickRef = useRef(onCandidateClick);
+
+  useEffect(() => {
+    latestCandidatesRef.current = candidates;
+  }, [candidates]);
+
+  useEffect(() => {
+    latestOnCandidateClickRef.current = onCandidateClick;
+  }, [onCandidateClick]);
+
+  const ensurePlaceHasGeometry = useCallback(async (rawPlace: google.maps.places.PlaceResult | undefined) => {
+    if (!rawPlace) {
+      return null;
+    }
+
+    if (rawPlace.geometry?.location) {
+      return rawPlace;
+    }
+
+    if (!rawPlace.place_id) {
+      return null;
+    }
+
+    // PlacesService should already be initialized eagerly in the Google load effect
+    if (!placesServiceRef.current) {
+      console.error('❌ PlacesService not initialized - this should not happen');
+      return null;
+    }
+
+    console.log('🔍 Fetching full place details via PlacesService...');
+    return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
+      placesServiceRef.current!.getDetails(
+        {
+          placeId: rawPlace.place_id!,
+          fields: ['name', 'place_id', 'geometry', 'formatted_address', 'rating'],
+        },
+        (result, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+            resolve(result);
+          } else {
+            console.error('❌ Failed to fetch full place details:', status, rawPlace.place_id);
+            resolve(null);
+          }
+        }
+      );
+    });
+  }, []);
 
   // Wait for Google Maps Places library to load
   useEffect(() => {
     const checkGoogleLoaded = () => {
       if (typeof window !== 'undefined' && window.google?.maps?.places?.Autocomplete) {
         setIsGoogleLoaded(true);
+
+        // Initialize PlacesService EAGERLY (not lazily) to avoid timing issues
+        // This ensures it's ready when ensurePlaceHasGeometry needs it
+        if (!placesServiceRef.current && window.google?.maps?.places?.PlacesService) {
+          placesServiceRef.current = new google.maps.places.PlacesService(document.createElement('div'));
+          console.log('✅ PlacesService initialized eagerly');
+        }
       } else {
         setTimeout(checkGoogleLoaded, 100);
       }
@@ -78,43 +146,148 @@ export default function SearchSubView({
       return;
     }
 
+    const inputElement = keywordInputRef.current;
+
     // Initialize Autocomplete - NO type restriction to allow both generic terms and specific venues
-    const autocompleteInstance = new google.maps.places.Autocomplete(keywordInputRef.current, {
+    const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, {
       // Remove types restriction - allow user to type generic keywords OR select specific places
-      fields: ['name', 'place_id'],
+      fields: ['name', 'place_id', 'geometry', 'formatted_address', 'rating'],
     });
 
-    // Listen for place selection
-    autocompleteInstance.addListener('place_changed', () => {
-      const place = autocompleteInstance.getPlace();
+    const handlePlaceSelection = () => {
+      console.log('🚨 handlePlaceSelection called');
+      const rawPlace = autocompleteInstance.getPlace();
 
-      console.log('🔍 Autocomplete place selected:', place);
-      console.log('🔍 Place name:', place.name);
-      console.log('🔍 Formatted address:', place.formatted_address);
+      console.log('🔍 Autocomplete place selected:', rawPlace);
+      console.log('🔍 Place name:', rawPlace?.name);
+      console.log('🔍 Place ID:', rawPlace?.place_id);
+      console.log('🔍 Formatted address:', rawPlace?.formatted_address);
+      console.log('🔍 Has geometry?', !!rawPlace?.geometry);
+      console.log('🔍 Has location?', !!rawPlace?.geometry?.location);
 
-      if (place.name) {
-        // Extract just the main venue name (before any comma) to use as search keyword
-        // This handles cases like "Elmer Holmes Bobst Library, Washington Square South, New York, NY, USA"
-        // We want just "Elmer Holmes Bobst Library" as the search term
-        const cleanName = place.name.split(',')[0].trim();
-        console.log('🔍 Clean name for search:', cleanName);
-        onKeywordChange(cleanName);
+      ensurePlaceHasGeometry(rawPlace).then((place) => {
+        if (!place) {
+          console.warn('⚠️ Skipping place selection: no place data returned');
+          return;
+        }
 
-        // Auto-trigger search when user selects from autocomplete
-        // Use setTimeout to ensure the keyword state is updated first
-        setTimeout(() => {
-          console.log('🔍 Triggering search with keyword');
-          onSearch();
-        }, 100);
-      }
-    });
+        console.log('🔍 Enhanced place details:', {
+          name: place.name,
+          placeId: place.place_id,
+          hasGeometry: !!place.geometry,
+          hasLocation: !!place.geometry?.location,
+        });
+
+        if (place.name && place.place_id && place.geometry?.location) {
+          // Extract just the main venue name (before any comma) to use as search keyword
+          const cleanName = place.name.split(',')[0].trim();
+          console.log('🔍 Clean name for search:', cleanName);
+
+          // IMPORTANT: Clear the keyword to show ALL venues (not just search-filtered ones)
+          // This ensures the newly added venue is visible immediately
+          onKeywordChange('');
+          console.log('🔍 Cleared keyword to show all venues');
+
+          const existingCandidate = latestCandidatesRef.current.find((candidate) => candidate.placeId === place.place_id);
+          if (existingCandidate) {
+            console.log('ℹ️ Venue already present, auto-selecting existing candidate');
+            pendingAutoSelectRef.current = null;
+            latestOnCandidateClickRef.current(existingCandidate);
+            return;
+          }
+
+          if (onAddVenueFromAutocomplete) {
+            console.log('🎯 Adding venue directly from autocomplete:', {
+              place_id: place.place_id,
+              name: place.name,
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            });
+
+            // Store place_id BEFORE making the async call
+            pendingAutoSelectRef.current = place.place_id || null;
+            console.log('📌 Stored place_id for auto-selection:', pendingAutoSelectRef.current);
+
+            onAddVenueFromAutocomplete({
+              place_id: place.place_id,
+              name: place.name,
+              address: place.formatted_address || '',
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+              rating: place.rating,
+            }).then(() => {
+              console.log('✅ Venue added successfully!');
+            }).catch((err) => {
+              console.error('❌ Failed to add venue:', err);
+
+              if (err.message && err.message.includes('already exists')) {
+                console.log('ℹ️ Venue already exists, will still attempt to select it');
+              } else {
+                pendingAutoSelectRef.current = null;
+              }
+            });
+          } else {
+            // Fallback: search by keyword (old behavior)
+            pendingAutoSelectRef.current = place.place_id || null;
+
+            setTimeout(() => {
+              console.log('🔍 Triggering search with keyword');
+              onSearch();
+            }, 100);
+          }
+        } else {
+          console.warn('⚠️ Place data missing required fields even after details fetch');
+        }
+      });
+    };
+
+    // Listen for place_changed event
+    autocompleteInstance.addListener('place_changed', handlePlaceSelection);
+
+    // WORKAROUND: Google Autocomplete has a known bug where place_changed doesn't fire
+    // on the first selection when clicking directly on a suggestion
+    // Solution: Listen for mousedown on the PAC container items
+    const setupPacContainerListener = () => {
+      // Wait for PAC container to be created by Google
+      setTimeout(() => {
+        const pacContainer = document.querySelector('.pac-container') as HTMLElement;
+        if (pacContainer) {
+          console.log('✅ Found PAC container, adding click listener');
+
+          const handlePacClick = (e: Event) => {
+            const target = e.target as HTMLElement;
+            // Check if click was on a PAC item
+            if (target.closest('.pac-item')) {
+              console.log('🖱️ PAC item clicked, waiting for place to populate...');
+              // Give Google time to populate the place object
+              setTimeout(() => {
+                const place = autocompleteInstance.getPlace();
+                if (place && place.place_id) {
+                  console.log('✅ Place populated after PAC click, triggering selection');
+                  handlePlaceSelection();
+                }
+              }, 100);
+            }
+          };
+
+          pacContainer.addEventListener('mousedown', handlePacClick);
+
+          // Store cleanup function
+          return () => {
+            pacContainer.removeEventListener('mousedown', handlePacClick);
+          };
+        }
+      }, 500);
+    };
+
+    setupPacContainerListener();
 
     return () => {
       if (autocompleteInstance) {
         google.maps.event.clearInstanceListeners(autocompleteInstance);
       }
     };
-  }, [isGoogleLoaded, onKeywordChange, onSearch]);
+  }, [isGoogleLoaded, onKeywordChange, onSearch, onAddVenueFromAutocomplete, ensurePlaceHasGeometry]);
 
   // Auto-scroll to selected candidate when it changes
   useEffect(() => {
@@ -125,6 +298,33 @@ export default function SearchSubView({
       });
     }
   }, [selectedCandidate]);
+
+  // Auto-select venue when candidates update after autocomplete selection
+  useEffect(() => {
+    console.log('🔍 Auto-select effect triggered:', {
+      hasPendingSelect: !!pendingAutoSelectRef.current,
+      pendingPlaceId: pendingAutoSelectRef.current,
+      candidatesCount: candidates.length,
+      isSearching,
+      candidatePlaceIds: candidates.map(c => c.placeId)
+    });
+
+    if (pendingAutoSelectRef.current && candidates.length > 0 && !isSearching) {
+      const targetPlaceId = pendingAutoSelectRef.current;
+      console.log('🔍 Looking for candidate with place_id:', targetPlaceId);
+
+      const matchingCandidate = candidates.find(c => c.placeId === targetPlaceId);
+
+      if (matchingCandidate) {
+        console.log('🎯 Auto-selecting venue from autocomplete:', matchingCandidate.name);
+        onCandidateClick(matchingCandidate);
+        pendingAutoSelectRef.current = null; // Clear after selection
+      } else {
+        console.log('❌ No matching candidate found for place_id:', targetPlaceId);
+        console.log('Available candidates:', candidates.map(c => ({ name: c.name, placeId: c.placeId })));
+      }
+    }
+  }, [candidates, isSearching, onCandidateClick]);
 
   const handleCategoryClick = (category: string) => {
     onKeywordChange(category);
@@ -160,7 +360,7 @@ export default function SearchSubView({
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-            placeholder={isGoogleLoaded ? "restaurant or venue name" : "loading..."}
+            placeholder={isGoogleLoaded ? "Search venues..." : "loading..."}
             disabled={!isGoogleLoaded}
             className="w-full pl-8 pr-2 py-1.5 text-xs text-black border-2 border-black focus:border-black outline-none placeholder:text-gray-400 disabled:cursor-wait"
           />

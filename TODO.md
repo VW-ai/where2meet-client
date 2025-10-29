@@ -20,6 +20,20 @@
 - [x] Custom techno-style dropdown for travel mode
 - [x] Instruction button repositioned (desktop only)
 
+## Search & Discovery
+
+### Advanced Autocomplete (Deferred)
+- [ ] Fix one-click venue addition from autocomplete dropdown
+  - **Current behavior:** Requires two clicks due to Google Autocomplete timing issues
+  - **Root cause:** Google doesn't reliably return geometry fields on first selection
+  - **Workaround:** Users can type venue name and press search button instead
+  - **Technical notes:**
+    - PlacesService.getDetails() sometimes returns incomplete data on first call
+    - Lazy initialization replaced with eager initialization (partially helps)
+    - May need to migrate to new PlaceAutocompleteElement API (Google's recommended replacement)
+  - **Priority:** Low (Text Search works well as alternative)
+  - **Files involved:** [SearchSubView.tsx](components/LeftPanel/SearchSubView.tsx)
+
 ## Future Improvements
 - [ ] Travel Chart popup on mobile venue detail
 - [ ] Participant map marker click interaction (switch to tab + scroll)

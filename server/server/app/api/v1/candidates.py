@@ -137,14 +137,20 @@ async def search_candidates(
 
         if is_specific_place:
             print(f"🔍 Nearby search returned 0 results. Trying Text Search for: '{search_data.keyword}'")
+
+            # Use expanded 10-mile radius for Text Search to mimic Google Maps behavior
+            # This allows users to find venues even if they're outside the current search area
+            text_search_radius_km = 16.0  # Fixed 10-mile radius (10 miles = ~16 km)
+
             places = await google_maps_service.search_places_text(
                 query=search_data.keyword,
                 lat=search_center_lat,
                 lng=search_center_lng,
-                radius=search_radius
+                radius=text_search_radius_km,
+                max_results=20  # Top 20 results
             )
             if len(places) > 0:
-                print(f"✅ Text Search found {len(places)} results!")
+                print(f"✅ Text Search found {len(places)} results within {text_search_radius_km} miles!")
                 used_text_search = True
 
     # Store new candidates in database and track all place IDs

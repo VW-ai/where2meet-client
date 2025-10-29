@@ -810,9 +810,9 @@ export default function MapView(props: MapViewProps) {
           </svg>
         </button>
 
-        {/* Route Info Display - Compact with Horizontal Bottom Buttons (Top Right) */}
+        {/* Route Info Display - Compact with Horizontal Bottom Buttons (Bottom Middle) */}
         {routeInfo && props.selectedCandidate && props.myParticipantId && (
-          <div className="absolute top-4 right-4 bg-white border-2 border-black shadow-lg z-10 w-[160px]">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white border-2 border-black shadow-lg z-10 w-[160px]">
             {/* Header */}
             <div className="px-2 py-1 bg-black text-white border-b-2 border-black">
               <div className="text-xs font-bold uppercase truncate">{props.selectedCandidate.name}</div>

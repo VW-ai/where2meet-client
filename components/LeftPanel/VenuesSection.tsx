@@ -27,6 +27,14 @@ interface VenuesSectionProps {
   isHost: boolean;
   hasAutoSearched: boolean;
   candidateColors?: Map<string, string>;
+  onAddVenueFromAutocomplete?: (place: {
+    place_id: string;
+    name: string;
+    address: string;
+    lat: number;
+    lng: number;
+    rating?: number;
+  }) => Promise<void>;
 }
 
 export default function VenuesSection({
@@ -50,6 +58,7 @@ export default function VenuesSection({
   isHost,
   hasAutoSearched,
   candidateColors,
+  onAddVenueFromAutocomplete,
 }: VenuesSectionProps) {
   const [activeTab, setActiveTab] = useState<'search' | 'list'>('search');
   const [isExpanded, setIsExpanded] = useState(true); // Default expanded
@@ -138,6 +147,7 @@ export default function VenuesSection({
             onSaveCandidate={onSaveCandidate}
             isHost={isHost}
             hasAutoSearched={hasAutoSearched}
+            onAddVenueFromAutocomplete={onAddVenueFromAutocomplete}
           />
         ) : (
           <VenueListSubView
