@@ -1,6 +1,92 @@
 # Where2Meet - Development Progress
 
-## Latest Session: October 28, 2025 - Text Search Implementation for Specific Venues
+## Latest Session: October 29, 2025 - Enhanced Search: Text Search + Autocomplete Integration
+
+### 🎯 Session Summary
+**Focus:** Implemented hybrid search supporting both type-based (category) and name-based (specific venue) searches seamlessly
+
+### Problems Identified
+1. **Text Search for Specific Venues**
+   - Nearby Search API couldn't find specific place names (e.g., "Elmer Holmes Bobst Library")
+   - Only worked for generic categories (restaurant, cafe)
+
+2. **Autocomplete Selection Issues**
+   - Two-click workflow: First selection did nothing, required second click
+   - Root cause: Google Autocomplete + lazy PlacesService initialization timing issues
+   - Venues filtered out when search keyword active (e.g., search "cafe" then add "school" → school hidden)
+
+3. **Filtering Confusion**
+   - Venues outside MEC circle filtered out even when explicitly searched
+   - Users couldn't see venues they just added if keyword filter was active
+
+### Solutions Implemented
+
+**1. Text Search API Fallback (Backend)**
+- Added `search_places_text()` method for specific venue searches
+- Smart fallback: Try Nearby Search first, if fails → Text Search
+- Expanded radius: 10 miles (16 km) for Text Search to mimic Google Maps behavior
+- Disabled `in_circle` filter for Text Search results
+- Added metadata: `used_text_search`, `has_out_of_circle_results`
+
+**2. Seamless Search Experience (Frontend)**
+- Clear keyword filter when venue added via autocomplete → Shows ALL venues
+- Auto-selection works across full candidate list
+- Check if venue already exists before adding
+- Toast notification when venues found outside optimal meetup area
+
+**3. PlacesService Initialization Fix**
+- Changed from lazy to eager initialization
+- PlacesService now initialized when Google Maps loads (not on first use)
+- Eliminates race conditions in geometry fetching
+
+**4. Error Handling Improvements**
+- Gracefully handle "Candidate already exists" error
+- Still auto-select venue even if backend says it exists
+- Better logging for debugging autocomplete flow
+
+### Technical Details
+
+**Backend Changes:**
+- `google_maps.py:23-100` - New `search_places_text()` method
+- `candidates.py:117-154` - Text Search fallback with 10-mile radius
+- `candidates.py:198-201` - Conditional `in_circle` filter
+- `event.py:177-178` - Extended `SearchAreaInfo` schema
+
+**Frontend Changes:**
+- `SearchSubView.tsx:131-136` - Eager PlacesService initialization
+- `SearchSubView.tsx:99-105` - Removed lazy initialization
+- `SearchSubView.tsx:180-183` - Clear keyword on autocomplete selection
+- `SearchSubView.tsx:185-191` - Check existing candidates before adding
+- `event/page.tsx:752-755` - Toast for out-of-circle venues
+- `lib/api.ts:105-106` - Updated TypeScript types
+
+### Current Limitations
+**Autocomplete Direct Add (Deferred):**
+- Two-click workflow still persists in some cases
+- Google Autocomplete geometry delivery remains unreliable
+- **Workaround:** Users can use text search instead of autocomplete
+- **Future:** Consider migrating to new `PlaceAutocompleteElement` API (Google's recommended replacement)
+
+### Key Achievements
+- ✅ Search by category (restaurant, cafe) works perfectly
+- ✅ Search by name (specific venues) works via Text Search fallback
+- ✅ Seamless switching between search modes
+- ✅ 10-mile radius for discovering venues
+- ✅ Clear UX when venues outside optimal area
+- ✅ No confusion from keyword filtering
+- ⚠️ Autocomplete direct-add needs more work (deferred to TODO)
+
+**Files Modified:**
+- `server/server/app/services/google_maps.py`
+- `server/server/app/api/v1/candidates.py`
+- `server/server/app/schemas/event.py`
+- `components/LeftPanel/SearchSubView.tsx`
+- `lib/api.ts`
+- `app/event/page.tsx`
+
+---
+
+## Previous Session: October 28, 2025 - Text Search Implementation for Specific Venues
 
 ### 🎯 Session Summary
 **Focus:** Fixed venue search to support specific place names using Google Places Text Search API

@@ -1432,6 +1432,7 @@ function EventPageContent() {
           onRemoveCandidate={handleRemoveCandidate}
           hasAutoSearched={hasAutoSearched}
           candidateColors={candidateColors}
+          onAddVenueFromAutocomplete={handleAddVenueManually}
 
           // Participation Section
           participants={participants}

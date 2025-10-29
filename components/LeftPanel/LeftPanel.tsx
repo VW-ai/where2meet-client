@@ -45,6 +45,14 @@ interface LeftPanelProps {
   onRemoveCandidate?: (candidateId: string) => void;
   hasAutoSearched: boolean;
   candidateColors?: Map<string, string>;
+  onAddVenueFromAutocomplete?: (place: {
+    place_id: string;
+    name: string;
+    address: string;
+    lat: number;
+    lng: number;
+    rating?: number;
+  }) => Promise<void>;
 
   // Participation Section Props
   participants: Participant[];
@@ -93,6 +101,7 @@ export default function LeftPanel({
   onRemoveCandidate,
   hasAutoSearched,
   candidateColors,
+  onAddVenueFromAutocomplete,
 
   // Participation
   participants,
@@ -157,6 +166,7 @@ export default function LeftPanel({
             isHost={isHost}
             hasAutoSearched={hasAutoSearched}
             candidateColors={candidateColors}
+            onAddVenueFromAutocomplete={onAddVenueFromAutocomplete}
           />
           {participants.length > 0 && <div className="h-0.5 bg-black" />}
         </div>
