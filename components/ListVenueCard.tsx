@@ -210,7 +210,7 @@ export default function ListVenueCard({ item, index, onUseForMeeting }: ListVenu
         <div className="flex gap-2 mt-3">
           <button
             onClick={handleToggle}
-            className="flex-1 px-4 py-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors font-bold text-sm uppercase flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors font-bold text-sm uppercase flex items-center justify-center gap-2 text-black"
           >
             {expanded ? (
               <>

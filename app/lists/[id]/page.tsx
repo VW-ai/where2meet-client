@@ -160,7 +160,7 @@ export default function ListDetailPage() {
             <div className="flex gap-2">
               <button
                 onClick={handleShare}
-                className="p-2 border-2 border-black hover:bg-gray-100 transition-colors"
+                className="p-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors text-black"
                 title="Share"
               >
                 <Share2 className="w-5 h-5" />
@@ -172,7 +172,7 @@ export default function ListDetailPage() {
                 className={`p-2 border-2 border-black transition-colors ${
                   list.is_liked
                     ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                    : 'hover:bg-gray-100'
+                    : 'bg-white hover:bg-gray-100 text-black'
                 }`}
                 title={list.is_liked ? 'Unlike' : 'Like'}
               >
@@ -183,14 +183,14 @@ export default function ListDetailPage() {
                 <>
                   <button
                     onClick={() => router.push(`/lists/${listId}/edit`)}
-                    className="p-2 border-2 border-black hover:bg-gray-100 transition-colors"
+                    className="p-2 border-2 border-black bg-white hover:bg-gray-100 transition-colors text-black"
                     title="Edit"
                   >
                     <Edit className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-2 border-2 border-black hover:bg-red-50 hover:text-red-600 transition-colors"
+                    className="p-2 border-2 border-black bg-white hover:bg-red-50 hover:text-red-600 transition-colors text-black"
                     title="Delete"
                   >
                     <Trash2 className="w-5 h-5" />
