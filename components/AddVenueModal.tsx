@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useGooglePlacesAutocomplete } from '@/hooks/useGooglePlacesAutocomplete';
 
 interface AddVenueModalProps {
@@ -25,6 +26,7 @@ export default function AddVenueModal({ isOpen, onClose, onSubmit }: AddVenueMod
   const [venueRating, setVenueRating] = useState<number | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Google Places Autocomplete (legacy API)
   const { containerRef, isLoaded } = useGooglePlacesAutocomplete({
@@ -46,6 +48,11 @@ export default function AddVenueModal({ isOpen, onClose, onSubmit }: AddVenueMod
     // No type restriction - allows all places (venues, addresses, etc.)
     types: undefined,
   });
+
+  // Set mounted state for portal (SSR safety)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Prevent background scroll when modal is open
   useEffect(() => {
@@ -134,9 +141,9 @@ export default function AddVenueModal({ isOpen, onClose, onSubmit }: AddVenueMod
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted) return null;
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -221,4 +228,6 @@ export default function AddVenueModal({ isOpen, onClose, onSubmit }: AddVenueMod
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

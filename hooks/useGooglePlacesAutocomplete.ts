@@ -195,37 +195,43 @@ export const useGooglePlacesAutocomplete = ({
 
       // Handle scroll repositioning - find the scrollable parent (modal content)
       const scrollableParent = input.closest('.overflow-y-auto');
+
+      const repositionDropdown = () => {
+        const pacContainer = document.querySelector('.pac-container') as HTMLElement;
+        if (pacContainer && pacContainer.style.display !== 'none') {
+          // Get input position relative to viewport
+          const rect = input.getBoundingClientRect();
+
+          // Position dropdown below input with fixed positioning
+          pacContainer.style.position = 'fixed';
+          pacContainer.style.left = `${rect.left}px`;
+          pacContainer.style.top = `${rect.bottom + 2}px`; // 2px gap
+          pacContainer.style.width = `${rect.width}px`;
+          pacContainer.style.zIndex = '9999'; // Ensure it's above modal overlay
+        }
+      };
+
+      const inputHandler = () => {
+        setTimeout(repositionDropdown, 10);
+      };
+
+      // Always add these listeners, regardless of scrollable parent
+      input.addEventListener('focus', repositionDropdown);
+      input.addEventListener('input', inputHandler);
+
+      // Add window resize listener to reposition on window resize
+      window.addEventListener('resize', repositionDropdown);
+      window.addEventListener('scroll', repositionDropdown, true); // Capture phase to catch all scrolls
+
+      // If there's a scrollable parent, listen to its scroll events too
       if (scrollableParent) {
-        const repositionDropdown = () => {
-          const pacContainer = document.querySelector('.pac-container') as HTMLElement;
-          if (pacContainer && pacContainer.style.display !== 'none') {
-            // Get input position relative to viewport
-            const rect = input.getBoundingClientRect();
-
-            // Position dropdown below input
-            pacContainer.style.position = 'fixed';
-            pacContainer.style.left = `${rect.left}px`;
-            pacContainer.style.top = `${rect.bottom + 2}px`; // 2px gap
-            pacContainer.style.width = `${rect.width}px`;
-          }
-        };
-
-        const inputHandler = () => {
-          setTimeout(repositionDropdown, 10);
-        };
-
-        // Reposition on scroll
         scrollableParent.addEventListener('scroll', repositionDropdown);
-
-        // Also reposition on input focus and when typing
-        input.addEventListener('focus', repositionDropdown);
-        input.addEventListener('input', inputHandler);
-
-        // Store the listeners for cleanup
-        (input as any)._scrollHandler = repositionDropdown;
-        (input as any)._inputHandler = inputHandler;
         (input as any)._scrollParent = scrollableParent;
       }
+
+      // Store the listeners for cleanup
+      (input as any)._scrollHandler = repositionDropdown;
+      (input as any)._inputHandler = inputHandler;
     } catch (err) {
       console.error('Error initializing autocomplete:', err);
       setError('Failed to initialize autocomplete');
@@ -244,9 +250,14 @@ export const useGooglePlacesAutocomplete = ({
           const scrollHandler = (input as any)._scrollHandler;
           const inputHandler = (input as any)._inputHandler;
           const scrollParent = (input as any)._scrollParent;
-          if (scrollHandler && scrollParent) {
-            scrollParent.removeEventListener('scroll', scrollHandler);
+
+          if (scrollHandler) {
             input.removeEventListener('focus', scrollHandler);
+            window.removeEventListener('resize', scrollHandler);
+            window.removeEventListener('scroll', scrollHandler, true);
+            if (scrollParent) {
+              scrollParent.removeEventListener('scroll', scrollHandler);
+            }
           }
           if (inputHandler) {
             input.removeEventListener('input', inputHandler);

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { api, CreateEventRequest, VenueListSummary } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/Logo';
@@ -11,6 +10,7 @@ import { useTranslation } from '@/lib/i18n';
 import MagicBento from '@/components/MagicBento';
 import Header from '@/components/Header';
 import EventCard from '@/components/EventCard';
+import Footer from '@/components/Footer';
 import EventCardSkeleton from '@/components/EventCardSkeleton';
 import PostEventModal from '@/components/PostEventModal';
 import DateTimePicker from '@/components/DateTimePicker';
@@ -1575,25 +1575,15 @@ export default function Home() {
           </div>
         </div>
 
-      {/* Footer */}
-      <footer className="hidden lg:block border-t border-black mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-600">
-          <div className="flex justify-center gap-6">
-            <Link href="/about" className="hover:text-black">About</Link>
-            <Link href="/help" className="hover:text-black">Help</Link>
-            <Link href="/privacy" className="hover:text-black">Privacy</Link>
-            <Link href="/terms" className="hover:text-black">Terms</Link>
-            <Link href="/contact" className="hover:text-black">Contact</Link>
-          </div>
-        </div>
-      </footer>
-
       {/* Post Event Modal */}
       <PostEventModal
         isOpen={showPostEventModal}
         onClose={() => setShowPostEventModal(false)}
         onSubmit={handlePostEvent}
       />
+
+      {/* Footer - Only on home page */}
+      <Footer />
     </main>
   );
 }

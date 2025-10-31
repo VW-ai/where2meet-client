@@ -14,7 +14,9 @@
       "Bash(alembic downgrade:*)",
       "Bash(git add:*)",
       "Bash(python -m alembic revision:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Read(//Users/victor/work/WhereToMeet/**)",
+      "Bash(pnpm run dev)"
     ],
     "deny": [],
     "ask": []
