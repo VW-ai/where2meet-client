@@ -1372,7 +1372,7 @@ function EventPageContent() {
       </div>
 
       {/* Final Decision Banner - Brutalist/Techno Style */}
-      {event.final_decision && (
+      {event?.final_decision && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] z-50 max-w-xl">
           <div className="bg-black text-white px-4 py-2 border-b-4 border-black flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1381,7 +1381,7 @@ function EventPageContent() {
             <p className="font-bold text-xs sm:text-sm uppercase tracking-wider">{t.finalDecision}</p>
           </div>
           <div className="px-4 py-3">
-            <p className="font-bold text-base sm:text-lg text-black uppercase text-center">{event.final_decision}</p>
+            <p className="font-bold text-base sm:text-lg text-black uppercase text-center">{event?.final_decision}</p>
           </div>
         </div>
       )}
@@ -2023,7 +2023,7 @@ function EventPageContent() {
         </div>
 
         {/* Final Decision Banner - Mobile */}
-        {event.final_decision && (
+        {event?.final_decision && (
           <div className="bg-white border-b-4 border-black z-50">
             <div className="bg-black text-white px-3 py-2 border-b-2 border-black flex items-center gap-2">
               <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -2032,7 +2032,7 @@ function EventPageContent() {
               <p className="font-bold text-xs uppercase tracking-wider">{t.finalDecision}</p>
             </div>
             <div className="px-3 py-2">
-              <p className="font-bold text-sm text-black uppercase text-center">{event.final_decision}</p>
+              <p className="font-bold text-sm text-black uppercase text-center">{event?.final_decision}</p>
             </div>
           </div>
         )}

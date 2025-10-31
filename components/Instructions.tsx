@@ -23,85 +23,7 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
 
-  useEffect(() => {
-    // Check if user has dismissed instructions before
-    const hasSeenInstructions = localStorage.getItem('where2meet_instructions_seen');
-    if (!hasSeenInstructions) {
-      setShowInstructions(true);
-    }
-  }, []);
-
-  // Update highlight when step changes
-  useEffect(() => {
-    if (!showInstructions) return;
-
-    const steps = getTutorialSteps();
-    if (currentStep >= steps.length) return;
-
-    const step = steps[currentStep];
-    if (step.targetElement) {
-      const element = document.querySelector(step.targetElement);
-      if (element) {
-        const rect = element.getBoundingClientRect();
-        setHighlightRect(rect);
-      } else {
-        setHighlightRect(null);
-      }
-    } else {
-      setHighlightRect(null);
-    }
-  }, [currentStep, showInstructions]);
-
-  const handleDismiss = () => {
-    localStorage.setItem('where2meet_instructions_seen', 'true');
-    setShowInstructions(false);
-    setDismissed(true);
-    setCurrentStep(0);
-    setHighlightRect(null);
-  };
-
-  const handleShow = () => {
-    setShowInstructions(true);
-    setCurrentStep(0);
-  };
-
-  const handleNext = () => {
-    const steps = getTutorialSteps();
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleDismiss();
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleSkip = () => {
-    setShowInstructions(false);
-    setCurrentStep(0);
-    setHighlightRect(null);
-  };
-
-  // Show help button if dismissed
-  // Mobile: top right corner, Desktop: bottom right, just left of focus on circle button
-  if (dismissed || (!showInstructions && localStorage.getItem('where2meet_instructions_seen'))) {
-    return (
-      <button
-        onClick={handleShow}
-        className="fixed bottom-4 right-20 lg:block hidden w-12 h-12 bg-black text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black transition-all z-50 flex items-center justify-center text-xl font-bold"
-        title={language === 'zh' ? '显示说明' : 'Show instructions'}
-      >
-        ?
-      </button>
-    );
-  }
-
-  if (!showInstructions) return null;
-
+  // Define getTutorialSteps function before useEffects
   const getTutorialSteps = (): TutorialStep[] => {
     if (role === 'host') {
       if (!hasLocations) {
@@ -198,6 +120,85 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
       ];
     }
   };
+
+  useEffect(() => {
+    // Check if user has dismissed instructions before
+    const hasSeenInstructions = localStorage.getItem('where2meet_instructions_seen');
+    if (!hasSeenInstructions) {
+      setShowInstructions(true);
+    }
+  }, []);
+
+  // Update highlight when step changes
+  useEffect(() => {
+    if (!showInstructions) return;
+
+    const steps = getTutorialSteps();
+    if (currentStep >= steps.length) return;
+
+    const step = steps[currentStep];
+    if (step.targetElement) {
+      const element = document.querySelector(step.targetElement);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setHighlightRect(rect);
+      } else {
+        setHighlightRect(null);
+      }
+    } else {
+      setHighlightRect(null);
+    }
+  }, [currentStep, showInstructions]);
+
+  const handleDismiss = () => {
+    localStorage.setItem('where2meet_instructions_seen', 'true');
+    setShowInstructions(false);
+    setDismissed(true);
+    setCurrentStep(0);
+    setHighlightRect(null);
+  };
+
+  const handleShow = () => {
+    setShowInstructions(true);
+    setCurrentStep(0);
+  };
+
+  const handleNext = () => {
+    const steps = getTutorialSteps();
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleDismiss();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSkip = () => {
+    setShowInstructions(false);
+    setCurrentStep(0);
+    setHighlightRect(null);
+  };
+
+  // Show help button if dismissed
+  // Mobile: top right corner, Desktop: bottom right, just left of focus on circle button
+  if (dismissed || (!showInstructions && localStorage.getItem('where2meet_instructions_seen'))) {
+    return (
+      <button
+        onClick={handleShow}
+        className="fixed bottom-4 right-20 lg:block hidden w-12 h-12 bg-black text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black transition-all z-50 flex items-center justify-center text-xl font-bold"
+        title={language === 'zh' ? '显示说明' : 'Show instructions'}
+      >
+        ?
+      </button>
+    );
+  }
+
+  if (!showInstructions) return null;
 
   const steps = getTutorialSteps();
   const currentTutorialStep = steps[currentStep];
@@ -298,6 +299,11 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
         className="fixed z-50 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 max-w-sm w-full mx-4"
         style={getTooltipPosition()}
       >
+        {/* Step-by-step badge */}
+        <div className="absolute -top-3 -left-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          {language === 'zh' ? '跟着步骤做' : 'FOLLOW STEPS'}
+        </div>
+
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             {/* Icon based on section */}
@@ -356,7 +362,7 @@ export default function Instructions({ role, hasLocations, hasCandidates }: Inst
           {currentStep > 0 && (
             <button
               onClick={handlePrevious}
-              className="px-4 py-2 text-sm font-bold border-2 border-black bg-white hover:bg-gray-100 transition-all"
+              className="px-4 py-2 text-sm font-bold border-2 border-black bg-white text-black hover:bg-gray-100 transition-all"
             >
               {language === 'zh' ? '上一步' : 'Back'}
             </button>
