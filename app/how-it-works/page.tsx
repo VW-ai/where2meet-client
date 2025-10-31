@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Calendar, Users, Vote, Search, Bell } from 'lucide-react';
 
+// Note: In Next.js App Router, metadata must be exported from page.tsx files
+// This page uses client-side rendering, so we add metadata via head in layout
+// For better SEO, consider converting this to a Server Component
+
 export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

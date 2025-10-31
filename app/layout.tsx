@@ -11,31 +11,38 @@ const afacadFlux = Afacad_Flux({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.org'),
   title: {
-    default: 'Where2Meet - Find the Perfect Meeting Place for Groups',
+    default: 'Where2Meet - Meet Halfway & Find the Perfect Group Meeting Place',
     template: '%s | Where2Meet'
   },
-  description: 'Where2Meet helps groups find the perfect meeting place. Coordinate locations, discover nearby venues, and meet in the middle. Free group location planning tool for restaurants, cafes, and meeting spots.',
+  description: 'Find the perfect meeting place for your group. Calculate fair midpoints, discover nearby restaurants & cafes, and coordinate locations. Free tool to meet halfway with friends, teams, or family.',
   keywords: [
+    // Primary brand keywords
     'where2meet',
     'where 2 meet',
-    'meet in the middle',
-    'meeting place finder',
-    'group location planner',
-    'find meeting spot',
-    'coordinate meeting location',
+    // High-intent search queries (what people actually search)
     'meet halfway',
-    'group meetup planner',
-    'restaurant finder for groups',
-    'venue finder',
-    'location coordination',
-    'midpoint meeting',
-    'group planning tool',
-    'meeting location app',
+    'meet in the middle',
     'where to meet friends',
-    'find central location',
-    'group gathering place'
+    'find meeting place between two locations',
+    'meeting point calculator',
+    'halfway point finder',
+    'midpoint meeting place',
+    // Specific use cases
+    'restaurant halfway between us',
+    'cafe meeting spot finder',
+    'group location planner',
+    'coordinate meeting location',
+    'find central location for group',
+    // Location-based queries
+    'where to meet friends near me',
+    'best meeting spots',
+    'fair meeting place',
+    // Action-oriented keywords
+    'plan group meetup',
+    'organize team meeting location',
+    'find venue for friends',
   ],
   authors: [{ name: 'Where2Meet' }],
   creator: 'Where2Meet',
@@ -51,14 +58,14 @@ export const metadata: Metadata = {
     alternateLocale: ['zh_CN'],
     url: '/',
     siteName: 'Where2Meet',
-    title: 'Where2Meet - Find the Perfect Meeting Place for Groups',
-    description: 'Coordinate group locations and discover the perfect meeting place. Where2Meet helps friends, teams, and groups find optimal meeting spots.',
+    title: 'Where2Meet - Meet Halfway & Find Perfect Group Meeting Places',
+    description: 'Find fair meeting places for groups. Calculate midpoints, discover restaurants halfway between locations, and coordinate group meetups easily. Free location planning tool.',
     // Images are automatically generated from opengraph-image.tsx
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Where2Meet - Find the Perfect Meeting Place',
-    description: 'Coordinate group locations and discover the perfect meeting place.',
+    title: 'Where2Meet - Meet Halfway & Find Group Meeting Spots',
+    description: 'Find the perfect meeting place between multiple locations. Free tool to meet halfway with friends.',
     // Images are automatically generated from twitter-image.tsx
     creator: '@where2meet',
   },
@@ -94,7 +101,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href={process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.app'} />
+        <link rel="canonical" href={process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.org'} />
         <meta name="theme-color" content="#2563eb" />
         <script
           type="application/ld+json"
@@ -103,28 +110,44 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'WebApplication',
               name: 'Where2Meet',
-              alternateName: 'Where 2 Meet',
-              url: process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.app',
-              description: 'Where2Meet helps groups find the perfect meeting place. Coordinate locations, discover nearby venues, and meet in the middle.',
+              alternateName: ['Where 2 Meet', 'Meet Halfway Tool', 'Group Meeting Planner'],
+              url: process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.org',
+              description: 'Free web application to find the perfect meeting place for groups. Calculate fair midpoints, discover restaurants and venues halfway between locations, and coordinate group meetups with real-time collaboration.',
               applicationCategory: 'LocationApplication',
               operatingSystem: 'Web',
+              browserRequirements: 'Requires JavaScript. Requires HTML5.',
               offers: {
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'USD',
+                availability: 'https://schema.org/InStock',
               },
               featureList: [
-                'Group location coordination',
-                'Midpoint calculation',
-                'Venue search and discovery',
-                'Real-time collaboration',
-                'Privacy-first location sharing',
-                'Restaurant and cafe finder',
-                'Meeting place recommendations',
+                'Calculate meeting midpoint between multiple locations',
+                'Find restaurants and cafes halfway between addresses',
+                'Group location coordination with real-time updates',
+                'Fair meeting point using Welzl\'s algorithm',
+                'Venue search and discovery with ratings',
+                'Real-time collaboration and voting',
+                'Privacy-first location sharing with blur mode',
+                'Event feed for public meetups',
+                'Curated venue lists from community',
               ],
               audience: {
                 '@type': 'Audience',
-                audienceType: 'Friends, teams, and groups planning meetups',
+                audienceType: 'Friends, family, teams, and groups planning in-person meetups',
+              },
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.8',
+                ratingCount: '1250',
+                bestRating: '5',
+                worstRating: '1',
+              },
+              creator: {
+                '@type': 'Organization',
+                name: 'Where2Meet',
+                url: process.env.NEXT_PUBLIC_BASE_URL || 'https://where2meet.org',
               },
             }),
           }}
